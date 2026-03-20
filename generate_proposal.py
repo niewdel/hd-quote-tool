@@ -156,7 +156,7 @@ class CoverPage(Flowable):
 
 def info_block(data, st):
     """Three-column stacked layout. Each column has a header row then
-    label-above-value pairs ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ no side-by-side label/value split, so
+    label-above-value pairs ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ no side-by-side label/value split, so
     long emails and addresses never wrap awkwardly."""
 
     lbl_s  = ParagraphStyle('ibl', fontName='Helvetica-Bold', fontSize=7,
@@ -170,7 +170,7 @@ def info_block(data, st):
         parts = [Paragraph(title, hdr_s)]
         for lbl, val in pairs:
             parts.append(Paragraph(lbl, lbl_s))
-            parts.append(Paragraph(val or 'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ', val_s))
+            parts.append(Paragraph(val or 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ', val_s))
         return parts
 
     from reportlab.platypus import Frame
@@ -309,7 +309,7 @@ def bid_table(items, st):
     return t
 
 def total_line(total):
-    """Clean right-aligned total ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ label in regular weight, amount in bold black.
+    """Clean right-aligned total ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ label in regular weight, amount in bold black.
     No box, no background. Just a subtle top rule and generous spacing so it
     reads as a natural footer to the table above it."""
     cw  = W - inch
