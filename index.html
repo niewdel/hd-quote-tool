@@ -250,8 +250,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div class="card-header"><span class="card-title">Global Settings</span></div>
           <div class="card-body">
             <div class="fg fg3">
-              <div><label>Waste Factor %</label><input id="waste" type="number" value="7" min="0" max="30" step="1" oninput="renderAll()"/></div>
-              <div><label>Mobilization / Flat Fee ($)</label><input id="mob-fee" type="number" value="0" min="0" step="50" oninput="recalc()"/></div>
+              <div><label>Waste Factor %</label><input id="waste" type="number" value="7" min="0" max="30" step="1" onchange="renderAll()"/></div>
+              <div><label>Mobilization / Flat Fee ($)</label><input id="mob-fee" type="number" value="0" min="0" step="50" onchange="recalc()"/></div>
               <div><label>Project Notes</label><input id="proj-notes" type="text" placeholder="Any notes for the proposal..." oninput="markDirty()"/></div>
             </div>
           </div>
@@ -587,7 +587,7 @@ function renderAll(){
         <input type="text" value="${escH(s.name)}" placeholder="Section name" onblur="updSec(${s.id},'name',this.value)" onkeydown="if(event.key==='Enter')this.blur()"/>
         <div style="display:flex;align-items:center;gap:5px;">
           <label style="margin:0;font-size:10px;color:var(--dgray);">SF</label>
-          <input type="number" value="${s.sf||''}" placeholder="0" min="0" step="1" style="width:95px" oninput="updSec(${s.id},'sf',this.value)">
+          <input type="number" value="${s.sf||''}" placeholder="0" min="0" step="1" style="width:95px" onchange="updSec(${s.id},'sf',this.value)">
           <span style="font-size:11px;color:var(--dgray);">= <b style="color:var(--black)">${s.sf>0?(s.sf/9).toFixed(1):'—'}</b> SY</span>
         </div>
         <button class="btn btn-secondary" style="font-size:11px;" onclick="addLayerTo(${s.id})">+ Layer</button>
