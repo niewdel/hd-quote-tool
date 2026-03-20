@@ -232,6 +232,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div class="fg fg4">
               <div><label>Waste Factor %</label><input id="waste" type="number" value="5" min="0" max="30" step="0.25"/></div>
               <div><label>Contingency %</label><input id="contingency" type="number" value="0" min="0" max="50" step="0.5" title="Applied to total bid as a separate line item"/></div>
+              <div><label>Contingency %</label><input id="contingency" type="number" value="0" min="0" max="50" step="0.5" title="Applied to total bid as a separate line item on the proposal"/></div>
               <div><label>Mobilization / Flat Fee ($)</label><input id="mob" type="number" value="0" min="0" step="50"/></div>
               <div><label>Project Notes</label><input id="proj-notes" type="text" placeholder="Notes for the proposal..."/></div>
             </div>
@@ -425,6 +426,7 @@ function boot(){
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('waste').addEventListener('change',function(){renderAll();});
   document.getElementById('contingency').addEventListener('change',function(){recalc();});
+  document.getElementById('contingency').addEventListener('change',function(){recalc();});
   document.getElementById('mob').addEventListener('change',function(){recalc();});
   renderPresets();
   if(!sections.length){
@@ -455,6 +457,7 @@ function saveStorage(){localStorage.setItem('hd_quotes',JSON.stringify(savedQuot
 function tons(sf,d,lbs){return(sf*(d/12)*lbs)/2000;}
 function wf(){return 1+(parseFloat(document.getElementById('waste').value)||0)/100;}
 function mob(){return parseFloat(document.getElementById('mob').value)||0;}
+function cont(){return parseFloat(document.getElementById('contingency').value)||0;}
 function cont(){return parseFloat(document.getElementById('contingency').value)||0;}
 function mu(m,b){return m>0?((b-m)/m*100):0;}
 function fi(n){return Math.round(n).toLocaleString();}
@@ -879,6 +882,8 @@ function buildPayload(){
     line_items.push({name:i.name,description:'',qty:i.qty,unit:i.unit,price:i.price,subtotal:i.subtotal});
   });
   if(mobv>0){total+=mobv;line_items.push({name:'Mobilization',description:'Project mobilization & setup',qty:1,unit:'LS',price:mobv,subtotal:mobv});}
+  var contPct2=cont(),contAmt=contPct2>0?Math.round(total*contPct2/100*100)/100:0;
+  if(contAmt>0){total=parseFloat((total+contAmt).toFixed(2));line_items.push({name:'Contingency ('+contPct2+'%)',description:'Project contingency allowance',qty:1,unit:'LS',price:contAmt,subtotal:contAmt});}
   var contAmt=Math.round(total*cont()/100*100)/100;
   if(contAmt>0){total+=contAmt;line_items.push({name:'Contingency ('+cont()+'%)',description:'Project contingency allowance',qty:1,unit:'LS',price:contAmt,subtotal:contAmt});}
   return{
@@ -1032,7 +1037,7 @@ function saveQuote(){
   var snap={name:name,client:document.getElementById('proj-client').value,
     date:document.getElementById('proj-date').value,addr:document.getElementById('proj-addr').value,
     cs:document.getElementById('proj-cs').value,notes:document.getElementById('proj-notes').value,
-    waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,contingency:document.getElementById('contingency').value,
+    waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,contingency:document.getElementById('contingency').value,contingency:document.getElementById('contingency').value,
     sections:sections,concItems:concItems,extraItems:extraItems};
   var p=buildPayload();
   savedQuotes.push({id:Date.now(),name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});
@@ -1050,6 +1055,7 @@ function loadQuote(id){
   document.getElementById('proj-notes').value=d.notes||'';
   document.getElementById('waste').value=d.waste||5;
   document.getElementById('mob').value=d.mob||0;
+  document.getElementById('contingency').value=d.contingency||0;
   document.getElementById('contingency').value=d.contingency||0;
   sections=d.sections||[];
   sid=sections.reduce(function(m,s){return Math.max(m,s.id+1);},0);
@@ -1077,7 +1083,7 @@ function renderSaved(){
 function resetAll(){
   sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;
   ['proj-name','proj-client','proj-addr','proj-cs','proj-notes'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('waste').value=5;document.getElementById('mob').value=0;document.getElementById('contingency').value=0;
+  document.getElementById('waste').value=5;document.getElementById('mob').value=0;document.getElementById('contingency').value=0;document.getElementById('contingency').value=0;
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('client-bar').style.display='none';
   renderAll();renderConc();renderExtra();
