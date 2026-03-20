@@ -116,6 +116,22 @@ def notion_push():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/notion/schema')
+@require_auth
+def notion_schema():
+    try:
+        r = http.get(
+            f'https://api.notion.com/v1/databases/{NOTION_PIPELINE}',
+            headers={'Authorization': f'Bearer {NOTION_KEY}', 'Notion-Version': NOTION_VER},
+            timeout=10
+        )
+        d = r.json()
+        props = list(d.get('properties', {}).keys()) if r.ok else []
+        return jsonify({'ok': r.ok, 'properties': props, 'error': d.get('message')})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/health')
 def health():
     return jsonify({'status': 'ok'})
