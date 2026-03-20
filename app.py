@@ -95,12 +95,12 @@ def notion_push():
             'parent': {'database_id': NOTION_PIPELINE},
             'properties': {
                 'Project Name': {'title': [{'text': {'content': data.get('project_name','')}}]},
-                'Client ':      {'rich_text': [{'text': {'content': data.get('client_name','')}}]},
-                'Scope Notes':  {'rich_text': [{'text': {'content': data.get('address','')}}]},
-                'Due Date':     {'date': {'start': data.get('date_iso', '')}},
+                'Scope Notes':  {'rich_text': [{'text': {'content': data.get('client_name','') + ' | ' + data.get('address','')}}]},
+                
+                'Due Date':     {'date': {'start': data.get('date_iso', '')}} if data.get('date_iso') else None,
                 'Status':    {'select': {'name': 'Quoted'}},
-                'Bid Total': {'number': data.get('total', 0)},
-                'Total SF':  {'number': data.get('total_sf', 0)},
+                
+                
             }
         }
         r = http.post(
