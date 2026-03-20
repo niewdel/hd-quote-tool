@@ -156,7 +156,7 @@ class CoverPage(Flowable):
 
 def info_block(data, st):
     """Three-column stacked layout. Each column has a header row then
-    label-above-value pairs Ã¢ÂÂ no side-by-side label/value split, so
+    label-above-value pairs ÃÂ¢ÃÂÃÂ no side-by-side label/value split, so
     long emails and addresses never wrap awkwardly."""
 
     lbl_s  = ParagraphStyle('ibl', fontName='Helvetica-Bold', fontSize=7,
@@ -170,7 +170,7 @@ def info_block(data, st):
         parts = [Paragraph(title, hdr_s)]
         for lbl, val in pairs:
             parts.append(Paragraph(lbl, lbl_s))
-            parts.append(Paragraph(val or 'Ã¢ÂÂ', val_s))
+            parts.append(Paragraph(val or 'ÃÂ¢ÃÂÃÂ', val_s))
         return parts
 
     from reportlab.platypus import Frame
@@ -309,7 +309,7 @@ def bid_table(items, st):
     return t
 
 def total_line(total):
-    """Clean right-aligned total Ã¢ÂÂ label in regular weight, amount in bold black.
+    """Clean right-aligned total ÃÂ¢ÃÂÃÂ label in regular weight, amount in bold black.
     No box, no background. Just a subtle top rule and generous spacing so it
     reads as a natural footer to the table above it."""
     cw  = W - inch
@@ -419,7 +419,7 @@ def tc_block(title, body_items, st, cw):
     hdr.setStyle(TableStyle([
         ('BACKGROUND',   (0,0),(-1,-1), colors.HexColor('#F6F6F6')),
         ('LINEBEFORE',   (0,0),(0,-1),  4, RED),
-        ('LINEBELOW',    (0,0),(-1,-1), 0.5, TBLBRD),
+        ('LINEBELOW',    (0,0),(-1,-1), 0.5, MGRAY),
         ('TOPPADDING',   (0,0),(-1,-1), 6),
         ('BOTTOMPADDING',(0,0),(-1,-1), 6),
         ('LEFTPADDING',  (0,0),(-1,-1), 10),
@@ -550,8 +550,8 @@ def tc_pages(st):
         ('VALIGN',       (0,0),(-1,-1), 'TOP'),
         ('TOPPADDING',   (0,0),(-1,-1), 6),
         ('BOTTOMPADDING',(0,0),(-1,-1), 6),
-        ('LINEABOVE',    (0,0),(-1,0),  1, TBLBRD),
-        ('LINEBELOW',    (0,-1),(-1,-1),1, TBLBRD),
+        ('LINEABOVE',    (0,0),(-1,0),  1, MGRAY),
+        ('LINEBELOW',    (0,-1),(-1,-1),1, MGRAY),
     ]))
     elems.append(KeepTogether([
         Paragraph('CONTRACT EXECUTION', ParagraphStyle('cex', fontName='Helvetica-Bold',
