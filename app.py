@@ -73,6 +73,23 @@ def generate_pdf():
             try: os.unlink(tmp_path)
             except: pass
 
+
+@app.route('/generate-docx', methods=['POST'])
+@require_auth
+def generate_docx_route():
+    try:
+        data = request.get_json(force=True)
+        buf = generate_docx.build(data)
+        fname = (data.get('project_name','Proposal') or 'Proposal').replace(' ','_')
+        return send_file(
+            buf,
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            as_attachment=True,
+            download_name=f'HD_Proposal_{fname}.docx'
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/notion/clients')
 @require_auth
 def notion_clients():
