@@ -323,6 +323,18 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div id="mat-saved-msg" style="margin-top:8px;font-size:12px;color:var(--dgray);"></div>
           </div>
         </div>
+        
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Material Prices ($/ton)</span><span style="font-size:11px;color:var(--dgray);font-weight:normal;">Update when supplier prices change</span></div>
+          <div class="card-body">
+            <div class="fg fg3" id="mat-prices-grid"></div>
+            <div style="margin-top:11px;display:flex;gap:8px;align-items:center;">
+              <button class="btn btn-red btn-sm" onclick="saveMatPrices()">Save Prices</button>
+              <button class="btn btn-sec btn-sm" onclick="resetMatPrices()">Reset to Defaults</button>
+              <span id="mat-price-saved" style="font-size:11px;color:#27500A;display:none;">✓ Saved — all open quotes updated</span>
+            </div>
+          </div>
+        </div>
         <div class="card">
           <div class="card-hdr"><span class="card-title">Spec Presets</span></div>
           <div class="card-body">
@@ -492,14 +504,14 @@ function updLyrType(sid2,lid2,v){
 }
 function updLyrMarkup(sid2,lid2,v){
   const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;
-  l.markup=parseFloat(v)||0;const mat=MAT[l.type]||0;l.rate=parseFloat((mat*(1+l.markup/100)).toFixed(2));
+  l.markup=parseFloat(v)||0;const mat=matPrices[l.type]||0;l.rate=parseFloat((mat*(1+l.markup/100)).toFixed(2));
   const rInp=document.querySelector('.lyr-rate[data-lyr="'+sid2+'-'+lid2+'"]');if(rInp)rInp.value=l.rate;
   recalc();updateLyrResult(sid2,lid2);
 }
 function updLyrDepth(sid2,lid2,v){const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;l.depth=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);}
 function updLyrRate(sid2,lid2,v){
   const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;
-  l.rate=parseFloat(v)||0;const mat=MAT[l.type]||0;l.markup=mat>0?Math.round((l.rate-mat)/mat*100):0;
+  l.rate=parseFloat(v)||0;const mat=matPrices[l.type]||0;l.markup=mat>0?Math.round((l.rate-mat)/mat*100):0;
   const mInp=document.querySelector('.lyr-markup[data-lyr="'+sid2+'-'+lid2+'"]');if(mInp)mInp.value=l.markup;
   recalc();updateLyrResult(sid2,lid2);
 }
@@ -529,7 +541,7 @@ function updateLyrResult(sid2,lid2){
   const l=s.layers.find(x=>x.id===lid2);if(!l)return;
   const sf=s.sf||0;const wfv=wf();
   const rawT=sf>0?tons(sf,l.depth,LBS[l.type]):0;
-  const t=rawT*wfv;const matC=t*MAT[l.type];const bidC=t*l.rate;const mp=gm(matC,bidC);
+  const t=rawT*wfv;const matC=t*matPrices[l.type];const bidC=t*l.rate;const mp=gm(matC,bidC);
   const resEl=document.querySelector(`.lres[data-lyr="${sid2}-${lid2}"]`);
   const gmEl=document.querySelector(`.gmbadge[data-lyr="${sid2}-${lid2}"]`);
   if(resEl) resEl.innerHTML=sf>0?`<b>${t.toFixed(2)}t</b> &middot; mat <b>$${fi(matC)}</b> &middot; bid <b>$${fi(bidC)}</b>`:'<span style="opacity:.5">enter SF above</span>';
@@ -540,7 +552,7 @@ function updateLyrResult(sid2,lid2){
 
 function secTot(s){
   const wfv=wf();let tt=0,tm=0,tb=0;
-  s.layers.forEach(l=>{const t=s.sf>0?tons(s.sf,l.depth,LBS[l.type])*wfv:0;tt+=t;tm+=t*MAT[l.type];tb+=t*l.rate;});
+  s.layers.forEach(l=>{const t=s.sf>0?tons(s.sf,l.depth,LBS[l.type])*wfv:0;tt+=t;tm+=t*matPrices[l.type];tb+=t*l.rate;});
   return{tons:tt,mat:tm,bid:tb};
 }
 
@@ -552,7 +564,7 @@ function renderAll(){
     let lrows='';
     s.layers.forEach(l=>{
       const wfv=wf();const rawT=sf>0?tons(sf,l.depth,LBS[l.type]):0;
-      const t=rawT*wfv;const matC=t*MAT[l.type];const bidC=t*l.rate;const lmp=gm(matC,bidC);
+      const t=rawT*wfv;const matC=t*matPrices[l.type];const bidC=t*l.rate;const lmp=gm(matC,bidC);
       const resHTML=sf>0?`<b>${t.toFixed(2)}t</b> &middot; mat <b>$${fi(matC)}</b> &middot; bid <b>$${fi(bidC)}</b>`:'<span style="opacity:.5">enter SF above</span>';
       const gmHTML=sf>0&&bidC>0?`<span class="gmbadge ${lmp>=0?'p':'n'}" data-lyr="${s.id}-${l.id}">${lmp.toFixed(1)}% GM</span>`:`<span class="gmbadge" data-lyr="${s.id}-${l.id}"></span>`;
       lrows+=`<div class="lyr-row">
@@ -697,13 +709,13 @@ function recalc(){
     const sf=s.sf||0;const sy=sf/9;gSF+=sf;gSY+=sy;
     s.layers.forEach(l=>{
       const rawT=sf>0?tons(sf,l.depth,LBS[l.type]):0;const t=rawT*wfv;
-      const mC=t*MAT[l.type];const bC=t*l.rate;const mp=gm(mC,bC);
+      const mC=t*matPrices[l.type];const bC=t*l.rate;const mp=gm(mC,bC);
       gT+=t;gM+=mC;gB+=bC;
       const tr=document.createElement('tr');
       tr.innerHTML=`<td><small>${esc(s.name)}</small></td><td><span class="badge ${LBADGE[l.type]||''}">${l.type}</span></td>
         <td>${sf>0?sf.toLocaleString():'—'}</td><td>${sf>0?sy.toFixed(1):'—'}</td>
         <td>${l.depth}"</td><td>ton</td><td>${sf>0?rawT.toFixed(2):'—'}</td><td>${sf>0?t.toFixed(2):'—'}</td>
-        <td>$${MAT[l.type]}</td><td>${sf>0?'$'+fi(mC):'—'}</td>
+        <td>$${matPrices[l.type]}</td><td>${sf>0?'$'+fi(mC):'—'}</td>
         <td>$${l.rate}</td><td>${sf>0?'$'+fi(bC):'—'}</td>
         <td class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'% MU':'—'}</td>`;
       bk.appendChild(tr);
@@ -892,7 +904,7 @@ function selectClient(c){
 // ── Save / load ───────────────────────────────────────────────────
 function saveQuote(){
   const name=document.getElementById('proj-name').value||('Quote '+(savedQuotes.length+1));
-  const snap={name,client:document.getElementById('proj-client').value,
+  const snap={name,matSnapshot:Object.assign({},matPrices),client:document.getElementById('proj-client').value,
     date:document.getElementById('proj-date').value,addr:document.getElementById('proj-addr').value,
     cs:document.getElementById('proj-cs').value,notes:document.getElementById('proj-notes').value,
     waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,
@@ -965,7 +977,7 @@ function saveMatPrices(){
   sections.forEach(s=>{
     s.layers.forEach(l=>{
       if(l.type==='Mill & Pave') return; // flat rate, no recalc
-      const mat=MAT[l.type]||0;
+      const mat=matPrices[l.type]||0;
       if(mat>0 && l.markup!==undefined){
         l.rate = parseFloat((mat*(1+l.markup/100)).toFixed(2));
       }
@@ -988,6 +1000,33 @@ function saveSender(){
   sender={name:document.getElementById('s-name').value,email:document.getElementById('s-email').value,phone:document.getElementById('s-phone').value};
   localStorage.setItem('hd_sender',JSON.stringify(sender));
   toast('Sender settings saved','ok');
+}
+
+function loadMatPricesUI(){
+  const grid=document.getElementById('mat-prices-grid');if(!grid)return;
+  const labels={'ABC base':'ABC Base','Binder':'Binder','Surface':'Surface','Mill & Pave':'Mill (sub)','B25.0C':'B25.0C','I19.0C':'I19.0C','S9.5C':'S9.5C'};
+  grid.innerHTML=Object.keys(matPrices).map(k=>
+    '<div><label>'+labels[k]+'</label><input type="number" id="mat_'+k.replace(/[^a-z0-9]/gi,'_')+'" value="'+(matPrices[k]||0)+'" min="0" step="0.5" style="width:100%"/></div>'
+  ).join('');
+}
+function saveMatPrices(){
+  Object.keys(matPrices).forEach(k=>{
+    const inp=document.getElementById('mat_'+k.replace(/[^a-z0-9]/gi,'_'));
+    if(inp)matPrices[k]=parseFloat(inp.value)||0;
+  });
+  localStorage.setItem('hd_mat_prices',JSON.stringify(matPrices));
+  // Recalc all open sections with new prices
+  renderAll();
+  const msg=document.getElementById('mat-price-saved');
+  if(msg){msg.style.display='inline';setTimeout(()=>msg.style.display='none',3000);}
+  toast('Material prices saved','ok');
+}
+function resetMatPrices(){
+  Object.assign(matPrices,MAT_DEFAULT);
+  localStorage.removeItem('hd_mat_prices');
+  loadMatPricesUI();
+  renderAll();
+  toast('Reset to defaults');
 }
 function loadSenderUI(){
   document.getElementById('s-name').value=sender.name||'';
