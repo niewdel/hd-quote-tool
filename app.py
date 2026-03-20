@@ -94,10 +94,10 @@ def notion_push():
         payload = {
             'parent': {'database_id': NOTION_PIPELINE},
             'properties': {
-                'Name':      {'title': [{'text': {'content': data.get('project_name','')}}]},
-                'Client':    {'rich_text': [{'text': {'content': data.get('client_name','')}}]},
-                'Address':   {'rich_text': [{'text': {'content': data.get('address','')}}]},
-                'Date':      {'date': {'start': data.get('date_iso', '')}},
+                'Project Name': {'title': [{'text': {'content': data.get('project_name','')}}]},
+                'Client ':      {'rich_text': [{'text': {'content': data.get('client_name','')}}]},
+                'Scope Notes':  {'rich_text': [{'text': {'content': data.get('address','')}}]},
+                'Due Date':     {'date': {'start': data.get('date_iso', '')}},
                 'Status':    {'select': {'name': 'Quoted'}},
                 'Bid Total': {'number': data.get('total', 0)},
                 'Total SF':  {'number': data.get('total_sf', 0)},
@@ -113,22 +113,6 @@ def notion_push():
             pid = resp.get('id','').replace('-','')
             return jsonify({'ok': True, 'url': f'https://notion.so/{pid}'})
         return jsonify({'error': resp.get('message','Notion error')}), r.status_code
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/notion/schema')
-@require_auth
-def notion_schema():
-    try:
-        r = http.get(
-            f'https://api.notion.com/v1/databases/{NOTION_PIPELINE}',
-            headers={'Authorization': f'Bearer {NOTION_KEY}', 'Notion-Version': NOTION_VER},
-            timeout=10
-        )
-        d = r.json()
-        props = list(d.get('properties', {}).keys()) if r.ok else []
-        return jsonify({'ok': r.ok, 'properties': props, 'error': d.get('message')})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
