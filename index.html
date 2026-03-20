@@ -306,6 +306,23 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <button class="btn btn-sec btn-sm" onclick="testNotion()">Test Connection</button>
           </div>
         </div>
+
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Material Costs ($/ton)</span><span style="font-size:11px;color:var(--dgray);">Used for markup% calculations</span></div>
+          <div class="card-body">
+            <div class="fg fg3" style="margin-bottom:11px;">
+              <div><label>ABC Base</label><input id="mat-abc" type="number" min="0" step="0.01" placeholder="30.00"/></div>
+              <div><label>Surface Mix (S9.5C)</label><input id="mat-surface" type="number" min="0" step="0.01" placeholder="90.00"/></div>
+              <div><label>Binder (I19.0C)</label><input id="mat-binder" type="number" min="0" step="0.01" placeholder="90.00"/></div>
+            </div>
+            <div class="fg fg3">
+              <div><label>Base Course (B25.0C)</label><input id="mat-b25" type="number" min="0" step="0.01" placeholder="80.00"/></div>
+              <div><label>Millings / Mill &amp; Pave</label><input id="mat-mill" type="number" min="0" step="0.01" placeholder="30.00"/></div>
+              <div style="display:flex;align-items:flex-end;"><button class="btn btn-red btn-sm" onclick="saveMatPrices()" style="width:100%;">Save &amp; Recalculate</button></div>
+            </div>
+            <div id="mat-saved-msg" style="margin-top:8px;font-size:12px;color:var(--dgray);"></div>
+          </div>
+        </div>
         <div class="card">
           <div class="card-hdr"><span class="card-title">Spec Presets</span></div>
           <div class="card-body">
@@ -325,7 +342,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
 // ── Constants ───────────────────────────────────────────────────
 const LTYPES = ['ABC base','Binder','Surface','Mill & Pave','B25.0C','I19.0C','S9.5C'];
 const LBS    = {'ABC base':150,'Binder':115,'Surface':115,'Mill & Pave':115,'B25.0C':115,'I19.0C':115,'S9.5C':115};
-const MAT    = {'ABC base':30,'Binder':90,'Surface':90,'Mill & Pave':30,'B25.0C':80,'I19.0C':85,'S9.5C':90};
+var   MAT    = {'ABC base':30,'Binder':90,'Surface':90,'Mill & Pave':30,'B25.0C':80,'I19.0C':85,'S9.5C':90}; // loaded from settings
+const MAT_DEF = {'ABC base':30,'Binder':90,'Surface':90,'Mill & Pave':30,'B25.0C':80,'I19.0C':85,'S9.5C':90};
 const DDEPTH = {'ABC base':6,'Binder':2,'Surface':2,'Mill & Pave':2,'B25.0C':5,'I19.0C':4,'S9.5C':3};
 const DRATE  = {'ABC base':50,'Binder':150,'Surface':150,'Mill & Pave':150,'B25.0C':150,'I19.0C':150,'S9.5C':150};
 const LBADGE = {'ABC base':'b-base','Binder':'b-binder','Surface':'b-surface','Mill & Pave':'b-millings','B25.0C':'b-base','I19.0C':'b-binder','S9.5C':'b-surface'};
@@ -406,6 +424,7 @@ function loadStorage(){
     const s=localStorage.getItem('hd_sender'); if(s)sender=JSON.parse(s);
     const p=localStorage.getItem('hd_presets'); if(p)PRESETS=JSON.parse(p);
     const q=localStorage.getItem('hd_quotes'); if(q)savedQuotes=JSON.parse(q);
+    const m=localStorage.getItem('hd_mat'); if(m){const mp=JSON.parse(m);Object.keys(mp).forEach(k=>{if(MAT[k]!==undefined)MAT[k]=mp[k];});}
   }catch(e){}
 }
 function saveStorage(){localStorage.setItem('hd_quotes',JSON.stringify(savedQuotes));}
@@ -433,7 +452,7 @@ function showPanel(id,el){
   if(el)el.classList.add('on');
   document.getElementById('topbar-title').textContent={build:'Build Quote',saved:'Saved Quotes',settings:'Settings'}[id]||id;
   if(id==='saved')renderSaved();
-  if(id==='settings'){loadSenderUI();renderPresetMgr();}
+  if(id==='settings'){loadSenderUI();renderPresetMgr();loadMatUI();}
 }
 
 // ── Presets ──────────────────────────────────────────────────────
@@ -926,6 +945,45 @@ function resetAll(){
 }
 
 // ── Settings ──────────────────────────────────────────────────────
+
+function saveMatPrices(){
+  // Read inputs
+  const newMat = {
+    'ABC base':   parseFloat(document.getElementById('mat-abc').value)    || MAT_DEF['ABC base'],
+    'Surface':    parseFloat(document.getElementById('mat-surface').value) || MAT_DEF['Surface'],
+    'Binder':     parseFloat(document.getElementById('mat-binder').value)  || MAT_DEF['Binder'],
+    'S9.5C':      parseFloat(document.getElementById('mat-surface').value) || MAT_DEF['S9.5C'],
+    'I19.0C':     parseFloat(document.getElementById('mat-binder').value)  || MAT_DEF['I19.0C'],
+    'B25.0C':     parseFloat(document.getElementById('mat-b25').value)     || MAT_DEF['B25.0C'],
+    'Mill & Pave':parseFloat(document.getElementById('mat-mill').value)    || MAT_DEF['Mill & Pave'],
+  };
+  // Update live MAT object
+  Object.assign(MAT, newMat);
+  // Persist
+  localStorage.setItem('hd_mat', JSON.stringify(newMat));
+  // Recalculate all existing layers to preserve markup%
+  sections.forEach(s=>{
+    s.layers.forEach(l=>{
+      if(l.type==='Mill & Pave') return; // flat rate, no recalc
+      const mat=MAT[l.type]||0;
+      if(mat>0 && l.markup!==undefined){
+        l.rate = parseFloat((mat*(1+l.markup/100)).toFixed(2));
+      }
+    });
+  });
+  renderAll();
+  const msg=document.getElementById('mat-saved-msg');
+  if(msg) msg.innerHTML='<span style="color:#27500A;font-weight:600">✓ Saved — all layer rates recalculated</span>';
+  setTimeout(()=>{if(msg)msg.textContent='';},4000);
+  toast('Material prices saved & rates updated','ok');
+}
+function loadMatUI(){
+  document.getElementById('mat-abc').value     = MAT['ABC base'] || '';
+  document.getElementById('mat-surface').value = MAT['Surface']  || '';
+  document.getElementById('mat-binder').value  = MAT['Binder']   || '';
+  document.getElementById('mat-b25').value     = MAT['B25.0C']   || '';
+  document.getElementById('mat-mill').value    = MAT['Mill & Pave'] || '';
+}
 function saveSender(){
   sender={name:document.getElementById('s-name').value,email:document.getElementById('s-email').value,phone:document.getElementById('s-phone').value};
   localStorage.setItem('hd_sender',JSON.stringify(sender));
