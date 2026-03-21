@@ -1,6 +1,12 @@
 import os, tempfile, functools
 from flask import Flask, request, jsonify, session, send_file
 from generate_proposal import build
+try:
+    from googleapiclient.discovery import build as gmail_build
+    from google.oauth2.credentials import Credentials
+    GMAIL_AVAILABLE = True
+except ImportError:
+    GMAIL_AVAILABLE = False
 import generate_docx
 import requests as http
 
@@ -83,6 +89,48 @@ def generate_docx_route():
         buf  = generate_docx.build(data)
         fname = (data.get('project_name','Proposal') or 'Proposal').replace(' ','_')
         return send_file(buf, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document', as_attachment=True, download_name=f'HD_Proposal_{fname}.docx')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/send-email', methods=['POST'])
+@require_auth
+def send_email_route():
+    if not GMAIL_AVAILABLE:
+        return jsonify({'error': 'Gmail API not installed on server.'}), 500
+    data       = request.get_json(force=True)
+    to         = data.get('to','').strip()
+    subject    = data.get('subject','').strip()
+    body_text  = data.get('body','').strip()
+    pdf_b64    = data.get('pdf_b64','')
+    pdf_fn     = data.get('pdf_filename','HD_Proposal.pdf')
+    if not to or not subject:
+        return jsonify({'error': 'Recipient and subject required'}), 400
+    token_json = os.environ.get('GMAIL_TOKEN_JSON','')
+    if not token_json:
+        return jsonify({'error': 'Gmail not configured. Add GMAIL_TOKEN_JSON to Railway environment variables.'}), 500
+    try:
+        import json as _j
+        td = _j.loads(token_json)
+        creds = Credentials(
+            token=td.get('token'), refresh_token=td.get('refresh_token'),
+            token_uri=td.get('token_uri','https://oauth2.googleapis.com/token'),
+            client_id=td.get('client_id'), client_secret=td.get('client_secret'),
+            scopes=td.get('scopes',['https://www.googleapis.com/auth/gmail.send'])
+        )
+        msg = MIMEMultipart()
+        msg['to'] = to; msg['subject'] = subject
+        msg.attach(MIMEText(body_text, 'plain'))
+        if pdf_b64:
+            pdf_bytes = base64.b64decode(pdf_b64)
+            part = MIMEBase('application','pdf'); part.set_payload(pdf_bytes)
+            email_encoders.encode_base64(part)
+            part.add_header('Content-Disposition', f'attachment; filename="{pdf_fn}"')
+            msg.attach(part)
+        svc = gmail_build('gmail','v1',credentials=creds)
+        raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+        svc.users().messages().send(userId='me', body={'raw': raw}).execute()
+        return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
