@@ -172,7 +172,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
     <img src="/assets/hd_logo.png" alt="HD Hauling and Grading"/>
   </div>
   <div class="pin-box">
-    <h2>Quote Tool</h2>
+    <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
     <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="••••"
            onkeydown="if(event.key==='Enter')doLogin()"/>
@@ -186,12 +186,12 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <aside class="sb">
     <div class="sb-logo">
       <img src="/assets/hd_logo.png" alt="HD Hauling &amp; Grading"/>
-      <p>Quote Tool</p>
+      <p>Proposal Generator</p>
     </div>
     <nav>
       <div class="nav-grp">Quote</div>
       <div class="nav-item on" onclick="showPanel('build',this)">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Build Quote
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Build Proposal
       </div>
       <div class="nav-item" onclick="showPanel('analytics',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v3H1zm4-4h3v7H5zm4-4h3v11H9zm4-6h2v17h-2z"/></svg>Analytics</div>
         <div class="nav-item" onclick="showPanel('co',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h8l3 3v9H2V2zm5 4H4v1h3V6zm5 2H4v1h6V8zm0 2H4v1h6v-1z"/></svg>Change Orders</div>
@@ -208,7 +208,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
   <div class="main">
     <div class="topbar">
-      <span class="topbar-title" id="topbar-title">Build Quote</span>
+      <span class="topbar-title" id="topbar-title">Build Proposal</span>
       <div class="topbar-actions">
         <button class="btn btn-sec btn-sm" onclick="saveQuote()">Save</button>
         <button class="btn btn-sec btn-sm" onclick="resetAll()">Reset</button>
@@ -264,7 +264,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div><label>Waste Factor %</label><input id="waste" type="number" value="5" min="0" max="30" step="0.25"/></div>
               <div><label>Contingency %</label><input id="contingency" type="number" value="0" min="0" max="50" step="0.5" title="Applied to total bid as a separate line item on the proposal"/></div>
             <div><label>Mobilization / Flat Fee ($)</label><input id="mob" type="number" value="0" min="0" step="50"/></div>
-              <div><label>Contingency %</label><input id="contingency" type="number" value="0" min="0" max="50" step="0.5"/></div>
+              
               <div><label>Project Notes</label><input id="proj-notes" type="text" placeholder="Notes for the proposal..."/></div>
             </div>
             <div style="margin-top:10px;">
@@ -612,75 +612,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
   </div>
 </div>
 
-<!-- Change Orders Panel -->
-<div class="panel" id="co-panel">
-  <div class="topbar">
-    <div class="topbar-title">Change Orders</div>
-    <div class="topbar-actions">
-      <button class="btn btn-sec btn-sm" onclick="resetCO()">Reset</button>
-      <button class="btn btn-red btn-sm" id="co-pdf-btn" onclick="exportCOPDF()">Export CO PDF</button>
-    </div>
-  </div>
-  <div class="content">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title">Change Order Info</span></div>
-      <div class="card-body">
-        <div class="fg fg4">
-          <div><label>Project Name</label><input id="co-project" type="text" placeholder="Project name..."/></div>
-          <div><label>Client Name</label><input id="co-client" type="text" placeholder="Client name..."/></div>
-          <div><label>Change Order #</label><input id="co-number" type="number" value="1" min="1"/></div>
-          <div><label>Date</label><input id="co-date" type="date"/></div>
-        </div>
-        <div class="fg fg2" style="margin-top:11px;">
-          <div><label>Original Contract Date</label><input id="co-orig-date" type="date"/></div>
-          <div><label>Original Contract Amount ($)</label><input id="co-orig-amount" type="number" value="0" min="0" step="0.01"/></div>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title">Description of Change</span></div>
-      <div class="card-body">
-        <textarea id="co-description" style="width:100%;min-height:80px;" placeholder="Describe the change in scope, reason for change, and any relevant site conditions..."></textarea>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-hdr">
-        <span class="card-title">Change Order Line Items</span>
-        <div style="display:flex;gap:7px;">
-          <button class="btn btn-sec btn-sm" onclick="addCOLine('add')">+ Add</button>
-          <button class="btn btn-sec btn-sm" onclick="addCOLine('deduct')">- Deduct</button>
-          <button class="btn btn-sec btn-sm" onclick="addCOLine('nocost')">No Cost</button>
-        </div>
-      </div>
-      <div class="card-body" style="padding:0;">
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <thead>
-            <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);">
-              <th style="padding:8px 12px;text-align:left;font-weight:600;">Type</th>
-              <th style="padding:8px 12px;text-align:left;font-weight:600;">Description</th>
-              <th style="padding:8px 12px;text-align:right;font-weight:600;">Qty</th>
-              <th style="padding:8px 12px;text-align:left;font-weight:600;">Unit</th>
-              <th style="padding:8px 12px;text-align:right;font-weight:600;">Unit Price</th>
-              <th style="padding:8px 12px;text-align:right;font-weight:600;">Subtotal</th>
-              <th style="padding:8px 6px;"></th>
-            </tr>
-          </thead>
-          <tbody id="co-lines"></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title">Cost Summary</span></div>
-      <div class="card-body">
-        <div class="co-summary" id="co-summary">
-          <div class="co-summary-row"><span>Original Contract Amount</span><span id="cos-orig">$0</span></div>
-          <div class="co-summary-row co-type-add"><span>This Change Order (Add)</span><span id="cos-add">$0</span></div>
-          <div class="co-summary-row co-type-deduct"><span>This Change Order (Deduct)</span><span id="cos-deduct">$0</span></div>
-          <div class="co-summary-row co-type-nocost"><span>No Cost Changes</span><span id="cos-nocost">--</span></div>
-          <div class="co-summary-row total"><span>Revised Contract Total</span><span id="cos-total">$0</span></div>
-        </div>
-      </div>
-    </div>
+
   </div>
 </div>
 
@@ -956,8 +888,8 @@ function renderJCDefaults(){
   var cr=document.getElementById('jc-default-crew-rate');if(cr)cr.value=jcCrewRate;
   var op=document.getElementById('jc-default-overhead-pct');if(op)op.value=jcOverheadPct;
   // Also update the build panel fields if they are at default
-  var bcr=document.getElementById('jc-crew-rate');if(bcr&&!bcr._edited)bcr.value=jcCrewRate;
-  var bop=document.getElementById('jc-overhead-pct');if(bop&&!bop._edited)bop.value=jcOverheadPct;
+  var bcr=document.getElementById('jc-crew-rate');if(bcr)bcr.value=jcCrewRate;
+  var bop=document.getElementById('jc-overhead-pct');if(bop)bop.value=jcOverheadPct;
 }
 
 function calcJobCost(){
@@ -1041,9 +973,9 @@ function initJobCost(){
   var jcDaysEl=document.getElementById('jc-days');
   if(jcDaysEl)jcDaysEl.addEventListener('input',function(){renderJobCost();});
   var jcCrEl=document.getElementById('jc-crew-rate');
-  if(jcCrEl)jcCrEl.addEventListener('input',function(){jcCrEl._edited=true;renderJobCost();});
+  if(jcCrEl)jcCrEl.addEventListener('input',function(){renderJobCost();});
   var jcOpEl=document.getElementById('jc-overhead-pct');
-  if(jcOpEl)jcOpEl.addEventListener('input',function(){jcOpEl._edited=true;renderJobCost();});
+  if(jcOpEl)jcOpEl.addEventListener('input',function(){renderJobCost();});
 }
 
 // ---- Analytics (#10) ----
@@ -1342,7 +1274,7 @@ function showPanel(id,el){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
-  document.getElementById('topbar-title').textContent={build:'Build Quote',saved:'Saved Quotes',settings:'Settings'}[id]||id;
+  document.getElementById('topbar-title').textContent={build:'Build Proposal',saved:'Saved Proposals',settings:'Settings'}[id]||id;
   if(id==='saved')renderSaved();
   if(id==='settings'){loadSenderUI();renderPresetMgr();renderMatPriceInputs();}
 }
