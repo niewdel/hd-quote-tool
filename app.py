@@ -178,6 +178,25 @@ def notion_push():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/generate-jc-pdf', methods=['POST'])
+@require_auth
+def generate_jc_pdf():
+    data = request.get_json(force=True)
+    try:
+        from generate_job_cost import build as jc_build
+        tmp = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+        tmp.close()
+        jc_build(data, tmp.name)
+        with open(tmp.name, 'rb') as f:
+            pdf_bytes = f.read()
+        os.unlink(tmp.name)
+        from flask import Response
+        return Response(pdf_bytes, mimetype='application/pdf',
+            headers={'Content-Disposition': 'attachment; filename=job_cost.pdf'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/generate-co-pdf', methods=['POST'])
 @require_auth
 def generate_co_pdf():
