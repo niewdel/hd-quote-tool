@@ -164,7 +164,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
     <img src="/assets/hd_logo.png" alt="HD Hauling and Grading"/>
   </div>
   <div class="pin-box">
-    <h2>Quote Tool</h2>
+    <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
     <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="••••"
            onkeydown="if(event.key==='Enter')doLogin()"/>
@@ -178,12 +178,12 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <aside class="sb">
     <div class="sb-logo">
       <img src="/assets/hd_logo.png" alt="HD Hauling &amp; Grading"/>
-      <p>Quote Tool</p>
+      <p>Proposal Generator</p>
     </div>
     <nav>
       <div class="nav-grp">Quote</div>
       <div class="nav-item on" onclick="showPanel('build',this)">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Build Quote
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Build Proposal
       </div>
       <div class="nav-item" onclick="showPanel('co',this)">Change Orders</div>
       <div class="nav-item" onclick="showPanel('saved',this)">
@@ -199,7 +199,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
   <div class="main">
     <div class="topbar">
-      <span class="topbar-title" id="topbar-title">Build Quote</span>
+      <span class="topbar-title" id="topbar-title">Build Proposal</span>
       <div class="topbar-actions">
         <button class="btn btn-sec btn-sm" onclick="saveQuote()">Save</button>
         <button class="btn btn-sec btn-sm" onclick="resetAll()">Reset</button>
@@ -856,7 +856,7 @@ function showPanel(id,el){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
-  document.getElementById('topbar-title').textContent={build:'Build Quote',saved:'Saved Quotes',settings:'Settings'}[id]||id;
+  document.getElementById('topbar-title').textContent={build:'Build Proposal',saved:'Saved Quotes',settings:'Settings'}[id]||id;
   if(id==='saved')renderSaved();
   if(id==='settings'){loadSenderUI();renderPresetMgr();renderMatPriceInputs();}
 }
