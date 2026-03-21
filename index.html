@@ -703,7 +703,7 @@ function boot(){
   document.getElementById('contingency').addEventListener('change',function(){recalc();});
   var coD=document.getElementById('co-date');if(coD)coD.value=new Date().toISOString().split('T')[0];
   initEquip();
-  initJobCost();
+  setTimeout(initJobCost, 0);
   var coOA=document.getElementById('co-orig-amount');if(coOA)coOA.addEventListener('input',function(){recalcCO();});
   document.getElementById('mob').addEventListener('change',function(){recalc();});
   renderPresets();
