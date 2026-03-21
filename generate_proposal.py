@@ -156,7 +156,7 @@ class CoverPage(Flowable):
 
 def info_block(data, st):
     """Three-column stacked layout. Each column has a header row then
-    label-above-value pairs ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ no side-by-side label/value split, so
+    label-above-value pairs ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ no side-by-side label/value split, so
     long emails and addresses never wrap awkwardly."""
 
     lbl_s  = ParagraphStyle('ibl', fontName='Helvetica-Bold', fontSize=7,
@@ -170,7 +170,7 @@ def info_block(data, st):
         parts = [Paragraph(title, hdr_s)]
         for lbl, val in pairs:
             parts.append(Paragraph(lbl, lbl_s))
-            parts.append(Paragraph(val or 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ', val_s))
+            parts.append(Paragraph(val or 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ', val_s))
         return parts
 
     from reportlab.platypus import Frame
@@ -309,7 +309,7 @@ def bid_table(items, st):
     return t
 
 def total_line(total):
-    """Clean right-aligned total ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ label in regular weight, amount in bold black.
+    """Clean right-aligned total ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ label in regular weight, amount in bold black.
     No box, no background. Just a subtle top rule and generous spacing so it
     reads as a natural footer to the table above it."""
     cw  = W - inch
@@ -415,21 +415,19 @@ def approval_page(data, st):
     return elems
 
 def tc_block(title, body_items, st, cw):
+    """Returns a KeepTogether block for one T&C section."""
     hdr = Table([[Paragraph(title, st['tc_section'])]], colWidths=[cw])
     hdr.setStyle(TableStyle([
         ('BACKGROUND',   (0,0),(-1,-1), colors.HexColor('#F6F6F6')),
         ('LINEBEFORE',   (0,0),(0,-1),  4, RED),
-        ('LINEBELOW',    (0,0),(-1,-1), 0.5, MGRAY),
+        ('LINEBELOW',    (0,0),(-1,-1), 0.5, TBLBORD),
         ('TOPPADDING',   (0,0),(-1,-1), 6),
         ('BOTTOMPADDING',(0,0),(-1,-1), 6),
         ('LEFTPADDING',  (0,0),(-1,-1), 10),
     ]))
     items = [hdr, Spacer(1, 0.04*inch)]
     for item in body_items:
-        if item.startswith('\u2022'):
-            items.append(Paragraph(item, st['tc_bullet']))
-        else:
-            items.append(Paragraph(item, st['tc_body']))
+        items.append(Paragraph(item, st['tc_body']))
     items.append(Spacer(1, 0.06*inch))
     return KeepTogether(items)
 
@@ -441,122 +439,54 @@ def tc_pages(st):
         ParagraphStyle('tch', fontName='Helvetica-Bold', fontSize=14,
                        alignment=TA_CENTER, spaceAfter=6)))
     elems.append(HRFlowable(width='100%', thickness=1, color=BLACK, spaceAfter=10))
-
-    sections = [
-        ('1. Contract Formation &amp; Binding Agreement', [
-            'This Proposal and Contract becomes legally binding upon execution by both the Customer/Purchaser and HD Hauling &amp; Grading. Any conditions not expressly set forth herein shall not be recognized unless documented in writing and signed by authorized representatives of both parties. Verbal agreements, purchase orders, or prior understandings do not modify or supersede this contract unless incorporated by written amendment.',
-        ]),
-        ('2. Proposal Validity', [
-            'Pricing in this proposal is valid for thirty (30) calendar days from the date of issuance. HD Hauling &amp; Grading reserves the right to withdraw or modify this proposal if not executed within that period, including adjustments for material price changes. If work has not commenced within sixty (60) days of contract execution, HD Hauling &amp; Grading reserves the right to reprice the contract to reflect current material and labor costs.',
-        ]),
-        ('3. Scope of Work', [
-            "HD Hauling &amp; Grading's scope is limited to the paving, concrete, striping, and signage work explicitly described in the Bid Items section of this document. No additional work, modifications, or extensions of scope are included unless captured in a written, signed Change Order prior to commencement of that work.",
-        ]),
-        ('4. Changed Conditions', [
-            'If HD Hauling &amp; Grading encounters subsurface or concealed conditions that differ materially from those indicated in the contract documents -- including but not limited to rock, unsuitable soils, organic material, underground obstructions, undocumented utilities, or excessive groundwater -- HD Hauling &amp; Grading shall promptly notify the Customer in writing.',
-            '\u2022 All work related to changed conditions shall be subject to a written Change Order executed before additional work proceeds.',
-            "\u2022 HD Hauling &amp; Grading is not liable for schedule delays or cost overruns resulting from changed conditions not visible during a standard site walkthrough.",
-            "\u2022 If utilities are not located and marked prior to start of work by NC 811, the Customer assumes full responsibility for any damage to underground infrastructure.",
-        ]),
-        ('5. Change Orders', [
-            'Any modification to the approved scope of work requires a written Change Order executed by both parties before work begins. HD Hauling &amp; Grading shall not be obligated to perform out-of-scope work without an approved Change Order.',
-            '\u2022 Unit prices for overage work are listed in the Paving Overage Unit Prices section and shall apply to all approved change order work of similar type.',
-        ]),
-        ('6. Site Access &amp; Staging', [
-            'The Customer shall provide HD Hauling &amp; Grading with unobstructed vehicular access to the project site, a designated staging area for equipment and materials, and a safe haul route for loaded delivery trucks for the duration of work.',
-            '\u2022 Delays, re-mobilizations, or standby time caused by restricted access or site conflicts will be billed at applicable unit rates.',
-            "\u2022 Customer is responsible for ensuring underground utilities are marked by NC 811 prior to start. HD Hauling &amp; Grading is not liable for damage to unmarked or inaccurately marked utilities.",
-        ]),
-        ("7. Subgrade Acceptance &amp; Pavement Performance", [
-            "HD Hauling &amp; Grading is not responsible for pavement failure, cracking, or settlement resulting from inadequate subgrade preparation, poor drainage, or unsuitable sub-base materials outside HD Hauling &amp; Grading's scope of work.",
-            "\u2022 Commencement of paving constitutes Customer's acceptance of subgrade conditions. Customer is responsible for ensuring subgrade has been properly graded, compacted to NCDOT specifications, and proof-rolled prior to paving.",
-            "\u2022 If HD Hauling &amp; Grading identifies conditions that may affect pavement performance, written notification will be provided. Customer's direction to proceed releases HD Hauling &amp; Grading from performance liability related to those conditions.",
-        ]),
-        ("8. Materials &amp; NCDOT Specifications", [
-            "All asphalt materials shall conform to the applicable NCDOT Standard Specifications for Roads and Structures, current edition, unless otherwise specified in writing.",
-            "\u2022 Material substitutions required due to plant availability or supply chain disruptions will be communicated promptly. Functionally equivalent materials will be substituted at no additional cost.",
-        ]),
-        ("9. Weather &amp; Temperature Conditions", [
-            "Asphalt paving will be performed in accordance with NCDOT temperature and weather placement requirements for the specified mix type. Work will not proceed during rain, sleet, or snow; or when the base course contains standing water or frost.",
-            "\u2022 Schedule adjustments caused by weather are not grounds for price renegotiation, penalties, or liquidated damages against HD Hauling &amp; Grading.",
-            "\u2022 Concrete placement shall comply with ACI 305R (hot weather) and ACI 306R (cold weather) requirements as applicable.",
-        ]),
-        ("10. Compaction &amp; Quality", [
-            "Asphalt pavement compaction shall meet NCDOT density requirements for the specified mix type. If compaction testing is required by the Owner or Engineer of Record, the Customer is responsible for providing an independent testing agency at Customer's expense.",
-        ]),
-        ("11. Warranty", [
-            "HD Hauling &amp; Grading warrants all materials and workmanship against defects for one (1) year from the date of substantial completion. This warranty is limited to defects in materials and workmanship directly performed by HD Hauling &amp; Grading under this contract.",
-            "This warranty expressly excludes:",
-            "\u2022 Damage from petroleum products, chemical spills, or de-icing agents",
-            "\u2022 Pavement failure attributable to subgrade or base conditions not prepared by HD Hauling &amp; Grading",
-            "\u2022 Damage from vehicle loads exceeding the pavement design capacity",
-            "\u2022 Reflective cracking from existing pavement on mill-and-pave or overlay projects",
-            "\u2022 Normal surface oxidation, weathering, raveling, and expected pavement aging",
-            "\u2022 Damage from third parties, acts of God, flooding, or events beyond HD Hauling &amp; Grading's control",
-            "Warranty claims must be submitted in writing within the warranty period. HD Hauling &amp; Grading's sole obligation is repair or replacement of the defective work at HD Hauling &amp; Grading's discretion.",
-        ]),
-        ("12. Traffic Control &amp; Permits", [
-            "If included in the Bid Items, HD Hauling &amp; Grading will provide traffic control in general conformance with the MUTCD for the duration of active paving operations only.",
-            "\u2022 The Customer is responsible for all permits, right-of-way authorizations, NCDOT encroachment agreements, and lane closure approvals prior to the scheduled start of work.",
-        ]),
-        ("13. Limitation of Liability", [
-            "HD Hauling &amp; Grading's total liability under this contract shall not exceed the total contract price paid. In no event shall HD Hauling &amp; Grading be liable for consequential, incidental, indirect, special, or punitive damages, including loss of use, lost revenue, business interruption, or third-party claims.",
-        ]),
-        ("14. Payment Terms", [
-            "Payment is due Net 30 -- all invoices are due and payable within thirty (30) calendar days of the invoice date. Invoices will be issued upon substantial completion of the work or upon completion of each defined phase, whichever occurs first.",
-            "\u2022 Any balance not received within thirty (30) days of the invoice date shall accrue interest at the rate of 1.5% per month (18% per annum) on the outstanding balance, calculated from the invoice date until paid in full.",
-            "\u2022 HD Hauling &amp; Grading reserves the right to suspend work if any invoice remains outstanding beyond thirty (30) days. Schedule delays resulting from payment-related work suspensions are the Customer's responsibility.",
-            "\u2022 The individual executing this contract provides a personal guarantee for full payment of all principal, accrued interest, attorneys' fees, and collection costs.",
-            "\u2022 Disputed invoice amounts must be submitted in writing within ten (10) days of the invoice date. Undisputed portions remain due per these terms.",
-        ]),
-        ("15. Lien Rights &amp; Collections", [
-            "NOTICE: HD Hauling &amp; Grading is a licensed contractor in the State of North Carolina. HD Hauling &amp; Grading expressly reserves its right to file a Claim of Lien against the property and a Bond Claim against any applicable payment bond pursuant to N.C.G.S. Chapter 44A in the event of non-payment.",
-            "\u2022 Nothing in this contract constitutes a waiver of lien rights.",
-            "\u2022 In the event legal action is required to collect payment, the Customer shall be responsible for all reasonable attorneys' fees, court costs, and collection expenses per N.C.G.S. SS 44A-35.",
-        ]),
-        ("16. Material Pricing &amp; Availability", [
-            "Due to volatility in liquid asphalt index (LAI) pricing and aggregate costs, material costs may be adjusted if costs increase more than ten percent (10%) from the proposal date to the date of material purchase. Written notice will be provided prior to any adjustment.",
-        ]),
-        ("17. Force Majeure", [
-            "HD Hauling &amp; Grading shall not be liable for delays caused by acts of God, severe weather, labor disputes, government actions, supply chain disruptions, fuel shortages, or other circumstances beyond its reasonable control. The project schedule shall be extended accordingly.",
-        ]),
-        ("18. Dispute Resolution", [
-            "This contract shall be governed by the laws of the State of North Carolina. The parties agree to attempt good-faith negotiation before pursuing formal legal action. Venue for any legal proceedings shall be in the county where the project is located.",
-        ]),
-        ("19. Entire Agreement", [
-            "This Proposal and Contract constitutes the entire agreement between the parties and supersedes all prior proposals, representations, and understandings. No terms printed on Customer's purchase orders shall apply unless explicitly incorporated by written amendment signed by both parties.",
-        ]),
-    ]
-
+    sections = [["1. CONTRACT FORMATION AND BINDING AGREEMENT",["This Proposal and Contract (\"Agreement\") is legally binding upon execution by both the Customer/Purchaser (\"Customer\") and HD Hauling & Grading (\"Contractor\"). No representation, warranty, or understanding not expressly set forth herein shall be enforceable against Contractor. No verbal agreement, course of dealing, or prior understanding shall modify or supersede this Agreement unless reduced to writing and executed by authorized representatives of both parties."]],["2. PROPOSAL VALIDITY",["Pricing set forth herein is valid for thirty (30) calendar days from the date of issuance. Contractor reserves the right to withdraw or reprice this Proposal prior to execution if Customer fails to execute within said period, including adjustments for material cost changes, fuel surcharges, or labor rate fluctuations. If work has not commenced within sixty (60) calendar days of execution, Contractor reserves the right to reprice the Agreement to reflect prevailing costs at the time of mobilization, with advance written notice to Customer."]],["3. SCOPE OF WORK",["Contractor's obligations are strictly limited to the work explicitly described in the Bid Items section of this Agreement. No work, materials, labor, or services beyond those expressly enumerated shall be construed as included within Contractor's scope. All additional, modified, or substituted work shall be performed solely pursuant to a written Change Order executed by both parties prior to commencement, as set forth in Section 5 herein."]],["4. CHANGED CONDITIONS",["Should Contractor encounter subsurface, concealed, or latent conditions at the project site that differ materially from those indicated in the Agreement -- or that could not reasonably have been anticipated through a standard pre-bid site walkthrough -- including but not limited to rock, unsuitable or unstable soils, organic material, underground obstructions, undisclosed utilities, excessive groundwater, or contaminated material, Contractor shall provide prompt written notice to Customer prior to disturbing the affected area.","(a) All work arising from or related to such changed conditions shall be governed by a written Change Order executed by both parties prior to the performance of any additional work. Customer shall not direct Contractor to proceed in any area of changed conditions without a fully executed Change Order.","(b) Upon receipt of written notice of changed conditions, Customer shall respond in writing within forty-eight (48) hours authorizing a Change Order, directing Contractor to stop work in the affected area, or providing alternative written direction. Failure to respond within forty-eight (48) hours shall entitle Contractor to suspend work in the affected area and to bill standby time and re-mobilization costs at applicable unit rates, without liability to Customer.","(c) Contractor shall bear no liability for schedule delays, cost overruns, property damage, or consequential losses attributable to changed conditions that were not disclosed by Customer, were not reasonably ascertainable during a standard pre-bid walkthrough, or were caused by third parties.","(d) Customer bears sole responsibility for ensuring all underground utilities within and adjacent to the project site are identified, located, and marked pursuant to the requirements of the North Carolina One-Call Center (NC 811) prior to commencement of any excavation or grading work. Contractor shall bear no liability for damage to any utility infrastructure not properly located and marked prior to the start of work."]],["5. CHANGE ORDERS",["Any addition, deletion, substitution, or modification of the scope of work set forth in this Agreement shall require a written Change Order fully executed by authorized representatives of both parties prior to commencement of such work. Contractor shall have no obligation to perform out-of-scope work absent an executed Change Order, and shall bear no liability for any delay, damage, or cost arising from changes not memorialized in a fully executed Change Order. Unit prices for Change Order work of similar type and scope shall be those set forth in the Paving Overage Unit Prices section of this Agreement."]],["6. SITE ACCESS AND STAGING",["Customer shall provide Contractor with continuous, unobstructed vehicular and equipment access to all areas of the project site necessary for the performance of the work, an adequate staging area for equipment, materials, and supplies, and a safe haul route capable of accommodating fully loaded delivery vehicles throughout the duration of the project.","(a) Delays, standby time, or re-mobilization costs incurred by Contractor due to restricted or denied site access, interference by other trades, or unavailability of the designated work area shall be billed at applicable unit rates set forth in the Paving Overage Unit Prices section.","(b) Customer bears sole responsibility for ensuring all underground utilities within and adjacent to the project site are identified and marked by NC 811 or a licensed private utility locating service prior to the commencement of any subsurface work. Contractor shall bear no liability for damage to any utility, conduit, or infrastructure not properly marked prior to the start of work."]],["7. SUBGRADE ACCEPTANCE AND PAVEMENT PERFORMANCE",["Contractor shall bear no responsibility for pavement failure, cracking, rutting, settlement, or premature deterioration attributable to inadequate subgrade preparation, insufficient base course compaction, inadequate drainage, or unsuitable sub-base materials outside the scope of work expressly undertaken by Contractor under this Agreement.","(a) Commencement of paving operations by Contractor shall constitute Customer's express acceptance of the existing subgrade and base course conditions. Prior to paving, Customer bears sole responsibility for ensuring the subgrade has been properly graded, compacted in accordance with applicable NCDOT specifications, proof-rolled where required, and inspected by a qualified party.","(b) In the event Contractor identifies conditions that may adversely affect pavement performance, Contractor shall provide written notice to Customer prior to proceeding. Customer's direction to proceed, whether written or verbal, shall constitute a full and complete release of Contractor from all performance liability attributable to those identified conditions.","(c) Proof rolling, compaction testing, moisture content testing, and geotechnical evaluation shall be Customer's sole responsibility unless expressly included within Contractor's scope in the Bid Items section."]],["8. MATERIALS AND NCDOT SPECIFICATIONS",["All asphalt materials furnished by Contractor shall conform to the applicable requirements of the current edition of the North Carolina Department of Transportation Standard Specifications for Roads and Structures (NCDOT Specifications), unless alternative specifications are expressly identified in the Bid Items. In the event a specified material or mix type becomes unavailable due to plant operations, material shortages, or supply chain disruptions, Contractor shall promptly notify Customer and may substitute a functionally equivalent material meeting applicable NCDOT Specifications at no additional cost to Customer."]],["9. WEATHER AND TEMPERATURE CONDITIONS",["Paving operations shall be performed in strict accordance with the ambient temperature, surface temperature, and weather placement requirements established by the NCDOT Specifications for the designated mix type. Contractor shall not be obligated to perform paving operations during precipitation of any kind, when standing water or frost is present on the base course, when temperatures fail to satisfy NCDOT minimums, or when forecast conditions within four (4) hours are reasonably anticipated to compromise compaction, bonding, or curing of the pavement.","(a) Schedule adjustments or delays arising from weather conditions shall not constitute grounds for price renegotiation, assessment of liquidated damages, or any other claim against Contractor.","(b) Concrete placement shall be performed in compliance with ACI 305R (Hot Weather Concreting) and ACI 306R (Cold Weather Concreting), as applicable to prevailing field conditions."]],["10. COMPACTION AND QUALITY",["Compaction shall be performed to achieve density requirements in accordance with applicable NCDOT Specifications for the designated mix type. Where the Owner or Engineer of Record requires independent compaction or quality assurance testing, Customer shall engage and compensate a qualified independent testing agency at Customer's sole expense. Contractor shall bear no liability for compaction deficiencies attributable to: (i) mix temperature loss during transport resulting from causes beyond Contractor's reasonable control; (ii) laydown delays caused by Customer, other contractors, or third parties; or (iii) subgrade instability or inadequate base course support."]],["11. WARRANTY",["Contractor warrants all materials and workmanship performed under this Agreement against defects for a period of one (1) year from the date of substantial completion (Warranty Period), limited to defects directly and solely attributable to Contractor's performance hereunder. For purposes of this Agreement, substantial completion shall be defined as the date on which paving operations are complete and the improved surface is open to vehicular or pedestrian traffic, as applicable.","This warranty expressly excludes:","(a) Damage or deterioration resulting from the application of petroleum products, chemical spills, solvents, or de-icing agents, including without limitation sodium chloride, calcium chloride, or magnesium chloride;","(b) Pavement failure, rutting, cracking, or settlement attributable to subgrade, sub-base, or base course conditions not prepared by Contractor under this Agreement;","(c) Damage caused by vehicular or axle loads exceeding the design capacity of the pavement section specified in the Bid Items;","(d) Reflective cracking, delamination, or surface distress resulting from conditions in the underlying existing pavement on mill-and-pave, overlay, or patching projects;","(e) Normal surface oxidation, weathering, aggregate polishing, raveling, or other age-related pavement distress consistent with expected material performance over time;","(f) Damage or deterioration caused by third parties, acts of God, flooding, subsidence, tree root intrusion, freeze-thaw cycling, or events beyond Contractor's reasonable control;","(g) Pavement markings, thermoplastic striping, signage, or appurtenances not installed by Contractor under this Agreement.","All warranty claims must be submitted to Contractor in writing prior to expiration of the Warranty Period. Contractor's sole and exclusive obligation under this warranty shall be, at Contractor's election, repair or replacement of the defective work. This warranty is expressly in lieu of all other warranties, express or implied, including without limitation any implied warranty of merchantability or fitness for a particular purpose."]],["12. TRAFFIC CONTROL AND PERMITS",["To the extent traffic control is expressly included within Contractor's scope in the Bid Items, Contractor shall provide traffic control devices in general conformance with the Manual on Uniform Traffic Control Devices (MUTCD) during periods of active paving operations only. Traffic control shall not extend beyond active operations or between work shifts.","(a) Customer bears sole responsibility for obtaining and maintaining, at Customer's expense, all permits, licenses, right-of-way authorizations, NCDOT encroachment agreements, and governmental approvals required for the performance of the work prior to the scheduled commencement date. Permit-related delays shall not constitute grounds for price renegotiation or claims against Contractor.","(b) All determinations regarding ADA compliance for pavement markings, curb ramps, detectable warning surfaces, and accessible routes are the sole responsibility of the Owner and Engineer of Record. Contractor assumes no ADA compliance design or certification responsibility."]],["13. LIMITATION OF LIABILITY",["Contractor's aggregate liability for any and all claims arising out of or related to this Agreement, whether in contract, tort, or otherwise, shall not exceed the total contract price paid by Customer to Contractor hereunder. Under no circumstances shall Contractor be liable for consequential, incidental, indirect, special, exemplary, or punitive damages of any nature, including without limitation loss of use, loss of revenue, lost profits, loss of business opportunity, business interruption, or third-party claims, regardless of the theory of liability asserted."]],["14. PAYMENT TERMS",["All invoices are due and payable in full within thirty (30) calendar days of the invoice date. Invoices shall be submitted upon substantial completion of the work or upon completion of each defined phase, whichever occurs first.","(a) Any unpaid balance remaining after the due date shall accrue interest at the rate of one and one-half percent (1.5%) per month -- eighteen percent (18%) per annum -- calculated on the outstanding principal balance from the invoice date until paid in full.","(b) Should any invoice remain unpaid beyond thirty (30) days, Contractor may, upon written notice to Customer, suspend all work under this Agreement until the full outstanding balance, together with all accrued interest, has been satisfied. All schedule delays, re-mobilization costs, and project cost increases resulting from a payment-related suspension shall be the sole responsibility of Customer.","(c) The individual executing this Agreement, whether in their individual capacity or as an authorized representative of a business entity, hereby unconditionally and personally guarantees full and prompt payment of all amounts due hereunder, including principal, accrued interest, attorneys' fees, and collection costs. By signing in the designated Personal Guarantee field, the signatory acknowledges this guarantee is made in their individual capacity and is enforceable independently of any corporate or entity signature on this Agreement.","(d) Any good-faith dispute regarding a specific invoice amount must be submitted to Contractor in writing within ten (10) calendar days of the invoice date, stating with specificity the basis for the dispute. All undisputed invoice amounts shall remain due and payable per the terms hereof, notwithstanding any pending dispute."]],["15. LIEN RIGHTS AND COLLECTIONS",["NOTICE TO OWNER: HD Hauling & Grading is a licensed contractor in the State of North Carolina. Contractor expressly reserves, and does not waive, its right to file and enforce a Claim of Lien upon the real property on which the work is performed and a Bond Claim against any applicable payment bond, pursuant to N.C.G.S. Chapter 44A, in the event of non-payment of any amounts due under this Agreement.","Nothing contained in this Agreement, in any purchase order, in any joint check agreement, or in any payment direction letter shall be construed as a waiver of Contractor's lien or bond rights under N.C.G.S. Chapter 44A, absent a separate written waiver executed by an authorized representative of Contractor.","Should Contractor be required to institute legal or collection proceedings to recover amounts due hereunder, Customer shall be liable for and shall pay all reasonable attorneys' fees, court costs, and collection expenses incurred by Contractor, as authorized by N.C.G.S. § 44A-35."]],["16. RETAINAGE",["Where this Agreement is performed as a subcontract and retainage is withheld by the prime contractor or Owner, Contractor's retainage shall be released no later than thirty (30) calendar days following final completion and acceptance of Contractor's scope of work, regardless of the status of any other work on the project. Pursuant to N.C.G.S. § 22C-2, any retainage not released within said thirty (30) day period shall accrue interest at the legal rate from the date on which it was due until the date of full payment. Contractor expressly does not waive its right to interest on any retainage held beyond the statutory release date."]],["17. MATERIAL PRICING AND MARKET ADJUSTMENTS",["Customer acknowledges that asphalt material costs are subject to market volatility arising from fluctuations in the Liquid Asphalt Index (LAI), crude oil pricing, aggregate costs, and transportation and fuel surcharges. Should Contractor's actual material costs at the time of purchase exceed those assumed in this Proposal by more than ten percent (10%), Contractor reserves the right to adjust the contract price accordingly, with advance written notice to Customer prior to any such adjustment. Contractor shall bear no liability for project delays arising from plant closures, material shortages, or supply chain disruptions beyond Contractor's control."]],["18. FORCE MAJEURE",["Contractor shall not be liable for any delay in, or failure of, performance under this Agreement caused by circumstances beyond Contractor's reasonable control, including without limitation acts of God, severe weather events, flooding, fire, public health emergencies, labor disputes or strikes, governmental actions or restrictions, fuel shortages, or supply chain disruptions. In the event of a qualifying force majeure condition, the project schedule shall be extended for a period equal to the duration of the delay, and the contract price shall be subject to good-faith renegotiation in the event market conditions change materially during the period of force majeure."]],["19. GOVERNING LAW AND DISPUTE RESOLUTION",["This Agreement shall be governed by and construed in accordance with the laws of the State of North Carolina, without regard to its conflict of laws principles. In the event of any dispute arising out of or relating to this Agreement, the parties shall first attempt resolution through good-faith negotiation prior to initiating formal legal proceedings. If negotiation fails to resolve the matter, venue and exclusive jurisdiction for any legal action shall lie in the Superior Court of the county in which the project is located, or in the appropriate federal district court where federal jurisdiction exists."]],["20. ENTIRE AGREEMENT AND INTEGRATION",["This Agreement, together with the Bid Items, Paving Overage Unit Prices, and any fully executed Change Orders, constitutes the entire agreement between the parties with respect to the subject matter hereof and supersedes all prior and contemporaneous proposals, negotiations, representations, and understandings, whether written or oral. No terms or conditions contained in any Customer purchase order or other document shall be incorporated into or deemed part of this Agreement unless expressly identified in a written amendment executed by authorized representatives of both parties. No amendment, modification, or waiver of any provision hereof shall be valid or binding unless made in writing and executed by authorized representatives of both parties."]]]
     for title, body in sections:
         elems.append(tc_block(title, body, st, cw))
-
-    # Execution signature block
-    elems.append(Spacer(1, 0.3*inch))
+    elems.append(Spacer(1, 0.25*inch))
     sig_data = [
-        [Paragraph('<b>HD Hauling &amp; Grading</b>', ParagraphStyle('sigbody', fontName='Helvetica', fontSize=9, textColor=BLACK, leading=13)),
-         Paragraph('<b>Customer / Purchaser</b>', ParagraphStyle('sigbody', fontName='Helvetica', fontSize=9, textColor=BLACK, leading=13))],
-        [Paragraph('Authorized Signature: ___________________________', ParagraphStyle('sigbody', fontName='Helvetica', fontSize=9, textColor=BLACK, leading=13)),
-         Paragraph('Authorized Signature: ___________________________', ParagraphStyle('sigbody', fontName='Helvetica', fontSize=9, textColor=BLACK, leading=13))],
-        [Paragraph('Printed Name: _________________________________', ParagraphStyle('sigbody', fontName='Helvetica', fontSize=9, textColor=BLACK, leading=13)),
-         Paragraph('Printed Name: _________________________________', ParagraphStyle('sigbody', fontName='Helvetica', fontSize=9, textColor=BLACK, leading=13))],
-        [Paragraph('Title: _________________________________________', ParagraphStyle('sigbody', fontName='Helvetica', fontSize=9, textColor=BLACK, leading=13)),
-         Paragraph('Title: _________________________________________', ParagraphStyle('sigbody', fontName='Helvetica', fontSize=9, textColor=BLACK, leading=13))],
-        [Paragraph('Date: __________________________________________', ParagraphStyle('sigbody', fontName='Helvetica', fontSize=9, textColor=BLACK, leading=13)),
-         Paragraph('Date: __________________________________________', ParagraphStyle('sigbody', fontName='Helvetica', fontSize=9, textColor=BLACK, leading=13))],
+        [Paragraph('<b>HD Hauling &amp; Grading</b>', st['tc_body']),
+         Paragraph('<b>Customer / Purchaser</b>', st['tc_body'])],
+        [Paragraph('Authorized Signature: ___________________________', st['tc_body']),
+         Paragraph('Authorized Signature: ___________________________', st['tc_body'])],
+        [Paragraph('Printed Name: _________________________________', st['tc_body']),
+         Paragraph('Printed Name: _________________________________', st['tc_body'])],
+        [Paragraph('Title: _________________________________________', st['tc_body']),
+         Paragraph('Title: _________________________________________', st['tc_body'])],
+        [Paragraph('Date: __________________________________________', st['tc_body']),
+         Paragraph('Date: __________________________________________', st['tc_body'])],
     ]
     sig_tbl = Table(sig_data, colWidths=[(W-inch)/2, (W-inch)/2])
     sig_tbl.setStyle(TableStyle([
-        ('VALIGN',       (0,0),(-1,-1), 'TOP'),
-        ('TOPPADDING',   (0,0),(-1,-1), 6),
+        ('VALIGN',        (0,0),(-1,-1), 'TOP'),
+        ('TOPPADDING',    (0,0),(-1,-1), 6),
         ('BOTTOMPADDING',(0,0),(-1,-1), 6),
-        ('LINEABOVE',    (0,0),(-1,0),  1, MGRAY),
-        ('LINEBELOW',    (0,-1),(-1,-1),1, MGRAY),
+        ('LINEABOVE',     (0,0),(-1,0),  1, TBLBORD),
+        ('LINEBELOW',     (0,-1),(-1,-1),1, TBLBORD),
+    ]))
+    pg_data = [
+        [Paragraph('<b>PERSONAL GUARANTEE -- See Section 14(c)</b>', st['tc_section']),
+         Paragraph('', st['tc_body'])],
+        [Paragraph('Personal Guarantee Signature: __________________', st['tc_body']),
+         Paragraph('Printed Name &amp; Title: ________________________', st['tc_body'])],
+        [Paragraph('Date: __________________________________________', st['tc_body']),
+         Paragraph('', st['tc_body'])],
+    ]
+    pg_tbl = Table(pg_data, colWidths=[(W-inch)/2, (W-inch)/2])
+    pg_tbl.setStyle(TableStyle([
+        ('VALIGN',        (0,0),(-1,-1), 'TOP'),
+        ('TOPPADDING',    (0,0),(-1,-1), 6),
+        ('BOTTOMPADDING',(0,0),(-1,-1), 6),
+        ('LINEABOVE',     (0,0),(-1,0),  2, RED),
+        ('LINEBELOW',     (0,-1),(-1,-1),1, TBLBORD),
+        ('BACKGROUND',    (0,0),(-1,-1), colors.HexColor('#FFF5F5')),
     ]))
     elems.append(KeepTogether([
-        Paragraph('CONTRACT EXECUTION', ParagraphStyle('cex', fontName='Helvetica-Bold',
-            fontSize=10, alignment=TA_CENTER, spaceBefore=10, spaceAfter=8)),
-        sig_tbl
+        Paragraph('CONTRACT EXECUTION',
+            ParagraphStyle('cex', fontName='Helvetica-Bold', fontSize=10,
+                alignment=TA_CENTER, spaceBefore=10, spaceAfter=8)),
+        sig_tbl,
+        Spacer(1, 0.18*inch),
+        pg_tbl,
     ]))
     return elems
 
@@ -587,6 +517,7 @@ def build(data, out_path):
     story.append(PageBreak())
     story += tc_pages(st)
     doc.build(story, canvasmaker=canvas_maker(data.get('date','')))
+
 
 if __name__ == '__main__':
     import json, sys
