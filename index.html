@@ -1718,7 +1718,6 @@ function renderExtra(){
 // -- Recalc --------------------------------------------------------------------
 function recalc(){
   var bk=document.getElementById('breakdown');bk.innerHTML='';
-  if(multiPhase){phases[activePhaseIdx].sections=sections;phases[activePhaseIdx].concItems=concItems;phases[activePhaseIdx].extraItems=extraItems;}
   var wfv=wf(),mobv=mob();
   var gSF=0,gSY=0,gT=0,gM=0,gB=0;
   sections.forEach(function(s){
