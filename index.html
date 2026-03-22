@@ -1621,7 +1621,7 @@ function updateLyrResult(sid2,lid2){
   var muEl=document.querySelector('.mubadge[data-lyr="'+sid2+'-'+lid2+'"]');
   if(resEl){
     if(isMill) resEl.innerHTML=millFlat>0?'Milling: <b>$'+fi(millFlat)+'</b>':'<span style="opacity:.5">enter days &amp; rate</span>';
-    else resEl.innerHTML=sf>0?('<b>'+t.toFixed(2)+'t</b> · mat <b>$'+fi(matC)+'</b> · bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter SF above</span>';
+    else resEl.innerHTML=sf>0?('<b>'+t.toFixed(2)+'t</b> \u00b7 mat <b>$'+fi(matC)+'</b> \u00b7 bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter SF above</span>';
   }
   if(muEl){muEl.textContent=(!isMill&&sf>0&&bidC>0)?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
   updateSecFooter(sid2);
@@ -1638,7 +1638,7 @@ function renderAll(){
       var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
       var t=rawT*wfv,millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
       var matC=t*(MAT[l.type]||0),bidC=isMill?millFlat:t*l.rate,lmp=mu(matC,bidC);
-      var resHTML=isMill?(millFlat>0?'Milling: <b>$'+fi(millFlat)+'</b>':'<span style="opacity:.5">enter days &amp; rate</span>'):(sf>0?'<b>'+t.toFixed(2)+'t</b> · mat <b>$'+fi(matC)+'</b> · bid <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter SF above</span>');
+      var resHTML=isMill?(millFlat>0?'Milling: <b>$'+fi(millFlat)+'</b>':'<span style="opacity:.5">enter days &amp; rate</span>'):(sf>0?'<b>'+t.toFixed(2)+'t</b> \u00b7 mat <b>$'+fi(matC)+'</b> \u00b7 bid <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter SF above</span>');
       var muBadge='<span class="mubadge '+(lmp>=0?'p':'n')+'" data-lyr="'+s.id+'-'+l.id+'">'+((!isMill&&sf>0&&bidC>0)?lmp.toFixed(1)+'% MU':'')+'</span>';
       var typeOpts=LTYPES.map(function(t2){return '<option'+(t2===l.type?' selected':'')+'>'+t2+'</option>';}).join('');
       var millFields=isMill?('<label>Days</label><input type="number" value="'+(l.mill_days||'')+'" placeholder="0" min="0" step="1" style="width:54px" onchange="updMillDays('+s.id+','+l.id+',this.value)"><label>$/day</label><input type="number" value="'+(l.mill_rate||'')+'" placeholder="0" min="0" step="any" style="width:74px" onchange="updMillRate('+s.id+','+l.id+',this.value)">'):'';
@@ -1689,7 +1689,7 @@ function updateConcResult(id){
   var bR=concBid(item),bidC=item.qty*bR,subC=item.qty*item.sub,mp=mu(subC,bidC);
   var resEl=document.querySelector('.lres[data-conc="'+id+'"]');
   var muEl=document.querySelector('.mubadge[data-conc="'+id+'"]');
-  if(resEl)resEl.innerHTML=item.qty>0&&item.sub>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b> · sub <b>$'+fi(subC)+'</b> · bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty &amp; sub rate</span>';
+  if(resEl)resEl.innerHTML=item.qty>0&&item.sub>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b> \u00b7 sub <b>$'+fi(subC)+'</b> \u00b7 bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty &amp; sub rate</span>';
   if(muEl){muEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
 }
 function renderConc(){
@@ -1698,7 +1698,7 @@ function renderConc(){
   concItems.forEach(function(item){
     var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];
     var bR=concBid(item),bidC=item.qty*bR,subC=item.qty*item.sub,mp=mu(subC,bidC);
-    var resHTML=item.qty>0&&item.sub>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b> · sub <b>$'+fi(subC)+'</b> · bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty &amp; sub rate</span>';
+    var resHTML=item.qty>0&&item.sub>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b> \u00b7 sub <b>$'+fi(subC)+'</b> \u00b7 bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty &amp; sub rate</span>';
     var muBadge='<span class="mubadge '+(mp>=0?'p':'n')+'" data-conc="'+item.id+'">'+(item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'')+'</span>';
     var ctOpts=CTYPES.map(function(ct2){return '<option value="'+ct2.id+'"'+(ct2.id===item.type?' selected':'')+'>'+ct2.name+'</option>';}).join('');
     var row=document.createElement('div');row.className='lyr-row';
@@ -1960,8 +1960,8 @@ async function testNotion(){
   try{
     var r=await fetch('/notion/clients');
     var d=await r.json();
-    if(r.ok&&d.results)el.innerHTML='<span style="color:#3B6D11;font-weight:600">&#10003; Connected — '+d.results.length+' clients loaded</span>';
-    else el.innerHTML='<span style="color:#CC0000">Failed — check NOTION_KEY in Railway variables</span>';
+    if(r.ok&&d.results)el.innerHTML='<span style="color:#3B6D11;font-weight:600">&#10003; Connected \u2014 '+d.results.length+' clients loaded</span>';
+    else el.innerHTML='<span style="color:#CC0000">Failed \u2014 check NOTION_KEY in Railway variables</span>';
   }catch(e){el.innerHTML='<span style="color:#CC0000">Error: '+e.message+'</span>';}
 }
 
@@ -1991,7 +1991,7 @@ function onClientInput(v){
       var json=JSON.stringify(c).replace(/"/g,'&quot;');
       return '<div onclick="selectClient(\''+json.replace(/'/g,'&#39;')+'\')" style="padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'\'">'
         +'<div style="font-weight:600">'+esc(c.name)+'</div>'
-        +'<div style="font-size:11px;color:var(--dgray)">'+(c.company?esc(c.company)+' · ':'')+esc(c.phone||c.email||'')+'</div>'
+        +'<div style="font-size:11px;color:var(--dgray)">'+(c.company?esc(c.company)+' \u00b7 ':'')+esc(c.phone||c.email||'')+'</div>'
         +'</div>';
     }).join('');
     sug.style.display='block';
@@ -2053,7 +2053,7 @@ function renderSaved(){
     var div=document.createElement('div');
     div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
     div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+esc(q.name)+'</div>'
-      +'<div style="font-size:11px;color:var(--dgray);">'+(q.client?esc(q.client)+' · ':'')+(q.date||'')+' · $'+Math.round(q.total).toLocaleString()+'</div></div>'
+      +'<div style="font-size:11px;color:var(--dgray);">'+(q.client?esc(q.client)+' \u00b7 ':'')+(q.date||'')+' \u00b7 $'+Math.round(q.total).toLocaleString()+'</div></div>'
       +'<button class="btn btn-sec btn-sm" onclick="loadQuote('+q.id+')">Load</button>'
       +'<button class="btn-ico" onclick="delSaved('+q.id+')">&#10005;</button>';
     c.appendChild(div);
