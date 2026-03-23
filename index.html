@@ -1816,7 +1816,7 @@ function renderConc(){
   c.innerHTML='';em.style.display=concItems.length?'none':'block';
   concItems.forEach(function(item){
     var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];
-    var bR=concBid(item),bidC=item.qty*bR,subC=item.qty*item.sub,mp=mu(subC,bidC);
+    var matCost=item.qty*(parseFloat(item.mat)||0),subC=item.qty*item.sub,bR=concBid(item),bidC=item.qty*bR,mp=mu(matCost+subC,bidC);
     var resHTML=item.qty>0&&item.sub>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  -  sub <b>$'+fi(subC)+'</b>  -  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty &amp; sub rate</span>';
     var muBadge='<span class="mubadge '+(mp>=0?'p':'n')+'" data-conc="'+item.id+'">'+(item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'')+'</span>';
     var ctOpts=CTYPES.map(function(ct2){return '<option value="'+ct2.id+'"'+(ct2.id===item.type?' selected':'')+'>'+ct2.name+'</option>';}).join('');
