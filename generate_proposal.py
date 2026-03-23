@@ -159,87 +159,48 @@ class CoverPage(Flowable):
         c.drawString(rx, fy + 0.16*inch, d.get('client_company', ''))
 
 def info_block(data, st):
-    """Three-column stacked layout. Each column has a header row then
-    label-above-value pairs — no side-by-side label/value split, so
-    long emails and addresses never wrap awkwardly."""
-
-    lbl_s  = ParagraphStyle('ibl', fontName='Helvetica-Bold', fontSize=7,
-                             textColor=DGRAY, leading=10, spaceBefore=4)
-    val_s  = ParagraphStyle('iva', fontName='Helvetica',      fontSize=8,
-                             textColor=BLACK, leading=11, spaceAfter=2)
-    hdr_s  = ParagraphStyle('ihd', fontName='Helvetica-Bold', fontSize=8,
-                             textColor=BLACK, alignment=TA_CENTER)
-
-    def make_col(title, pairs):
-        parts = [Paragraph(title, hdr_s)]
-        for lbl, val in pairs:
-            parts.append(Paragraph(lbl, lbl_s))
-            parts.append(Paragraph(val or '—', val_s))
-        return parts
-
-    from reportlab.platypus import Frame
-    cw = (W - inch) / 3 - 2  # slight gap between cols
-
-    def col_table(title, pairs):
-        """Each column is its own single-cell table containing stacked paragraphs."""
-        content = make_col(title, pairs)
-        # Wrap in a single-cell table
-        # Split into header row + content row so we can draw a rule between them
-        hdr_para = content[0]   # Paragraph('Project/Sender/Client Information')
-        body_content = content[1:]  # Spacer + label/value pairs
-
-        inner = Table([
-            [hdr_para],
-            [body_content],
-        ], colWidths=[cw - 2])
-        inner.setStyle(TableStyle([
-            ('LINEBELOW',    (0,0), (-1,0),  0.75, colors.HexColor('#CCCCCC')),
-            ('BACKGROUND',   (0,0), (-1,0),  colors.HexColor('#F7F7F7')),
-            ('TOPPADDING',   (0,0), (-1,0),  6),
-            ('BOTTOMPADDING',(0,0), (-1,0),  5),
-            ('LEFTPADDING',  (0,0), (-1,-1), 8),
-            ('RIGHTPADDING', (0,0), (-1,-1), 8),
-            ('TOPPADDING',   (0,1), (-1,1),  5),
-            ('BOTTOMPADDING',(0,1), (-1,1),  6),
-            ('VALIGN',       (0,0), (-1,-1), 'TOP'),
-        ]))
-        t = Table([[inner]], colWidths=[cw])
-        t.setStyle(TableStyle([
-            ('BOX',         (0,0),(-1,-1), 0.5, TBLBORD),
-            ('TOPPADDING',  (0,0),(-1,-1), 0),
-            ('BOTTOMPADDING',(0,0),(-1,-1),0),
-            ('LEFTPADDING', (0,0),(-1,-1), 0),
-            ('RIGHTPADDING',(0,0),(-1,-1), 0),
-        ]))
-        return t
-
-    proj_t = col_table('Project Information', [
-        ('Project Name', data.get('project_name','')),
-        ('Street Address', data.get('address','')),
-        ('City, State', data.get('city_state','')),
-    ])
-    send_t = col_table('Sender Information', [
-        ('Name', data.get('sender_name','')),
-        ('Email', data.get('sender_email','')),
-        ('Phone', data.get('sender_phone','')),
-    ])
-    cli_t  = col_table('Client Information', [
-        ('Name', data.get('client_name','')),
-        ('Email', data.get('client_email','')),
-        ('Phone', data.get('client_phone','')),
-    ])
-
-    # Lay all three side by side in a wrapper table
-    gap = 4
-    wrapper = Table([[proj_t, send_t, cli_t]],
-                    colWidths=[cw, cw, cw],
-                    hAlign='LEFT')
+    """Option C - single horizontal band, no boxes, subtle lines."""
+    FW = W - inch
+    title_s  = ParagraphStyle('c_t',   fontName='Helvetica-Bold', fontSize=11, textColor=BLACK, leading=14)
+    addr_s   = ParagraphStyle('c_a',   fontName='Helvetica',      fontSize=8,  textColor=DGRAY, leading=11)
+    date_s   = ParagraphStyle('c_d',   fontName='Helvetica-Bold', fontSize=8,  textColor=RED,   leading=11)
+    sec_s    = ParagraphStyle('c_sec', fontName='Helvetica-Bold', fontSize=7,  textColor=RED,   leading=9,  spaceAfter=2)
+    name_s   = ParagraphStyle('c_n',   fontName='Helvetica-Bold', fontSize=9,  textColor=BLACK, leading=12)
+    detail_s = ParagraphStyle('c_det', fontName='Helvetica',      fontSize=8,  textColor=DGRAY, leading=11)
+    proj_cell = [
+        Paragraph(data.get('project_name', ''), title_s),
+        Paragraph(', '.join(filter(None, [data.get('address',''), data.get('city_state','')])), addr_s),
+        Spacer(1, 3),
+        Paragraph(data.get('date', ''), date_s),
+    ]
+    by_cell = [
+        Paragraph('PREPARED BY', sec_s),
+        Paragraph(data.get('sender_name',  ''), name_s),
+        Paragraph(data.get('sender_email', ''), detail_s),
+        Paragraph(data.get('sender_phone', ''), detail_s),
+    ]
+    for_cell = [
+        Paragraph('PREPARED FOR', sec_s),
+        Paragraph(data.get('client_name',  ''), name_s),
+        Paragraph(data.get('client_email', ''), detail_s),
+        Paragraph(data.get('client_phone', ''), detail_s),
+    ]
+    cw_proj = FW * 0.42
+    cw_by   = FW * 0.27
+    cw_for  = FW * 0.31
+    wrapper = Table([[proj_cell, by_cell, for_cell]], colWidths=[cw_proj, cw_by, cw_for], hAlign='LEFT')
     wrapper.setStyle(TableStyle([
-        ('LEFTPADDING',  (0,0),(-1,-1), 2),
-        ('RIGHTPADDING', (0,0),(-1,-1), 2),
-        ('TOPPADDING',   (0,0),(-1,-1), 0),
-        ('BOTTOMPADDING',(0,0),(-1,-1), 0),
-        ('VALIGN',       (0,0),(-1,-1), 'TOP'),
+        ('TOPPADDING',    (0,0),(-1,-1), 10),
+        ('BOTTOMPADDING', (0,0),(-1,-1), 10),
+        ('LEFTPADDING',   (0,0),(0,-1),  0),
+        ('LEFTPADDING',   (1,0),(-1,-1), 14),
+        ('RIGHTPADDING',  (0,0),(-1,-1), 6),
+        ('LINEBEFORE',    (1,0),(1,-1),  1.0, MGRAY),
+        ('LINEBEFORE',    (2,0),(2,-1),  1.0, MGRAY),
+        ('LINEABOVE',     (0,0),(-1,0),  1.0, BLACK),
+        ('LINEBELOW',     (0,-1),(-1,-1),1.0, MGRAY),
+        ('VALIGN',        (0,0),(-1,-1), 'TOP'),
+        ('BACKGROUND',    (0,0),(-1,-1), WHITE),
     ]))
     return wrapper
 
@@ -288,7 +249,7 @@ def bid_table(items, st):
             Paragraph(f'${sub:,.2f}',   st['cell_b']),
         ])
 
-    # Row heights — banner auto-sizes (matches Project Notes header), col header fixed
+    # Row heights â banner auto-sizes (matches Project Notes header), col header fixed
     col_hdr_h = 0.28 * inch
     row_heights = [None, col_hdr_h] + [None] * (len(rows) - 2)
     t = Table(rows, colWidths=[cw*0.50, cw*0.10, cw*0.10, cw*0.15, cw*0.15],
@@ -313,7 +274,7 @@ def bid_table(items, st):
     return t
 
 def total_line(total):
-    """CO-style contract total — bold label + amount on gray background
+    """CO-style contract total â bold label + amount on gray background
     with a thick red underline, matching the Change Order PDF styling."""
     cw  = W - inch
     lbl = ParagraphStyle('tl', fontName='Helvetica-Bold', fontSize=11,
@@ -369,11 +330,11 @@ def approval_page(data, st):
     cw = W - inch
     total = data.get('total', 0)
 
-    # ── Section header ────────────────────────────────────────────────────────
+    # ââ Section header ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     elems.append(red_hdr('Client Approval & Authorization', st, cw))
     elems.append(Spacer(1, 0.14*inch))
 
-    # ── Project summary box ───────────────────────────────────────────────────
+    # ââ Project summary box âââââââââââââââââââââââââââââââââââââââââââââââââââ
     lbl_s = ParagraphStyle('psl', fontName='Helvetica-Bold', fontSize=8,
                             textColor=DGRAY, leading=11)
     val_s = ParagraphStyle('psv', fontName='Helvetica',      fontSize=9,
@@ -405,7 +366,7 @@ def approval_page(data, st):
     elems.append(sum_t)
     elems.append(Spacer(1, 0.14*inch))
 
-    # ── Approved contract value (print-friendly — matches contract total style) ─
+    # ââ Approved contract value (print-friendly â matches contract total style) â
     amt_lbl = ParagraphStyle('al2', fontName='Helvetica-Bold', fontSize=11,
                               textColor=BLACK)
     amt_val = ParagraphStyle('av2', fontName='Helvetica-Bold', fontSize=13,
@@ -427,7 +388,7 @@ def approval_page(data, st):
     elems.append(amt_t)
     elems.append(Spacer(1, 0.18*inch))
 
-    # ── Authorization language ────────────────────────────────────────────────
+    # ââ Authorization language ââââââââââââââââââââââââââââââââââââââââââââââââ
     auth_st = ParagraphStyle('auth', fontName='Helvetica-Oblique', fontSize=8,
                               textColor=DGRAY, leading=13, alignment=TA_CENTER)
     elems.append(Paragraph(
@@ -437,7 +398,7 @@ def approval_page(data, st):
         auth_st))
     elems.append(Spacer(1, 0.18*inch))
 
-    # ── Bilateral signature block — CO style ──────────────────────────────────
+    # ââ Bilateral signature block â CO style ââââââââââââââââââââââââââââââââââ
     body_st   = ParagraphStyle('sb',  fontName='Helvetica',      fontSize=9,
                                 textColor=BLACK, leading=14)
     body_b_st = ParagraphStyle('sbb', fontName='Helvetica-Bold', fontSize=9,
@@ -468,7 +429,7 @@ def approval_page(data, st):
     elems.append(sig_tbl)
     elems.append(Spacer(1, 0.22*inch))
 
-    # ── Paving Overage Unit Prices — Option C (bid-table style) ──────────────
+    # ââ Paving Overage Unit Prices â Option C (bid-table style) ââââââââââââââ
     unit_items = data.get('unit_prices', [])
     if unit_items:
         ch_l = ParagraphStyle('ucl', fontName='Helvetica-Bold', fontSize=8,
@@ -539,7 +500,7 @@ def tc_block(title, body_items, st, cw):
     ]))
     items = [hdr, Spacer(1, 0.04*inch)]
     for item in body_items:
-        if item.startswith('•'):
+        if item.startswith('â¢'):
             items.append(Paragraph(item, st['tc_bullet']))
         else:
             items.append(Paragraph(item, st['tc_body']))
@@ -566,75 +527,75 @@ def tc_pages(st):
             'HD Hauling & Grading\'s scope is limited to the paving, concrete, striping, and signage work explicitly described in the Bid Items section of this document. No additional work, modifications, or extensions of scope are included unless captured in a written, signed Change Order prior to commencement of that work.',
         ]),
         ('4. Change Orders', [
-            'Any modification to the approved scope of work — including additions, deletions, substitutions, or design changes — requires a written Change Order executed by both parties before work begins. HD Hauling & Grading shall not be obligated to perform out-of-scope work without an approved Change Order and is not liable for delays caused by scope changes requested after contract execution.',
+            'Any modification to the approved scope of work â including additions, deletions, substitutions, or design changes â requires a written Change Order executed by both parties before work begins. HD Hauling & Grading shall not be obligated to perform out-of-scope work without an approved Change Order and is not liable for delays caused by scope changes requested after contract execution.',
         ]),
         ('5. Site Access & Staging', [
             'The Customer shall provide HD Hauling & Grading with unobstructed vehicular access to the project site, a designated staging area for equipment and materials, and a safe haul route for loaded delivery trucks for the duration of work.',
-            '• Delays, re-mobilizations, or standby time caused by restricted access, site conflicts with other trades, or unavailability of the work area will be billed at the applicable unit rates in the Paving Overage Unit Prices.',
-            '• Customer is responsible for ensuring underground utilities are located and marked prior to the start of work. HD Hauling & Grading is not liable for damage to unmarked utilities.',
+            'â¢ Delays, re-mobilizations, or standby time caused by restricted access, site conflicts with other trades, or unavailability of the work area will be billed at the applicable unit rates in the Paving Overage Unit Prices.',
+            'â¢ Customer is responsible for ensuring underground utilities are located and marked prior to the start of work. HD Hauling & Grading is not liable for damage to unmarked utilities.',
         ]),
         ('6. Subgrade Acceptance & Pavement Performance', [
             'HD Hauling & Grading is not responsible for pavement failure, cracking, settlement, or premature deterioration resulting from inadequate subgrade preparation, insufficient base compaction, poor drainage, or unsuitable sub-base materials outside HD Hauling & Grading\'s scope of work.',
-            '• Prior to paving, the Customer or their designated representative is responsible for ensuring the subgrade and base course have been properly graded, compacted to NCDOT specifications, proof-rolled where required, and inspected. Commencement of paving constitutes Customer\'s acceptance of subgrade conditions.',
-            '• Proof rolling, moisture content testing, and base course density testing are the responsibility of the Customer unless explicitly included in the scope of work.',
-            '• If HD Hauling & Grading identifies conditions that may affect pavement performance, written notification will be provided. Customer\'s direction to proceed releases HD Hauling & Grading from performance liability related to those conditions.',
+            'â¢ Prior to paving, the Customer or their designated representative is responsible for ensuring the subgrade and base course have been properly graded, compacted to NCDOT specifications, proof-rolled where required, and inspected. Commencement of paving constitutes Customer\'s acceptance of subgrade conditions.',
+            'â¢ Proof rolling, moisture content testing, and base course density testing are the responsibility of the Customer unless explicitly included in the scope of work.',
+            'â¢ If HD Hauling & Grading identifies conditions that may affect pavement performance, written notification will be provided. Customer\'s direction to proceed releases HD Hauling & Grading from performance liability related to those conditions.',
         ]),
         ('7. Materials & NCDOT Specifications', [
             'All asphalt materials furnished by HD Hauling & Grading shall conform to the applicable NCDOT Standard Specifications for Roads and Structures, current edition, unless otherwise specified in writing. Mix type, aggregate gradation, and binder content shall be per the mix design designated in the Bid Items.',
-            '• Material substitutions required due to plant availability or supply chain disruptions will be communicated promptly. Functionally equivalent materials will be substituted at no additional cost.',
-            '• HD Hauling & Grading does not guarantee long-term availability of specific mix designs or material sources.',
+            'â¢ Material substitutions required due to plant availability or supply chain disruptions will be communicated promptly. Functionally equivalent materials will be substituted at no additional cost.',
+            'â¢ HD Hauling & Grading does not guarantee long-term availability of specific mix designs or material sources.',
         ]),
-        ('8. Weather & Temperature Conditions — Asphalt', [
-            'Asphalt paving will not be performed under the following conditions: ambient or surface temperatures below 40°F and falling; during rain, sleet, or snow; when the base course contains standing water or frost; or when forecast conditions within four (4) hours are anticipated to compromise compaction or curing.',
-            '• Schedule adjustments caused by weather are not grounds for price renegotiation, penalties, or liquidated damages against HD Hauling & Grading.',
+        ('8. Weather & Temperature Conditions â Asphalt', [
+            'Asphalt paving will not be performed under the following conditions: ambient or surface temperatures below 40Â°F and falling; during rain, sleet, or snow; when the base course contains standing water or frost; or when forecast conditions within four (4) hours are anticipated to compromise compaction or curing.',
+            'â¢ Schedule adjustments caused by weather are not grounds for price renegotiation, penalties, or liquidated damages against HD Hauling & Grading.',
         ]),
         ('9. Concrete Work Conditions', [
-            'All concrete work shall be performed in accordance with applicable ACI standards and NCDOT specifications. Concrete will not be placed when ambient temperatures are below 40°F without approved cold-weather protection measures, or when temperatures exceed 90°F without appropriate hot-weather precautions.',
-            '• Form layout, grade stakes, and joint locations must be approved by the Customer or their representative prior to placement. Once concrete is placed, corrections to layout or elevation are billable as additional work.',
-            '• Cure time and form removal timing will be determined by HD Hauling & Grading based on ambient conditions and mix design requirements. Customer requests to accelerate form removal or trafficking of concrete prior to adequate cure are at Customer\'s sole risk.',
-            '• HD Hauling & Grading is not responsible for surface defects, cracking, or scaling resulting from: improper curing practices by others, premature trafficking, freeze-thaw cycles, de-icing chemical application, or subgrade settlement outside HD Hauling & Grading\'s scope.',
+            'All concrete work shall be performed in accordance with applicable ACI standards and NCDOT specifications. Concrete will not be placed when ambient temperatures are below 40Â°F without approved cold-weather protection measures, or when temperatures exceed 90Â°F without appropriate hot-weather precautions.',
+            'â¢ Form layout, grade stakes, and joint locations must be approved by the Customer or their representative prior to placement. Once concrete is placed, corrections to layout or elevation are billable as additional work.',
+            'â¢ Cure time and form removal timing will be determined by HD Hauling & Grading based on ambient conditions and mix design requirements. Customer requests to accelerate form removal or trafficking of concrete prior to adequate cure are at Customer\'s sole risk.',
+            'â¢ HD Hauling & Grading is not responsible for surface defects, cracking, or scaling resulting from: improper curing practices by others, premature trafficking, freeze-thaw cycles, de-icing chemical application, or subgrade settlement outside HD Hauling & Grading\'s scope.',
         ]),
         ('10. Compaction & Quality', [
             'Asphalt pavement compaction shall meet NCDOT density requirements for the specified mix type. If compaction testing is required, the Customer is responsible for providing an independent testing agency.',
-            '• HD Hauling & Grading is not liable for compaction failures resulting from: mix temperature loss during transport caused by factors outside its control, Customer-caused delays between delivery and laydown, or subgrade instability.',
+            'â¢ HD Hauling & Grading is not liable for compaction failures resulting from: mix temperature loss during transport caused by factors outside its control, Customer-caused delays between delivery and laydown, or subgrade instability.',
         ]),
         ('11. Warranty', [
             'HD Hauling & Grading warrants all materials and workmanship for one (1) year from the date of substantial completion. This warranty covers defects in materials and workmanship performed directly by HD Hauling & Grading.',
             'This warranty expressly excludes:',
-            '• Damage from petroleum products, chemical spills, or de-icing agents',
-            '• Pavement failure from subgrade conditions not prepared by HD Hauling & Grading',
-            '• Damage from vehicle loads exceeding pavement design capacity',
-            '• Deterioration adjacent to a repaired area on maintenance projects',
-            '• Pavement markings or signage not installed by HD Hauling & Grading',
-            '• Normal wear, surface oxidation, and expected pavement aging',
-            '• Damage from third parties, acts of God, or events beyond HD Hauling & Grading\'s control',
+            'â¢ Damage from petroleum products, chemical spills, or de-icing agents',
+            'â¢ Pavement failure from subgrade conditions not prepared by HD Hauling & Grading',
+            'â¢ Damage from vehicle loads exceeding pavement design capacity',
+            'â¢ Deterioration adjacent to a repaired area on maintenance projects',
+            'â¢ Pavement markings or signage not installed by HD Hauling & Grading',
+            'â¢ Normal wear, surface oxidation, and expected pavement aging',
+            'â¢ Damage from third parties, acts of God, or events beyond HD Hauling & Grading\'s control',
             'For maintenance and repair projects, the warranty applies only to the specific area(s) of new work.',
         ]),
         ('12. Traffic Control & Permits', [
             'If included in the Bid Items, HD Hauling & Grading will provide traffic control in general conformance with the MUTCD for the duration of active paving operations.',
-            '• The Customer is responsible for all permits, right-of-way authorizations, and NCDOT lane closure approvals prior to the scheduled start of work.',
-            '• ADA compliance determinations for pavement markings, curb ramps, and accessible routes are the responsibility of the Owner and Engineer of Record.',
+            'â¢ The Customer is responsible for all permits, right-of-way authorizations, and NCDOT lane closure approvals prior to the scheduled start of work.',
+            'â¢ ADA compliance determinations for pavement markings, curb ramps, and accessible routes are the responsibility of the Owner and Engineer of Record.',
         ]),
         ('13. Pavement Markings & Signage', [
             'Pavement markings will be installed per the approved plan or layout provided by the Customer. HD Hauling & Grading is not responsible for incorrect layouts resulting from inaccurate field dimensions or conflicting plans.',
-            '• Thermoplastic markings require a minimum asphalt cure period before application.',
-            '• Signage installation will follow locations and specifications provided. Sign content, ADA designation, and regulatory compliance are the Customer\'s responsibility.',
+            'â¢ Thermoplastic markings require a minimum asphalt cure period before application.',
+            'â¢ Signage installation will follow locations and specifications provided. Sign content, ADA designation, and regulatory compliance are the Customer\'s responsibility.',
         ]),
         ('14. Limitation of Liability', [
             'HD Hauling & Grading\'s total liability under this contract, regardless of cause, shall not exceed the total contract value. In no event shall HD Hauling & Grading be liable for consequential, incidental, indirect, or punitive damages, including but not limited to loss of use, lost revenue, business interruption, or third-party claims arising from delays or defects.',
         ]),
         ('15. Payment Terms', [
             'All invoices are due Net 30 (thirty calendar days from the invoice date). Invoices will be submitted upon completion of each defined phase of work or on a monthly basis, whichever occurs first.',
-            '• Balances not received within thirty (30) days accrue interest at 1.5% per month (18% annually).',
-            '• Final payment is due within thirty (30) calendar days of the final completion invoice. Where applicable and agreed in writing, retention may be withheld per the terms of the prime contract, but shall be released no later than thirty (30) days after final completion and acceptance of HD Hauling & Grading\'s scope of work.',
-            '• The individual executing this contract on behalf of the Customer/Purchaser provides a personal guarantee for full payment of all principal and accrued interest.',
+            'â¢ Balances not received within thirty (30) days accrue interest at 1.5% per month (18% annually).',
+            'â¢ Final payment is due within thirty (30) calendar days of the final completion invoice. Where applicable and agreed in writing, retention may be withheld per the terms of the prime contract, but shall be released no later than thirty (30) days after final completion and acceptance of HD Hauling & Grading\'s scope of work.',
+            'â¢ The individual executing this contract on behalf of the Customer/Purchaser provides a personal guarantee for full payment of all principal and accrued interest.',
         ]),
         ('16. Lien Rights', [
-            'HD Hauling & Grading expressly reserves its right to file a Claim of Lien pursuant to N.C.G.S. Chapter 44A in the event of non-payment. Nothing herein constitutes a waiver of lien rights. In the event legal action is required, the Customer shall be responsible for all reasonable attorney\'s fees and collection costs per N.C.G.S. § 44A-35.',
+            'HD Hauling & Grading expressly reserves its right to file a Claim of Lien pursuant to N.C.G.S. Chapter 44A in the event of non-payment. Nothing herein constitutes a waiver of lien rights. In the event legal action is required, the Customer shall be responsible for all reasonable attorney\'s fees and collection costs per N.C.G.S. Â§ 44A-35.',
         ]),
         ('17. Material Pricing & Availability', [
             'Due to volatility in liquid asphalt, aggregate, and fuel markets, material costs may be adjusted to reflect prevailing market rates if costs increase more than ten percent (10%) from the proposal date. Written notice will be provided prior to any adjustment.',
-            '• HD Hauling & Grading is not liable for delays caused by plant shutdowns, material shortages, or supplier issues.',
+            'â¢ HD Hauling & Grading is not liable for delays caused by plant shutdowns, material shortages, or supplier issues.',
         ]),
         ('18. Force Majeure', [
             'HD Hauling & Grading shall not be liable for delays or failure to perform caused by circumstances beyond its reasonable control, including acts of God, severe weather, labor disputes, government actions, supply chain disruptions, fuel shortages, or public health emergencies. The schedule will be extended by a reasonable period and pricing may be subject to renegotiation.',
