@@ -301,7 +301,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <div class="pin-box">
     <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
-    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢"
+    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="••••"
            onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="pin-btn" onclick="doLogin()">Access Tool</button>
     <div class="pin-err" id="pin-err"></div>
@@ -396,7 +396,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div style="margin-top:10px;">
               <div class="mat-indicator" id="mat-indicator" onclick="showPanel('settings',document.querySelectorAll('.nav-item')[2])">
                 <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 3v4l3 2-1 1-3-2V4z"/></svg>
-                Mat prices: ABC <b id="mp-abc">$45</b> &middot; Asphalt <b id="mp-asp">$92</b>/ton &nbsp;&middot;&nbsp; <span style="opacity:.6;">Click to update in Settings</span>
+                Mat prices: ABC <b id="mp-abc">$45</b> - Asphalt <b id="mp-asp">$92</b>/ton &nbsp;&middot;&nbsp; <span style="opacity:.6;">Click to update in Settings</span>
               </div>
             </div>
           </div>
@@ -435,15 +435,15 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
 
         <div class="metrics">
-          <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div></div>
-          <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div></div>
-          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div><div class="metric-sub">w/ waste</div></div>
-          <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div></div>
-          <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">-</div></div>
+          <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">-</div></div>
+          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">-</div><div class="metric-sub">w/ waste</div></div>
+          <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">-</div></div>
+          <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">-</div></div>
           <div class="metric"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">$0</div></div>
           <div class="metric" id="m-phase-card" style="display:none;"><div class="metric-lbl" id="m-phase-lbl">Phase 1</div><div class="metric-val" id="m-phase">-</div></div>
-          <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div></div>
-          <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div></div>
+          <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">-</div></div>
+          <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">-</div></div>
         </div>
 
       <!-- Job Costing Card (Internal) -->
@@ -642,10 +642,11 @@ tr:nth-child(even) td{background:#FAFAFA;}
           </div>
         </div>
         <div class="card-body">
-          <div class="fg fg2">
-            <div><label>Default Crew Day Rate ($)</label><input id="jc-default-crew-rate" type="number" min="0" step="100"/></div>
-            <div><label>Default Overhead %</label><input id="jc-default-overhead-pct" type="number" min="0" max="100" step="1"/></div>
-          </div>
+          <div class="fg fg3">
+            <div><label>DEFAULT CREW DAY RATE ($)</label><input id="jc-default-crew-rate" type="number" min="0" step="100"/></div>
+            <div><label>DEFAULT OVERHEAD %</label><input id="jc-default-overhead-pct" type="number" min="0" step="1"/></div>
+            <div><label>PRODUCTIVITY (t/day)</label><input id="jc-default-productivity" type="number" min="1" step="10"/></div>
+            </div>
           <div id="jc-settings-indicator" style="margin-top:8px;font-size:11px;color:var(--dgray);"></div>
         </div>
       </div>
@@ -722,8 +723,12 @@ var LTYPES = ['ABC base','Mill & Pave','B25.0C','I19.0C','S9.5B','S9.5C'];
 var LBS    = {'ABC base':150,'Mill & Pave':115,'B25.0C':115,'I19.0C':115,'S9.5B':115,'S9.5C':115};
 // MAT is a live variable - editable via Settings and persisted to localStorage
 var MAT    = {'ABC base':45,'Mill & Pave':35,'B25.0C':85,'I19.0C':92,'S9.5B':95,'S9.5C':95};
-var JC_CREW_RATE_DEFAULT = 3000;
+var JC_CREW_RATE_DEFAULT = 5000;
+var JC_PRODUCTIVITY_DEFAULT = 400; // tons/day
+var jcProductivity = JC_PRODUCTIVITY_DEFAULT;
 var JC_OVERHEAD_PCT_DEFAULT = 15;
+var JC_PRODUCTIVITY_DEFAULT = 400; // tons per day
+var jcProductivity = JC_PRODUCTIVITY_DEFAULT;
 var jcCrewRate = JC_CREW_RATE_DEFAULT;
 var jcOverheadPct = JC_OVERHEAD_PCT_DEFAULT;
 var MAT_DEFAULT = {'ABC base':45,'Mill & Pave':35,'B25.0C':85,'I19.0C':92,'S9.5B':95,'S9.5C':95};
@@ -968,7 +973,7 @@ function safeId(s){return s.split('').filter(function(c){return (c>='a'&&c<='z')
 function loadJCDefaults(){
   try{
     var s=localStorage.getItem('hd_jc_defaults');
-    if(s){var d=JSON.parse(s);jcCrewRate=d.crew_rate||JC_CREW_RATE_DEFAULT;jcOverheadPct=d.overhead_pct||JC_OVERHEAD_PCT_DEFAULT;}
+    if(s){var d=JSON.parse(s);jcCrewRate=d.crew_rate||JC_CREW_RATE_DEFAULT;jcOverheadPct=d.overhead_pct||JC_OVERHEAD_PCT_DEFAULT;if(d.productivity)productivity=d.productivity;}
   }catch(e){}
 }
 
@@ -976,14 +981,15 @@ function saveJCDefaults(){
   var cr=parseFloat(document.getElementById('jc-default-crew-rate')?document.getElementById('jc-default-crew-rate').value:jcCrewRate)||jcCrewRate;
   var op=parseFloat(document.getElementById('jc-default-overhead-pct')?document.getElementById('jc-default-overhead-pct').value:jcOverheadPct)||jcOverheadPct;
   jcCrewRate=cr; jcOverheadPct=op;
-  try{localStorage.setItem('hd_jc_defaults',JSON.stringify({crew_rate:cr,overhead_pct:op}));}catch(e){}
+  var pr=parseFloat(document.getElementById('jc-default-productivity')?document.getElementById('jc-default-productivity').value:PRODUCTIVITY_DEFAULT)||PRODUCTIVITY_DEFAULT;productivity=pr;
+  try{localStorage.setItem('hd_jc_defaults',JSON.stringify({crew_rate:cr,overhead_pct:op,productivity:productivity}));}catch(e){}
   renderJCDefaults();
   var ind=document.getElementById('jc-settings-indicator');
   if(ind){ind.textContent='Saved.';setTimeout(function(){ind.textContent='';},2000);}
 }
 
 function resetJCDefaults(){
-  jcCrewRate=JC_CREW_RATE_DEFAULT; jcOverheadPct=JC_OVERHEAD_PCT_DEFAULT;
+  jcCrewRate=JC_CREW_RATE_DEFAULT; jcOverheadPct=JC_OVERHEAD_PCT_DEFAULT; jcProductivity=JC_PRODUCTIVITY_DEFAULT;
   try{localStorage.removeItem('hd_jc_defaults');}catch(e){}
   renderJCDefaults();
 }
@@ -991,6 +997,8 @@ function resetJCDefaults(){
 function renderJCDefaults(){
   var cr=document.getElementById('jc-default-crew-rate');if(cr)cr.value=jcCrewRate;
   var op=document.getElementById('jc-default-overhead-pct');if(op)op.value=jcOverheadPct;
+  var pr=document.getElementById('jc-default-productivity');if(pr)pr.value=jcProductivity;
+  var prEl=document.getElementById('jc-default-productivity');if(prEl)prEl.value=productivity;
   // Also update the build panel fields if they are at default
   var bcr=document.getElementById('jc-crew-rate');if(bcr)bcr.value=jcCrewRate;
   var bop=document.getElementById('jc-overhead-pct');if(bop)bop.value=jcOverheadPct;
@@ -1425,7 +1433,7 @@ var TOPBAR_CFG = {
     {id:'site-plan-btn',html:'Site Plan',cls:'btn btn-sec btn-sm',fn:"document.getElementById('site-plan-input').click()"},
     {id:'docx-btn',html:'Word',cls:'btn btn-sec btn-sm',fn:'exportDOCX()'},
     {id:'email-btn',html:'Email',cls:'btn btn-sec btn-sm',fn:'openEmailModal()'},
-    
+    {id:'notion-btn',html:'Notion',cls:'btn btn-dark btn-sm',fn:'pushNotion()'},
     {id:'pdf-btn',html:'Export PDF',cls:'btn btn-red btn-sm',fn:'exportPDF()'}
   ],
   co:[
@@ -1532,37 +1540,59 @@ function renderMatTable(){
     var isDefault = MAT_DEFAULT.hasOwnProperty(k);
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid var(--bdr)';
-    var td0=document.createElement('td');td0.style.cssText='padding:6px 10px;';
-    if(isDefault){var sp=document.createElement('span');sp.style.cssText='font-size:12px;font-weight:600;';sp.textContent=k;td0.appendChild(sp);}
-    else{var ni=document.createElement('input');ni.type='text';ni.value=k;ni.placeholder='Name';ni.style.cssText='width:110px;font-size:12px;';(function(kk){ni.addEventListener('change',function(){renameMaterial(kk,this.value);});})(k);td0.appendChild(ni);}
+    // Name
+    var td0 = document.createElement('td'); td0.style.cssText='padding:6px 10px;';
+    if(isDefault){
+      var sp=document.createElement('span');sp.style.cssText='font-size:12px;font-weight:600;';sp.textContent=k;td0.appendChild(sp);
+    } else {
+      var ni=document.createElement('input');ni.type='text';ni.value=k;ni.placeholder='Name';
+      ni.style.cssText='width:110px;font-size:12px;';
+      (function(kk){ni.addEventListener('change',function(){renameMaterial(kk,this.value);});})(k);
+      td0.appendChild(ni);
+    }
     tr.appendChild(td0);
+    // Cost $/ton
     var td1=document.createElement('td');td1.style.cssText='padding:6px 10px;text-align:right;';
     var i1=document.createElement('input');i1.type='number';i1.value=MAT[k]||0;i1.min=0;i1.step=1;i1.style.cssText='width:70px;text-align:right;';
     (function(kk){i1.addEventListener('change',function(){MAT[kk]=parseFloat(this.value)||0;renderAll();renderConc();renderExtra();});})(k);
     td1.appendChild(i1);tr.appendChild(td1);
+    // Default rate $/ton
     var td2=document.createElement('td');td2.style.cssText='padding:6px 10px;text-align:right;';
     var i2=document.createElement('input');i2.type='number';i2.value=DRATE[k]||0;i2.min=0;i2.step=1;i2.style.cssText='width:70px;text-align:right;';
     (function(kk){i2.addEventListener('change',function(){DRATE[kk]=parseFloat(this.value)||0;});})(k);
     td2.appendChild(i2);tr.appendChild(td2);
+    // Density lbs/ton
     var td3=document.createElement('td');td3.style.cssText='padding:6px 10px;text-align:right;';
     var i3=document.createElement('input');i3.type='number';i3.value=LBS[k]||115;i3.min=1;i3.step=1;i3.style.cssText='width:70px;text-align:right;';
     (function(kk){i3.addEventListener('change',function(){LBS[kk]=parseFloat(this.value)||115;});})(k);
     td3.appendChild(i3);tr.appendChild(td3);
+    // Default depth
     var td4=document.createElement('td');td4.style.cssText='padding:6px 10px;text-align:right;';
     var i4=document.createElement('input');i4.type='number';i4.value=DDEPTH[k]||3;i4.min=0;i4.step=0.5;i4.style.cssText='width:60px;text-align:right;';
     (function(kk){i4.addEventListener('change',function(){DDEPTH[kk]=parseFloat(this.value)||3;});})(k);
     td4.appendChild(i4);tr.appendChild(td4);
+    // Badge
     var td5=document.createElement('td');td5.style.cssText='padding:6px 10px;text-align:center;';
     var sel=document.createElement('select');sel.style.cssText='font-size:11px;width:80px;';
-    badges.forEach(function(b,i){var opt=document.createElement('option');opt.value=b;opt.textContent=badgeLabels[i];if((LBADGE[k]||'')=== b)opt.selected=true;sel.appendChild(opt);});
+    badges.forEach(function(b,i){
+      var opt=document.createElement('option');opt.value=b;opt.textContent=badgeLabels[i];
+      if((LBADGE[k]||'')=== b) opt.selected=true;
+      sel.appendChild(opt);
+    });
     (function(kk){sel.addEventListener('change',function(){LBADGE[kk]=this.value;});})(k);
     td5.appendChild(sel);tr.appendChild(td5);
+    // Remove
     var td6=document.createElement('td');td6.style.cssText='padding:6px 4px;text-align:center;';
-    if(!isDefault){var rb=document.createElement('button');rb.className='btn-ico';rb.textContent='x';(function(kk){rb.addEventListener('click',function(){removeMaterial(kk);});})(k);td6.appendChild(rb);}
+    if(!isDefault){
+      var rb=document.createElement('button');rb.className='btn-ico';rb.textContent='x';
+      (function(kk){rb.addEventListener('click',function(){removeMaterial(kk);});})(k);
+      td6.appendChild(rb);
+    }
     tr.appendChild(td6);
     tbody.appendChild(tr);
   });
 }
+
 function addMaterial(){
   var name = prompt('New material name (e.g. "S9.5D"):');
   if(!name || name.trim()==='') return;
@@ -1647,7 +1677,10 @@ function mkLayer(l){
     depth:l.depth!==undefined?l.depth:DDEPTH[l.type],
     rate:l.rate!==undefined?l.rate:DRATE[l.type],
     markup:l.markup!==undefined?l.markup:20,
-    mill_days:l.mill_days||0,mill_rate:l.mill_rate||0};
+    days_override:l.days_override!==undefined?l.days_override:null,
+  overhead:l.overhead!==undefined?l.overhead:jcOverheadPct,
+  rate_override:l.rate_override!==undefined?l.rate_override:null,
+  mill_days:l.mill_days||0,mill_rate:l.mill_rate||0};
 }
 
 function addSection(name,lds){
@@ -1675,25 +1708,48 @@ function updLyrDepth(sid2,lid2,v){
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   l.depth=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
 }
+function updLyrDays(sid2,lid2,v){
+  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
+  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
+  l.days_override=(v===''||v===null)?null:parseFloat(v);
+  recalc();updateLyrResult(sid2,lid2);
+}
+function updLyrDays(sid2,lid2,v,isManual){
+  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
+  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
+  if(isManual&&v!==''&&v!==null){l.days_override=parseFloat(v)||0;}
+  else{l.days_override=null;}
+  recalc();renderAll();
+}
 function updLyrRate(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
-  l.rate=parseFloat(v)||0;
-  var mat=MAT[l.type]||0;
-  l.markup=mat>0?Math.round((l.rate-mat)/mat*100):0;
-  var mInp=document.querySelector('.lyr-markup[data-lyr="'+sid2+'-'+lid2+'"]');
-  if(mInp)mInp.value=l.markup;
-  recalc();updateLyrResult(sid2,lid2);
+  var parsed=parseFloat(v);
+  if(!isNaN(parsed)&&parsed>0){l.rate_override=parsed;l.rate=parsed;}
+  else{l.rate_override=null;}
+  recalc();renderAll();
 }
 function updLyrMarkup(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   l.markup=parseFloat(v)||0;
-  var mat=MAT[l.type]||0;
-  l.rate=parseFloat((mat*(1+l.markup/100)).toFixed(2));
-  var rInp=document.querySelector('.lyr-rate[data-lyr="'+sid2+'-'+lid2+'"]');
-  if(rInp)rInp.value=l.rate;
+  l.rate_override=null; // clear override so rate recalculates
+  recalc();renderAll();
+}
+function updLyrDays(sid2,lid2,v){
+  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
+  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
+  var t=(s.sf>0)?tons(s.sf,l.depth,LBS[l.type])*wf():0;
+  var autoD=jcProductivity>0?t/jcProductivity:0;
+  var entered=parseFloat(v)||0;
+  // If value matches auto, clear override; otherwise set override
+  l.days_override=Math.abs(entered-autoD)<0.01?null:entered;
   recalc();updateLyrResult(sid2,lid2);
+}
+function updLyrOverhead(sid2,lid2,v){
+  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
+  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
+  l.overhead=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
 }
 function updMillDays(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
@@ -1706,13 +1762,66 @@ function updMillRate(sid2,lid2,v){
   l.mill_rate=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
 }
 
+
+// Layer pricing formula        
+// bid = (mat_cost + crew_cost) * (1 + overhead%) * (1 + markup%)
+function calcLayerDays(t, l){
+  if(l.days_override!==null&&l.days_override!==undefined&&l.days_override!=='') return parseFloat(l.days_override)||0;
+  return productivity>0?t/productivity:0;
+}
+function calcLayerBid(t, l){
+  if(l.type==='Mill & Pave') return (l.mill_days||0)*(l.mill_rate||0);
+  if(t<=0) return 0;
+  var matCost=t*(MAT[l.type]||0);
+  var days=calcLayerDays(t,l);
+  var crewCost=days*jcCrewRate;
+  var subtotal=matCost+crewCost;
+  var ovhEl=document.getElementById('jc-overhead-pct');
+  var ovhPct=ovhEl?parseFloat(ovhEl.value)||jcOverheadPct:jcOverheadPct;
+  var withOverhead=subtotal*(1+ovhPct/100);
+  return withOverhead*(1+(l.markup||0)/100);
+}
+function calcLayerRate(t, l){
+  if(t<=0||l.type==='Mill & Pave') return l.rate||0;
+  return calcLayerBid(t,l)/t;
+}
+
+
+// -- New pricing formula ------------------------------------------------------
+// bid = (mat_cost + crew_cost + overhead) * (1 + markup%)
+// where crew_cost = days * crew_rate, days = tons / productivity
+function calcLayerDays(tons, l) {
+  if (l.days_override !== null && l.days_override !== undefined) return l.days_override;
+  if (tons <= 0) return 0;
+  return tons / jcProductivity;
+}
+
+function calcLayerBid(tons, l) {
+  // If user has manually overridden the rate, use it directly
+  if (l.rate_override !== null && l.rate_override !== undefined) {
+    return tons * l.rate_override;
+  }
+  var matCost = tons * (MAT[l.type] || 0);
+  var days = calcLayerDays(tons, l);
+  var crewCost = days * jcCrewRate;
+  var subtotal = matCost + crewCost;
+  var overhead = subtotal * (jcOverheadPct / 100);
+  var bid = (subtotal + overhead) * (1 + (l.markup / 100));
+  return bid;
+}
+
+function calcLayerRate(tons, l) {
+  if (tons <= 0) return l.rate_override || 0;
+  return calcLayerBid(tons, l) / tons;
+}
+
 function secTot(s){
   var wfv=wf(),tt=0,tm=0,tb=0;
   s.layers.forEach(function(l){
     var isMill=l.type==='Mill & Pave';
     var t=(!isMill&&s.sf>0)?tons(s.sf,l.depth,LBS[l.type])*wfv:0;
     var mf=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
-    tt+=t;tm+=t*(MAT[l.type]||0);tb+=isMill?mf:t*l.rate;
+    tt+=t;tm+=t*(MAT[l.type]||0);tb+=calcLayerBid(t,l);
   });
   return {tons:tt,mat:tm,bid:tb};
 }
@@ -1738,12 +1847,13 @@ function updateLyrResult(sid2,lid2){
   var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
   var t=rawT*wfv;
   var millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
-  var matC=t*(MAT[l.type]||0),bidC=isMill?millFlat:t*l.rate,mp=mu(matC,bidC);
+  var matC=t*(MAT[l.type]||0),bidC=calcLayerBid(t,l),mp=mu(matC,bidC);
+  var lDays=(!isMill&&t>0)?calcLayerDays(t,l):0;
   var resEl=document.querySelector('.lres[data-lyr="'+sid2+'-'+lid2+'"]');
   var muEl=document.querySelector('.mubadge[data-lyr="'+sid2+'-'+lid2+'"]');
   if(resEl){
     if(isMill) resEl.innerHTML=millFlat>0?'Milling: <b>$'+fi(millFlat)+'</b>':'<span style="opacity:.5">enter days &amp; rate</span>';
-    else resEl.innerHTML=sf>0?('<b>'+t.toFixed(2)+'t</b>  -  mat <b>$'+fi(matC)+'</b>  -  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter SF above</span>';
+    else resEl.innerHTML=sf>0?('<b>'+t.toFixed(2)+'t</b> - <b>'+lDays.toFixed(2)+'d</b> - mat:<b>$'+fi(matC)+'</b> - bid:<b>$'+fi(bidC)+'</b> - <b>$'+(t>0?(bidC/t).toFixed(2):'0')+'/t</b>'):'<span style="opacity:.5">enter SF above</span>';
   }
   if(muEl){muEl.textContent=(!isMill&&sf>0&&bidC>0)?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
   updateSecFooter(sid2);
@@ -1759,12 +1869,15 @@ function renderAll(){
       var wfv=wf(),isMill=l.type==='Mill & Pave';
       var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
       var t=rawT*wfv,millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
-      var matC=t*(MAT[l.type]||0),bidC=isMill?millFlat:t*l.rate,lmp=mu(matC,bidC);
+      var matC=t*(MAT[l.type]||0),bidC=calcLayerBid(t,l),lmp=mu(matC,bidC);
       var resHTML=isMill?(millFlat>0?'Milling: <b>$'+fi(millFlat)+'</b>':'<span style="opacity:.5">enter days &amp; rate</span>'):(sf>0?'<b>'+t.toFixed(2)+'t</b>  -  mat <b>$'+fi(matC)+'</b>  -  bid <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter SF above</span>');
       var muBadge='<span class="mubadge '+(lmp>=0?'p':'n')+'" data-lyr="'+s.id+'-'+l.id+'">'+((!isMill&&sf>0&&bidC>0)?lmp.toFixed(1)+'% MU':'')+'</span>';
       var typeOpts=LTYPES.map(function(t2){return '<option'+(t2===l.type?' selected':'')+'>'+t2+'</option>';}).join('');
       var millFields=isMill?('<label>Days</label><input type="number" value="'+(l.mill_days||'')+'" placeholder="0" min="0" step="1" style="width:54px" onchange="updMillDays('+s.id+','+l.id+',this.value)"><label>$/day</label><input type="number" value="'+(l.mill_rate||'')+'" placeholder="0" min="0" step="any" style="width:74px" onchange="updMillRate('+s.id+','+l.id+',this.value)">'):'';
-      var stdFields=!isMill?('<label>Depth (in)</label><input type="number" value="'+l.depth+'" min=".5" step="any" style="width:60px" onchange="updLyrDepth('+s.id+','+l.id+',this.value)"><label>$/ton</label><input type="number" value="'+l.rate+'" min="0" step="any" style="width:62px" class="lyr-rate" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrRate('+s.id+','+l.id+',this.value)"><label>MU%</label><input type="number" value="'+(l.markup||0)+'" step="1" style="width:52px" class="lyr-markup" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrMarkup('+s.id+','+l.id+',this.value)">'):'';
+      var layerTons=(!isMill&&s.sf>0)?tons(s.sf,l.depth,LBS[l.type])*wf():0;
+    var layerDays=calcLayerDays(layerTons,l);
+    var layerRate=calcLayerRate(layerTons,l);
+    var stdFields=!isMill?('<label>Depth (in)</label><input type="number" value="'+l.depth+'" min=".5" step=".5" style="width:55px" onchange="updLyrDepth('+s.id+','+l.id+',this.value)"/>'+'<label>Days</label><input type="number" value="'+(l.days_override!==null&&l.days_override!==undefined?l.days_override:layerDays.toFixed(2))+'" min="0" step="0.25" style="width:60px" title="Auto: '+layerDays.toFixed(2)+'d" onchange="updLyrDays('+s.id+','+l.id+',this.value,true)"/>'+'<label title="Calc rate: $'+layerRate.toFixed(2)+'/t">$/t</label><input type="number" value="'+layerRate.toFixed(2)+'" min="0" step="1" style="width:65px;color:'+(l.rate_override!==null?'#B25000':'var(--dgray)')+';" title="'+(l.rate_override!==null?'Manual override':'Auto-calculated')+': $'+layerRate.toFixed(2)+'/t" onchange="updLyrRate('+s.id+','+l.id+',this.value)"/>'+'<label>MU%</label><input type="number" value="'+l.markup+'" min="0" step="1" style="width:52px" class="lyr-markup" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrMarkup('+s.id+','+l.id+',this.value)"/>'):''
       lrows+='<div class="lyr-row">'
         +'<select onchange="updLyrType('+s.id+','+l.id+',this.value)">'+typeOpts+'</select>'
         +millFields+stdFields
@@ -1864,6 +1977,26 @@ function renderExtra(){
   recalc();
 }
 
+
+// -- Layer bid price calculator ------------------------------------------------
+// bid = (mat_cost + crew_cost) * (1 + overhead/100) * (1 + markup/100)
+function calcLayerDays(tons, layer){
+  if(layer.days_override !== null && layer.days_override !== undefined) return layer.days_override;
+  return jcProductivity > 0 ? tons / jcProductivity : 0;
+}
+function calcLayerBid(tons, layer){
+  var mat = tons * (MAT[layer.type]||0);
+  var days = calcLayerDays(tons, layer);
+  var crew = days * jcCrewRate;
+  var ovh = (layer.overhead !== undefined ? layer.overhead : jcOverheadPct) / 100;
+  var mu = layer.markup / 100;
+  return (mat + crew) * (1 + ovh) * (1 + mu);
+}
+function calcLayerRate(tons, layer){
+  if(tons <= 0) return layer.rate;
+  return calcLayerBid(tons, layer) / tons;
+}
+
 // -- Recalc --------------------------------------------------------------------
 function recalc(){
   var bk=document.getElementById('breakdown');bk.innerHTML='';
@@ -1875,7 +2008,7 @@ function recalc(){
       var isMill=l.type==='Mill & Pave';
       var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
       var t=rawT*wfv,millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
-      var mC=t*(MAT[l.type]||0),bC=isMill?millFlat:t*l.rate,mp=mu(mC,bC);
+      var mC=t*(MAT[l.type]||0),bC=calcLayerBid(t,l),mp=mu(mC,bC);
       gT+=t;gM+=mC;gB+=bC;
       var tr=document.createElement('tr');
       tr.innerHTML='<td><small>'+esc(s.name)+'</small></td>'
@@ -1951,7 +2084,7 @@ function buildPayload(){
       var isMill=l.type==='Mill & Pave';
       var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
       var t=rawT*wfv,millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
-      var bC=isMill?millFlat:t*l.rate;
+      var bC=calcLayerBid(t,l);
       total+=bC;
       if(sf>0||isMill)line_items.push({
         name:s.name+' \u2014 '+l.type,
@@ -2054,20 +2187,6 @@ function setSitePlan(inp){
 }
 
 // -- Notion --------------------------------------------------------------------
-async function loadClients(){
-  try{
-    var r=await fetch('/clients/list');
-    if(!r.ok)return;
-    var d=await r.json();
-    clients=(d.clients||[]).map(function(p){
-      var props=p.properties||{};
-      function getName(){for(var k in props){if(props[k].type==='title'&&props[k].title&&props[k].title.length)return props[k].title.map(function(t){return t.plain_text;}).join('');} return '';}
-      function getV(k){var p2=props[k];if(!p2)return'';if(p2.type==='rich_text')return(p2.rich_text||[]).map(function(t){return t.plain_text;}).join('');if(p2.type==='phone_number')return p2.phone_number||'';if(p2.type==='email')return p2.email||'';return'';}
-      return{name:getName(),phone:getV('Phone'),email:getV('Email'),company:getV('Company Name')};
-    }).filter(function(x){return x.name;});
-  }catch(e){}
-}
-var clientTimer=null;
 function onClientInput(v){
   clearTimeout(clientTimer);
   var sug=document.getElementById('client-sug');
