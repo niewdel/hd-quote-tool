@@ -9,7 +9,7 @@ except ImportError:
     GMAIL_AVAILABLE = False
 import generate_docx
 import requests as http
-import db  # quote storage
+import db
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 app.secret_key = os.environ.get('SECRET_KEY', 'hd-hauling-dev-key')
@@ -28,7 +28,7 @@ def require_auth(f):
         return f(*args, **kwargs)
     return decorated
 
-# ── Static / Auth ─────────────────────────────────────────────────────────────
+# ── Static / Auth ──────────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
@@ -52,7 +52,7 @@ def logout():
 def auth_check():
     return jsonify({'authenticated': bool(session.get('authenticated'))})
 
-# ── Quote Storage ─────────────────────────────────────────────────────────────
+# ── Proposals ─────────────────────────────────────────────────────────────
 
 @app.route('/quotes/save', methods=['POST'])
 @require_auth
@@ -64,7 +64,7 @@ def quotes_save():
             client = data.get('client', ''),
             date   = data.get('date', ''),
             total  = data.get('total', 0),
-            snap   = json.dumps(data.get('snap', {}))
+            snap   = data.get('snap', {})
         )
         return jsonify({'ok': True, 'id': qid})
     except Exception as e:
@@ -74,14 +74,7 @@ def quotes_save():
 @require_auth
 def quotes_list():
     try:
-        quotes = db.list_quotes()
-        # Parse snap back to object so the client gets it as JSON
-        for q in quotes:
-            try:
-                q['snap'] = json.loads(q['snap'])
-            except Exception:
-                pass
-        return jsonify({'ok': True, 'quotes': quotes})
+        return jsonify({'ok': True, 'quotes': db.list_quotes()})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
@@ -94,7 +87,81 @@ def quotes_delete(qid):
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-# ── PDF / DOCX ────────────────────────────────────────────────────────────────
+@app.route('/quotes/update/<int:qid>', methods=['PATCH'])
+@require_auth
+def quotes_update(qid):
+    try:
+        db.update_proposal(qid, request.get_json() or {})
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ── Pipeline ──────────────────────────────────────────────────────────────
+
+@app.route('/pipeline/list')
+@require_auth
+def pipeline_list():
+    try:
+        return jsonify({'ok': True, 'proposals': db.list_pipeline()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/pipeline/stages')
+@require_auth
+def pipeline_stages():
+    try:
+        return jsonify({'ok': True, 'stages': db.list_stages()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/pipeline/move/<int:qid>', methods=['PATCH'])
+@require_auth
+def pipeline_move(qid):
+    data = request.get_json() or {}
+    try:
+        db.update_proposal(qid, {'stage_id': data.get('stage_id')})
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ── Clients ───────────────────────────────────────────────────────────────
+
+@app.route('/clients/list')
+@require_auth
+def clients_list():
+    try:
+        return jsonify({'ok': True, 'clients': db.list_clients()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/clients/save', methods=['POST'])
+@require_auth
+def clients_save():
+    try:
+        client = db.save_client(request.get_json() or {})
+        return jsonify({'ok': True, 'client': client})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/clients/update/<int:cid>', methods=['PATCH'])
+@require_auth
+def clients_update(cid):
+    try:
+        db.update_client(cid, request.get_json() or {})
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/clients/delete/<int:cid>', methods=['DELETE'])
+@require_auth
+def clients_delete(cid):
+    try:
+        db.delete_client(cid)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ── PDF / DOCX ────────────────────────────────────────────────────────────
 
 @app.route('/generate-pdf', methods=['POST'])
 @require_auth
@@ -105,8 +172,7 @@ def generate_pdf():
     try:
         build(data, out)
         return send_file(out, mimetype='application/pdf',
-                         as_attachment=True,
-                         download_name='HD_Proposal.pdf')
+                         as_attachment=True, download_name='HD_Proposal.pdf')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -119,8 +185,7 @@ def generate_docx_route():
     try:
         generate_docx.build(data, out)
         return send_file(out, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                         as_attachment=True,
-                         download_name='HD_Proposal.docx')
+                         as_attachment=True, download_name='HD_Proposal.docx')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -134,8 +199,7 @@ def generate_co_pdf():
     try:
         co_build(data, out)
         return send_file(out, mimetype='application/pdf',
-                         as_attachment=True,
-                         download_name='HD_ChangeOrder.pdf')
+                         as_attachment=True, download_name='HD_ChangeOrder.pdf')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -149,12 +213,11 @@ def generate_jc_pdf():
     try:
         jc_build(data, out)
         return send_file(out, mimetype='application/pdf',
-                         as_attachment=True,
-                         download_name='HD_JobCost.pdf')
+                         as_attachment=True, download_name='HD_JobCost.pdf')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ── Email ─────────────────────────────────────────────────────────────────────
+# ── Email ─────────────────────────────────────────────────────────────────
 
 @app.route('/send-email', methods=['POST'])
 @require_auth
@@ -166,47 +229,39 @@ def send_email():
     from email.mime.text import MIMEText
     from email.mime.base import MIMEBase
     from email import encoders
-
     data    = request.get_json() or {}
     to      = data.get('to', '')
     subject = data.get('subject', '')
     body    = data.get('body', '')
     pdf_b64 = data.get('pdf_b64', '')
     fname   = data.get('pdf_filename', 'HD_Proposal.pdf')
-
     try:
         token_json = os.environ.get('GMAIL_TOKEN_JSON', '')
         if not token_json:
             return jsonify({'ok': False, 'error': 'Gmail token not configured'}), 500
         creds = Credentials.from_authorized_user_info(json.loads(token_json))
         service = gmail_build('gmail', 'v1', credentials=creds)
-
         msg = MIMEMultipart()
         msg['to'] = to
         msg['subject'] = subject
         msg.attach(MIMEText(body, 'plain'))
-
         if pdf_b64:
             part = MIMEBase('application', 'pdf')
             part.set_payload(base64.b64decode(pdf_b64))
             encoders.encode_base64(part)
             part.add_header('Content-Disposition', f'attachment; filename="{fname}"')
             msg.attach(part)
-
         raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
         service.users().messages().send(userId='me', body={'raw': raw}).execute()
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-# ── Notion ────────────────────────────────────────────────────────────────────
+# ── Notion ────────────────────────────────────────────────────────────────
 
 def notion_headers():
-    return {
-        'Authorization': f'Bearer {NOTION_KEY}',
-        'Notion-Version': NOTION_VER,
-        'Content-Type': 'application/json'
-    }
+    return {'Authorization': f'Bearer {NOTION_KEY}',
+            'Notion-Version': NOTION_VER, 'Content-Type': 'application/json'}
 
 @app.route('/notion/push', methods=['POST'])
 @require_auth
@@ -227,9 +282,7 @@ def notion_push():
     try:
         r = http.post('https://api.notion.com/v1/pages',
                       headers=notion_headers(), json=payload, timeout=10)
-        if r.ok:
-            return jsonify({'ok': True})
-        return jsonify({'ok': False, 'error': r.text}), 500
+        return jsonify({'ok': True}) if r.ok else jsonify({'ok': False, 'error': r.text}), 500
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
@@ -244,8 +297,6 @@ def notion_clients():
         return jsonify(r.json())
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-# ── Run ───────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
