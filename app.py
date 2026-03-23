@@ -9,16 +9,28 @@ except ImportError:
     GMAIL_AVAILABLE = False
 import generate_docx
 import requests as http
-import db
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 app.secret_key = os.environ.get('SECRET_KEY', 'hd-hauling-dev-key')
 
-APP_PIN         = os.environ.get('APP_PIN', '2025')
-NOTION_KEY      = os.environ.get('NOTION_KEY', '')
-NOTION_PIPELINE = os.environ.get('NOTION_PIPELINE', '2ada1cc5891b80bebe53fde6c337bf8b')
-NOTION_CLIENTS  = os.environ.get('NOTION_CLIENTS',  '2ada1cc5891b804cbaa1c4d2577b674c')
-NOTION_VER      = '2022-06-28'
+APP_PIN        = os.environ.get('APP_PIN', '2025')
+SUPABASE_URL   = os.environ.get('SUPABASE_URL', '')
+SUPABASE_KEY   = os.environ.get('SUPABASE_KEY', '')
+NOTION_KEY     = os.environ.get('NOTION_KEY', '')
+NOTION_PIPELINE= os.environ.get('NOTION_PIPELINE', '2ada1cc5891b80bebe53fde6c337bf8b')
+NOTION_CLIENTS = os.environ.get('NOTION_CLIENTS',  '2ada1cc5891b804cbaa1c4d2577b674c')
+NOTION_VER     = '2022-06-28'
+
+def sb_headers():
+    return {
+        'apikey': SUPABASE_KEY,
+        'Authorization': f'Bearer {SUPABASE_KEY}',
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+    }
+
+def sb_url(table, params=''):
+    return f'{SUPABASE_URL}/rest/v1/{table}{params}'
 
 def require_auth(f):
     @functools.wraps(f)
@@ -27,8 +39,6 @@ def require_auth(f):
             return jsonify({'error': 'Unauthorized'}), 401
         return f(*args, **kwargs)
     return decorated
-
-# ── Static / Auth ──────────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
@@ -52,21 +62,25 @@ def logout():
 def auth_check():
     return jsonify({'authenticated': bool(session.get('authenticated'))})
 
-# ── Proposals ─────────────────────────────────────────────────────────────
+# ── Proposals ─────────────────────────────────────────────────────────────────
 
 @app.route('/quotes/save', methods=['POST'])
 @require_auth
 def quotes_save():
     data = request.get_json() or {}
     try:
-        qid = db.save_quote(
-            name   = data.get('name', 'Unnamed'),
-            client = data.get('client', ''),
-            date   = data.get('date', ''),
-            total  = data.get('total', 0),
-            snap   = data.get('snap', {})
-        )
-        return jsonify({'ok': True, 'id': qid})
+        snap = data.get('snap', {})
+        payload = {
+            'name':   data.get('name', 'Unnamed'),
+            'client': data.get('client', ''),
+            'date':   data.get('date', ''),
+            'total':  float(data.get('total', 0)),
+            'snap':   snap if isinstance(snap, dict) else json.loads(snap)
+        }
+        r = http.post(sb_url('proposals'), headers=sb_headers(), json=payload, timeout=10)
+        r.raise_for_status()
+        result = r.json()
+        return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
@@ -74,7 +88,9 @@ def quotes_save():
 @require_auth
 def quotes_list():
     try:
-        return jsonify({'ok': True, 'quotes': db.list_quotes()})
+        r = http.get(sb_url('proposals', '?select=*&order=created_at.desc'), headers=sb_headers(), timeout=10)
+        r.raise_for_status()
+        return jsonify({'ok': True, 'quotes': r.json()})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
@@ -82,86 +98,109 @@ def quotes_list():
 @require_auth
 def quotes_delete(qid):
     try:
-        db.delete_quote(qid)
+        r = http.delete(sb_url('proposals', f'?id=eq.{qid}'), headers=sb_headers(), timeout=10)
+        r.raise_for_status()
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-@app.route('/quotes/update/<int:qid>', methods=['PATCH'])
-@require_auth
-def quotes_update(qid):
-    try:
-        db.update_proposal(qid, request.get_json() or {})
-        return jsonify({'ok': True})
-    except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
-
-# ── Pipeline ──────────────────────────────────────────────────────────────
-
-@app.route('/pipeline/list')
-@require_auth
-def pipeline_list():
-    try:
-        return jsonify({'ok': True, 'proposals': db.list_pipeline()})
-    except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+# ── Pipeline ──────────────────────────────────────────────────────────────────
 
 @app.route('/pipeline/stages')
 @require_auth
 def pipeline_stages():
     try:
-        return jsonify({'ok': True, 'stages': db.list_stages()})
+        r = http.get(sb_url('pipeline_stages', '?select=*&order=position.asc'), headers=sb_headers(), timeout=10)
+        r.raise_for_status()
+        return jsonify({'ok': True, 'stages': r.json()})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-@app.route('/pipeline/move/<int:qid>', methods=['PATCH'])
+@app.route('/pipeline/list')
 @require_auth
-def pipeline_move(qid):
+def pipeline_list():
+    try:
+        r = http.get(
+            sb_url('proposals', '?select=*,pipeline_stages(name,color)&order=created_at.desc'),
+            headers=sb_headers(), timeout=10
+        )
+        r.raise_for_status()
+        return jsonify({'ok': True, 'proposals': r.json()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/pipeline/move/<int:proposal_id>', methods=['PATCH'])
+@require_auth
+def pipeline_move(proposal_id):
     data = request.get_json() or {}
     try:
-        db.update_proposal(qid, {'stage_id': data.get('stage_id')})
+        r = http.patch(
+            sb_url('proposals', f'?id=eq.{proposal_id}'),
+            headers=sb_headers(),
+            json={'stage_id': data.get('stage_id')},
+            timeout=10
+        )
+        r.raise_for_status()
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-# ── Clients ───────────────────────────────────────────────────────────────
+# ── Clients ───────────────────────────────────────────────────────────────────
 
 @app.route('/clients/list')
 @require_auth
 def clients_list():
     try:
-        return jsonify({'ok': True, 'clients': db.list_clients()})
+        r = http.get(sb_url('clients', '?select=*&order=name.asc'), headers=sb_headers(), timeout=10)
+        r.raise_for_status()
+        return jsonify({'ok': True, 'clients': r.json()})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/clients/save', methods=['POST'])
 @require_auth
 def clients_save():
+    data = request.get_json() or {}
     try:
-        client = db.save_client(request.get_json() or {})
-        return jsonify({'ok': True, 'client': client})
+        r = http.post(sb_url('clients'), headers=sb_headers(), json={
+            'name': data.get('name', ''), 'company': data.get('company', ''),
+            'phone': data.get('phone', ''), 'email': data.get('email', ''),
+            'address': data.get('address', ''), 'city_state': data.get('city_state', ''),
+            'notes': data.get('notes', ''),
+        }, timeout=10)
+        r.raise_for_status()
+        result = r.json()
+        return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-@app.route('/clients/update/<int:cid>', methods=['PATCH'])
+@app.route('/clients/update/<int:client_id>', methods=['PATCH'])
 @require_auth
-def clients_update(cid):
+def clients_update(client_id):
+    data = request.get_json() or {}
     try:
-        db.update_client(cid, request.get_json() or {})
+        r = http.patch(sb_url('clients', f'?id=eq.{client_id}'), headers=sb_headers(), json={
+            'name': data.get('name', ''), 'company': data.get('company', ''),
+            'phone': data.get('phone', ''), 'email': data.get('email', ''),
+            'address': data.get('address', ''), 'city_state': data.get('city_state', ''),
+            'notes': data.get('notes', ''),
+        }, timeout=10)
+        r.raise_for_status()
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-@app.route('/clients/delete/<int:cid>', methods=['DELETE'])
+@app.route('/clients/delete/<int:client_id>', methods=['DELETE'])
 @require_auth
-def clients_delete(cid):
+def clients_delete(client_id):
     try:
-        db.delete_client(cid)
+        r = http.delete(sb_url('clients', f'?id=eq.{client_id}'), headers=sb_headers(), timeout=10)
+        r.raise_for_status()
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-# ── PDF / DOCX ────────────────────────────────────────────────────────────
+# ── PDF / DOCX ────────────────────────────────────────────────────────────────
 
 @app.route('/generate-pdf', methods=['POST'])
 @require_auth
@@ -171,8 +210,7 @@ def generate_pdf():
         out = f.name
     try:
         build(data, out)
-        return send_file(out, mimetype='application/pdf',
-                         as_attachment=True, download_name='HD_Proposal.pdf')
+        return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_Proposal.pdf')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -198,8 +236,7 @@ def generate_co_pdf():
         out = f.name
     try:
         co_build(data, out)
-        return send_file(out, mimetype='application/pdf',
-                         as_attachment=True, download_name='HD_ChangeOrder.pdf')
+        return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_ChangeOrder.pdf')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -212,12 +249,11 @@ def generate_jc_pdf():
         out = f.name
     try:
         jc_build(data, out)
-        return send_file(out, mimetype='application/pdf',
-                         as_attachment=True, download_name='HD_JobCost.pdf')
+        return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_JobCost.pdf')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ── Email ─────────────────────────────────────────────────────────────────
+# ── Email ─────────────────────────────────────────────────────────────────────
 
 @app.route('/send-email', methods=['POST'])
 @require_auth
@@ -229,12 +265,8 @@ def send_email():
     from email.mime.text import MIMEText
     from email.mime.base import MIMEBase
     from email import encoders
-    data    = request.get_json() or {}
-    to      = data.get('to', '')
-    subject = data.get('subject', '')
-    body    = data.get('body', '')
-    pdf_b64 = data.get('pdf_b64', '')
-    fname   = data.get('pdf_filename', 'HD_Proposal.pdf')
+
+    data = request.get_json() or {}
     try:
         token_json = os.environ.get('GMAIL_TOKEN_JSON', '')
         if not token_json:
@@ -242,14 +274,14 @@ def send_email():
         creds = Credentials.from_authorized_user_info(json.loads(token_json))
         service = gmail_build('gmail', 'v1', credentials=creds)
         msg = MIMEMultipart()
-        msg['to'] = to
-        msg['subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
-        if pdf_b64:
+        msg['to'] = data.get('to', '')
+        msg['subject'] = data.get('subject', '')
+        msg.attach(MIMEText(data.get('body', ''), 'plain'))
+        if data.get('pdf_b64'):
             part = MIMEBase('application', 'pdf')
-            part.set_payload(base64.b64decode(pdf_b64))
+            part.set_payload(base64.b64decode(data['pdf_b64']))
             encoders.encode_base64(part)
-            part.add_header('Content-Disposition', f'attachment; filename="{fname}"')
+            part.add_header('Content-Disposition', f'attachment; filename="{data.get("pdf_filename","HD_Proposal.pdf")}"')
             msg.attach(part)
         raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
         service.users().messages().send(userId='me', body={'raw': raw}).execute()
@@ -257,11 +289,7 @@ def send_email():
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-# ── Notion ────────────────────────────────────────────────────────────────
-
-def notion_headers():
-    return {'Authorization': f'Bearer {NOTION_KEY}',
-            'Notion-Version': NOTION_VER, 'Content-Type': 'application/json'}
+# ── Notion ────────────────────────────────────────────────────────────────────
 
 @app.route('/notion/push', methods=['POST'])
 @require_auth
@@ -272,16 +300,19 @@ def notion_push():
     payload = {
         'parent': {'database_id': NOTION_PIPELINE},
         'properties': {
-            'Name': {'title': [{'text': {'content': data.get('project_name','')}}]},
-            'Client': {'rich_text': [{'text': {'content': data.get('client_name','')}}]},
-            'Address': {'rich_text': [{'text': {'content': data.get('address','')}}]},
-            'Date': {'date': {'start': data.get('date_iso','')} if data.get('date_iso') else None},
+            'Name': {'title': [{'text': {'content': data.get('project_name', '')}}]},
+            'Client': {'rich_text': [{'text': {'content': data.get('client_name', '')}}]},
+            'Address': {'rich_text': [{'text': {'content': data.get('address', '')}}]},
             'Total': {'number': float(data.get('total', 0))},
         }
     }
+    if data.get('date_iso'):
+        payload['properties']['Date'] = {'date': {'start': data['date_iso']}}
     try:
-        r = http.post('https://api.notion.com/v1/pages',
-                      headers=notion_headers(), json=payload, timeout=10)
+        r = http.post('https://api.notion.com/v1/pages', headers={
+            'Authorization': f'Bearer {NOTION_KEY}', 'Notion-Version': NOTION_VER,
+            'Content-Type': 'application/json'
+        }, json=payload, timeout=10)
         return jsonify({'ok': True}) if r.ok else jsonify({'ok': False, 'error': r.text}), 500
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
@@ -292,8 +323,10 @@ def notion_clients():
     if not NOTION_KEY:
         return jsonify({'results': []}), 200
     try:
-        r = http.post(f'https://api.notion.com/v1/databases/{NOTION_CLIENTS}/query',
-                      headers=notion_headers(), json={}, timeout=10)
+        r = http.post(f'https://api.notion.com/v1/databases/{NOTION_CLIENTS}/query', headers={
+            'Authorization': f'Bearer {NOTION_KEY}', 'Notion-Version': NOTION_VER,
+            'Content-Type': 'application/json'
+        }, json={}, timeout=10)
         return jsonify(r.json())
     except Exception as e:
         return jsonify({'error': str(e)}), 500
