@@ -240,12 +240,10 @@ def bid_table(items, st):
         unit  = item.get('unit','SY')
         price = item.get('price',0)
         sub   = item.get('subtotal',0)
-        # Strip unit suffix if qty is a string like '1,250 SY'
         if isinstance(qty,(int,float)):
             qty_s = f'{int(qty):,}' if qty==int(qty) else f'{qty:,.1f}'
         else:
-            qty_num = str(qty).strip().split()[0]  # take first token only
-            qty_s = qty_num
+            qty_s = str(qty).strip().split()[0] if str(qty).strip() else ''
         rows.append([
             Paragraph(f'<b>{name}</b><br/><font size="8" color="#777777">{desc}</font>', st['item_name']),
             Paragraph(qty_s, st['cell']),
