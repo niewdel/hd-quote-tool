@@ -532,8 +532,7 @@ def tc_block(title, body_items, st, cw):
     items = [hdr, Spacer(1, 0.04*inch)]
     for item in body_items:
         if item.startswith('•'):
-            # Strip bullet char — tc_bullet style provides indentation
-            items.append(Paragraph(item[1:].lstrip(), st['tc_bullet']))
+            items.append(Paragraph('- ' + item[1:].lstrip(), st['tc_bullet']))
         else:
             items.append(Paragraph(item, st['tc_body']))
     items.append(Spacer(1, 0.06*inch))
