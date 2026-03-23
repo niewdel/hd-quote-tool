@@ -303,7 +303,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <div class="pin-box">
     <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
-    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="••••"
+    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="â¢â¢â¢â¢"
            onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="pin-btn" onclick="doLogin()">Access Tool</button>
     <div class="pin-err" id="pin-err"></div>
@@ -882,31 +882,18 @@ function openEmailModal(){
   document.getElementById('email-subject').value =
     'HD Hauling & Grading - Paving Proposal: ' + (p.project_name || 'Project');
 
-  var body = (firstName || 'Hello') + ',
-
-'
+  var body = (firstName || 'Hello') + ',\n\n'
     + 'Thank you for the opportunity to work with you. Please find attached our Paving Proposal '
     + 'and Contract for ' + (p.project_name || 'your project')
-    + (addr ? ' located at ' + addr : '') + '.
-
-'
-    + 'Total Bid Price: ' + total + '
-
-'
+    + (addr ? ' located at ' + addr : '') + '.\n\n'
+    + 'Total Bid Price: ' + total + '\n\n'
     + 'Please review the attached proposal, including the Terms and Conditions, at your earliest '
-    + 'convenience. This proposal is valid for thirty (30) days from the date of issuance.
-
-'
+    + 'convenience. This proposal is valid for thirty (30) days from the date of issuance.\n\n'
     + 'To move forward, please sign and return the attached contract or reach out with any '
-    + 'questions. We look forward to working with you.
-
-'
-    + 'Best regards,
-'
-    + (sender.name || 'HD Hauling & Grading') + '
-'
-    + (sender.phone ? sender.phone + '
-' : '')
+    + 'questions. We look forward to working with you.\n\n'
+    + 'Best regards,\n'
+    + (sender.name || 'HD Hauling & Grading') + '\n'
+    + (sender.phone ? sender.phone + '\n' : '')
     + (sender.email ? sender.email : '');
 
   document.getElementById('email-body').value = body;
@@ -914,7 +901,6 @@ function openEmailModal(){
   document.getElementById('email-modal').classList.remove('hidden');
   setTimeout(function(){ document.getElementById('email-body').focus(); }, 100);
 }
-
 function closeEmailModal(){
   document.getElementById('email-modal').classList.add('hidden');
 }
