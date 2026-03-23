@@ -264,7 +264,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-bar">
-    <img src="/hd_logo.png" alt="HD Hauling and Grading" style="height:44px;width:auto;display:block;"/>
+    <img src="/assets/hd_logo.png" alt="HD Hauling and Grading" style="height:44px;width:auto;display:block;"/>
   </div>
   <div class="pin-box">
     <h2>Proposal Generator</h2>
@@ -294,7 +294,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
   <aside class="sb">
     <div class="sb-logo">
-      <img src="/hd_logo.png" alt="HD Hauling &amp; Grading"/>
+      <img src="/assets/hd_logo.png" alt="HD Hauling &amp; Grading"/>
       <p>Proposal Generator</p>
     </div>
     <nav>
@@ -305,7 +305,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" onclick="showPanel('analytics',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v3H1zm4-4h3v7H5zm4-4h3v11H9zm4-6h2v17h-2z"/></svg>Analytics</div>
         <div class="nav-item" onclick="showPanel('co',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h8l3 3v9H2V2zm5 4H4v1h3V6zm5 2H4v1h6V8zm0 2H4v1h6v-1z"/></svg>Change Orders</div>
         <div class="nav-item" onclick="showPanel('saved',this)">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Quotes
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Proposals
       </div>
       <div class="nav-grp">Admin</div>
       <div class="nav-item" onclick="showPanel('settings',this)">
@@ -426,7 +426,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">—</div></div>
           <div class="metric"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">$0</div></div>
           <div class="metric" id="m-equip-card" style="display:none"><div class="metric-lbl">Equip Cost</div><div class="metric-val" id="m-equip">-</div></div>
-          <div class="metric-val" id="m-cont">—</div></div>
           <div class="metric" id="m-phase-card" style="display:none;"><div class="metric-lbl" id="m-phase-lbl">Phase 1</div><div class="metric-val" id="m-phase">-</div></div>
           <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">—</div></div>
           <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">—</div></div>
@@ -848,7 +847,6 @@ function tons(sf,d,lbs){return(sf*(d/12)*lbs)/2000;}
 function wf(){return 1+(parseFloat(document.getElementById('waste').value)||0)/100;}
 function mob(){return parseFloat(document.getElementById('mob').value)||0;}
 function cont(){var el=document.getElementById('contingency');return el?parseFloat(el.value)||0:0;}
-function cont(){return parseFloat(document.getElementById('contingency').value)||0;}
 function mu(m,b){return m>0?((b-m)/m*100):0;}
 function fi(n){return Math.round(n).toLocaleString();}
 function f2(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -1233,7 +1231,7 @@ function renderAnalytics(){
   if(!tbody||!summary) return;
   var quotes=[];
   if(typeof savedQuotes!=='undefined'&&savedQuotes.length) quotes=savedQuotes;
-  else{try{var s=localStorage.getItem('hd_saved_quotes');if(s)quotes=JSON.parse(s);}catch(e){}}
+  else{try{var s=localStorage.getItem('hd_quotes');if(s)quotes=JSON.parse(s);}catch(e){}}
   tbody.innerHTML=''; summary.innerHTML='';
   if(!quotes.length){
     if(emptyMsg)emptyMsg.style.display='block';
@@ -1316,8 +1314,8 @@ function renderEquipRateInputs(){
   container.innerHTML='';
   Object.keys(EQUIP).forEach(function(k){
     var div=document.createElement('div');
-    var safeId='er-'+safeId(k);
-    div.innerHTML='<label>'+k+'</label><input id="'+safeId+'" type="number" value="'+EQUIP[k]+'" min="0" step="50"/>';
+    var erId='er-'+safeId(k);
+    div.innerHTML='<label>'+k+'</label><input id="'+erId+'" type="number" value="'+EQUIP[k]+'" min="0" step="50"/>';
     container.appendChild(div);
   });
 }
@@ -1883,7 +1881,6 @@ function recalc(){
   document.getElementById('m-tons').textContent=gT>0?gT.toFixed(2):'-';
   document.getElementById('m-mat').textContent=gM>0?'$'+fi(gM):'-';
   document.getElementById('m-mob').textContent=mobv>0?'$'+fi(mobv):'$0';
-  var ce=document.getElementById('m-cont');if(ce)ce.textContent=contv>0?'$'+fi(contv)+' ('+contPct+'%)':'$0';
   document.getElementById('m-bid').textContent=total>0?'$'+fi(total):'-';
   document.getElementById('m-gp').textContent=gp>0?'$'+fi(gp)+' ('+mu(gM,gB).toFixed(1)+'%)':'-';
 }
@@ -1934,8 +1931,6 @@ function buildPayload(){
     line_items.push({name:'Contingency ('+contPct2.toFixed(1)+'%)',description:'Project contingency',qty:1,unit:'LS',price:contv2,subtotal:contv2});
   }
   if(mobv>0){total+=mobv;line_items.push({name:'Mobilization',description:'Project mobilization & setup',qty:1,unit:'LS',price:mobv,subtotal:mobv});}
-  var contPct2=cont(),contv=contPct2>0?Math.round(total*contPct2/100*100)/100:0;
-  if(contv>0){total=parseFloat((total+contv).toFixed(2));line_items.push({name:'Contingency ('+contPct2+'%)',description:'Project contingency allowance',qty:1,unit:'LS',price:contv,subtotal:contv});}
   return{
     project_name:name,address:addr,city_state:cs,date:fmtDate,
     sender_name:sender.name||'HD Hauling & Grading',sender_email:sender.email||'',sender_phone:sender.phone||'',
