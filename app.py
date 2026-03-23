@@ -121,7 +121,7 @@ def pipeline_stages():
 def pipeline_list():
     try:
         r = http.get(
-            sb_url('proposals', '?select=*,pipeline_stages(name,color)&order=created_at.desc'),
+            sb_url('proposals', '?select=*,pipeline_stages(name,color,counts_in_ratio,is_closed)&order=created_at.desc'),
             headers=sb_headers(), timeout=10
         )
         r.raise_for_status()
