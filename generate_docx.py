@@ -165,15 +165,9 @@ def _add_page_break(doc):
     p.paragraph_format.space_before = Pt(0)
     p.paragraph_format.space_after = Pt(0)
     run = p.add_run()
-    run.add_break(docx_break_type=None)
-    from docx.oxml import OxmlElement
-    br = run._r.find(qn('w:br'))
-    if br is not None:
-        br.set(qn('w:type'), 'page')
-    else:
-        br_el = OxmlElement('w:br')
-        br_el.set(qn('w:type'), 'page')
-        run._r.append(br_el)
+    br_el = OxmlElement('w:br')
+    br_el.set(qn('w:type'), 'page')
+    run._r.append(br_el)
     return p
 
 
