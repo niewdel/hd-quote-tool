@@ -816,7 +816,6 @@ async function doLogin(){
       document.getElementById('app').className='on';
       boot();
       showAdminElements();
-      if(window._userRole==='admin'){var _an=document.getElementById('nav-admin');if(_an)_an.style.display='';}
     } else {
       document.getElementById('pin-err').textContent=d.error||'Incorrect username or PIN.';
       document.getElementById('pin-inp').value='';
