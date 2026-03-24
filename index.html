@@ -682,8 +682,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
               </div>
               <div class="fg fg4" style="margin-top:10px;">
                 <div><label>MILL FEE ($/day)</label><input id="jc-default-mill-fee" type="number" min="0" step="500" value="6000"/></div>
-                <div><label>DEFAULT TRUCKS</label><input id="jc-default-truck-count" type="number" min="0" step="1" value="3"/></div>
-                <div><label>TRUCK RATE ($/hr)</label><input id="jc-default-truck-rate" type="number" min="0" step="5" value="85"/></div>
+                <div><label>TONS/TRUCK</label><input id="jc-default-tons-per-truck" type="number" min="1" step="10" value="100"/></div>
+                <div><label>TRUCK RATE ($/hr)</label><input id="jc-default-truck-rate" type="number" min="0" step="5" value="100"/></div>
                 <div><label>TRUCK HOURS/DAY</label><input id="jc-default-truck-hours" type="number" min="0" step="0.5" value="8"/></div>
               </div>
               <div id="jc-settings-indicator" style="margin-top:8px;font-size:11px;color:var(--dgray);"></div>
@@ -816,12 +816,12 @@ var jcCrewRate = JC_CREW_RATE_DEFAULT;
 var jcOverheadPct = JC_OVERHEAD_PCT_DEFAULT;
 var MILL_FEE_DEFAULT = 6000; // $/day for milling
 var jcMillFee = MILL_FEE_DEFAULT;
-var TRUCK_RATE_DEFAULT = 85; // $/hr per truck
-var TRUCK_COUNT_DEFAULT = 3;
-var jcTruckRate = TRUCK_RATE_DEFAULT;
-var jcTruckCount = TRUCK_COUNT_DEFAULT;
+var TRUCK_RATE_DEFAULT = 100; // $/hr per truck
 var TRUCK_HOURS_DEFAULT = 8; // hours per day
+var TONS_PER_TRUCK_DEFAULT = 100; // tons per truck per day
+var jcTruckRate = TRUCK_RATE_DEFAULT;
 var jcTruckHours = TRUCK_HOURS_DEFAULT;
+var jcTonsPerTruck = TONS_PER_TRUCK_DEFAULT;
 var MAT_DEFAULT = {'ABC base':45,'Mill & Pave':35,'B25.0C':85,'I19.0C':92,'S9.5B':95,'S9.5C':95};
 var DRATE_DEFAULT = {'ABC base':50,'Mill & Pave':150,'B25.0C':150,'I19.0C':150,'S9.5B':150,'S9.5C':150};
 var LBS_DEFAULT = {'ABC base':150,'Mill & Pave':115,'B25.0C':115,'I19.0C':115,'S9.5B':115,'S9.5C':115};
@@ -1003,7 +1003,7 @@ function safeId(s){return s.split('').filter(function(c){return (c>='a'&&c<='z')
 function loadJCDefaults(){
   try{
     var s=localStorage.getItem('hd_jc_defaults');
-    if(s){var d=JSON.parse(s);jcCrewRate=d.crew_rate||JC_CREW_RATE_DEFAULT;jcOverheadPct=d.overhead_pct||JC_OVERHEAD_PCT_DEFAULT;if(d.productivity)jcProductivity=d.productivity;if(d.mill_fee)jcMillFee=d.mill_fee;if(d.truck_count!==undefined)jcTruckCount=d.truck_count;if(d.truck_rate)jcTruckRate=d.truck_rate;if(d.truck_hours)jcTruckHours=d.truck_hours;}
+    if(s){var d=JSON.parse(s);jcCrewRate=d.crew_rate||JC_CREW_RATE_DEFAULT;jcOverheadPct=d.overhead_pct||JC_OVERHEAD_PCT_DEFAULT;if(d.productivity)jcProductivity=d.productivity;if(d.mill_fee)jcMillFee=d.mill_fee;if(d.tons_per_truck)jcTonsPerTruck=d.tons_per_truck;if(d.truck_rate)jcTruckRate=d.truck_rate;if(d.truck_hours)jcTruckHours=d.truck_hours;}
   }catch(e){}
 }
 
@@ -1013,10 +1013,10 @@ function saveJCDefaults(){
   jcCrewRate=cr; jcOverheadPct=op;
   var pr=parseFloat(document.getElementById('jc-default-productivity')?document.getElementById('jc-default-productivity').value:JC_PRODUCTIVITY_DEFAULT)||JC_PRODUCTIVITY_DEFAULT;jcProductivity=pr;
   var mf=parseFloat(document.getElementById('jc-default-mill-fee')?document.getElementById('jc-default-mill-fee').value:jcMillFee)||jcMillFee;jcMillFee=mf;
-  var tc=parseFloat(document.getElementById('jc-default-truck-count')?document.getElementById('jc-default-truck-count').value:jcTruckCount);jcTruckCount=tc;
+  var tpt=parseFloat(document.getElementById('jc-default-tons-per-truck')?document.getElementById('jc-default-tons-per-truck').value:jcTonsPerTruck)||jcTonsPerTruck;jcTonsPerTruck=tpt;
   var tr2=parseFloat(document.getElementById('jc-default-truck-rate')?document.getElementById('jc-default-truck-rate').value:jcTruckRate)||jcTruckRate;jcTruckRate=tr2;
   var th=parseFloat(document.getElementById('jc-default-truck-hours')?document.getElementById('jc-default-truck-hours').value:jcTruckHours)||jcTruckHours;jcTruckHours=th;
-  try{localStorage.setItem('hd_jc_defaults',JSON.stringify({crew_rate:cr,overhead_pct:op,productivity:jcProductivity,mill_fee:jcMillFee,truck_count:jcTruckCount,truck_rate:jcTruckRate,truck_hours:jcTruckHours}));}catch(e){}
+  try{localStorage.setItem('hd_jc_defaults',JSON.stringify({crew_rate:cr,overhead_pct:op,productivity:jcProductivity,mill_fee:jcMillFee,tons_per_truck:jcTonsPerTruck,truck_rate:jcTruckRate,truck_hours:jcTruckHours}));}catch(e){}
   renderJCDefaults();
   var ind=document.getElementById('jc-settings-indicator');
   if(ind){ind.textContent='Saved.';setTimeout(function(){ind.textContent='';},2000);}
@@ -1024,7 +1024,7 @@ function saveJCDefaults(){
 
 function resetJCDefaults(){
   jcCrewRate=JC_CREW_RATE_DEFAULT; jcOverheadPct=JC_OVERHEAD_PCT_DEFAULT; jcProductivity=JC_PRODUCTIVITY_DEFAULT;
-  jcMillFee=MILL_FEE_DEFAULT; jcTruckCount=TRUCK_COUNT_DEFAULT; jcTruckRate=TRUCK_RATE_DEFAULT; jcTruckHours=TRUCK_HOURS_DEFAULT;
+  jcMillFee=MILL_FEE_DEFAULT; jcTonsPerTruck=TONS_PER_TRUCK_DEFAULT; jcTruckRate=TRUCK_RATE_DEFAULT; jcTruckHours=TRUCK_HOURS_DEFAULT;
   try{localStorage.removeItem('hd_jc_defaults');}catch(e){}
   renderJCDefaults();
 }
@@ -1034,7 +1034,7 @@ function renderJCDefaults(){
   var op=document.getElementById('jc-default-overhead-pct');if(op)op.value=jcOverheadPct;
   var pr=document.getElementById('jc-default-productivity');if(pr)pr.value=jcProductivity;
   var mf=document.getElementById('jc-default-mill-fee');if(mf)mf.value=jcMillFee;
-  var tc=document.getElementById('jc-default-truck-count');if(tc)tc.value=jcTruckCount;
+  var tpt=document.getElementById('jc-default-tons-per-truck');if(tpt)tpt.value=jcTonsPerTruck;
   var tr2=document.getElementById('jc-default-truck-rate');if(tr2)tr2.value=jcTruckRate;
   var th=document.getElementById('jc-default-truck-hours');if(th)th.value=jcTruckHours;
   // Also update the build panel fields if they are at default
@@ -1736,6 +1736,7 @@ function renderPresets(){
 // -- Sections ------------------------------------------------------------------
 function mkLayer(l){
   return {id:lid++,type:l.type,
+    name:l.name!==undefined?l.name:l.type,
     depth:l.depth!==undefined?l.depth:DDEPTH[l.type],
     rate:l.rate!==undefined?l.rate:DRATE[l.type],
     markup:l.markup!==undefined?l.markup:20,
@@ -1743,9 +1744,7 @@ function mkLayer(l){
     overhead:l.overhead!==undefined?l.overhead:jcOverheadPct,
     rate_override:l.rate_override!==undefined?l.rate_override:null,
     mill_days:l.mill_days||0,mill_rate:l.mill_rate||jcMillFee,
-    trucks:l.trucks!==undefined?l.trucks:jcTruckCount,
-    truck_rate:l.truck_rate!==undefined?l.truck_rate:jcTruckRate,
-    truck_hours:l.truck_hours!==undefined?l.truck_hours:jcTruckHours,
+    trucks_override:l.trucks_override!==undefined?l.trucks_override:null,
     description:l.description||''};
 }
 
@@ -1764,7 +1763,9 @@ function updSecSF(id,v){var s=sections.find(function(x){return x.id===id;});if(s
 function updLyrType(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
+  var oldType=l.type;
   l.type=v;l.depth=DDEPTH[v];l.rate=DRATE[v];
+  if(!l.name||l.name===oldType)l.name=v;
   var mat=MAT[v]||0;l.markup=mat>0?Math.round((l.rate-mat)/mat*100):0;
   l.mill_days=0;l.mill_rate=0;
   renderAll();
@@ -1817,17 +1818,17 @@ function updMillRate(sid2,lid2,v){
 function updTrucks(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
-  l.trucks=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
+  var sf=s.sf||0,wfv=wf(),isMill=l.type==='Mill & Pave';
+  var t=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type])*wfv:0;
+  var autoTrucks=calcTruckCount(t,{trucks_override:null});
+  var entered=parseInt(v)||0;
+  l.trucks_override=(entered===autoTrucks)?null:entered;
+  recalc();renderAll();
 }
-function updTruckRate(sid2,lid2,v){
+function updLyrName(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
-  l.truck_rate=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
-}
-function updTruckHours(sid2,lid2,v){
-  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
-  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
-  l.truck_hours=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
+  l.name=v;
 }
 function updLyrDesc(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
@@ -1871,13 +1872,13 @@ function updateLyrResult(sid2,lid2){
   var matC=isMill?0:t*(MAT[l.type]||0);
   var mp=mu(matC,bidC);
   var lDays=isMill?(l.mill_days||0):calcLayerDays(t,l);
-  var truckCost=calcTrucking(l,lDays);
+  var truckCost=calcTrucking(t,l,lDays);
   var crewCost=lDays*jcCrewRate;
   var resEl=document.querySelector('.lres[data-lyr="'+sid2+'-'+lid2+'"]');
   var muEl=document.querySelector('.mubadge[data-lyr="'+sid2+'-'+lid2+'"]');
   if(resEl){
     if(isMill){var millCost=(l.mill_days||0)*(l.mill_rate||jcMillFee);resEl.innerHTML=(l.mill_days>0)?'Mill: <b>$'+fi(millCost)+'</b> + Crew: <b>$'+fi(crewCost)+'</b> + Truck: <b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter days</span>';}
-    else resEl.innerHTML=sf>0?('<b>'+t.toLocaleString()+'t</b> <b>'+lDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter SF above</span>';
+    else{var ppt2=t>0?'<b>$'+(bidC/t).toFixed(2)+'/t</b> ':'';resEl.innerHTML=sf>0?('<b>'+t.toLocaleString()+'t</b> '+ppt2+'<b>'+lDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter SF above</span>';}
   }
   if(muEl){muEl.textContent=bidC>0?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
   updateSecFooter(sid2);
@@ -1897,32 +1898,35 @@ function renderAll(){
       var matC=isMill?0:t*(MAT[l.type]||0);
       var lmp=mu(matC,bidC);
       var layerDays=isMill?(l.mill_days||0):calcLayerDays(t,l);
-      var truckCost=calcTrucking(l,layerDays);
+      var truckCost=calcTrucking(t,l,layerDays);
       var crewCost=layerDays*jcCrewRate;
       var resHTML;
       if(isMill){
         var millCost=(l.mill_days||0)*(l.mill_rate||jcMillFee);
         resHTML=(l.mill_days>0)?'Mill: <b>$'+fi(millCost)+'</b> + Crew: <b>$'+fi(crewCost)+'</b> + Truck: <b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter days</span>';
       } else {
-        resHTML=sf>0?'<b>'+t.toLocaleString()+'t</b> <b>'+layerDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter SF above</span>';
+        var ppt=t>0?'<b>$'+(bidC/t).toFixed(2)+'/t</b> ':'';
+        resHTML=sf>0?'<b>'+t.toLocaleString()+'t</b> '+ppt+'<b>'+layerDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter SF above</span>';
       }
       var muBadge='<span class="mubadge '+(lmp>=0?'p':'n')+'" data-lyr="'+s.id+'-'+l.id+'">'+(bidC>0?lmp.toFixed(1)+'% MU':'')+'</span>';
       var typeOpts=LTYPES.map(function(t2){return '<option'+(t2===l.type?' selected':'')+'>'+t2+'</option>';}).join('');
       var millFields=isMill?('<label>Days</label><input type="number" value="'+(l.mill_days||'')+'" placeholder="0" min="0" step="0.5" style="width:54px" onchange="updMillDays('+s.id+','+l.id+',this.value)"><label>$/day</label><input type="number" value="'+(l.mill_rate||jcMillFee)+'" min="0" step="any" style="width:74px" onchange="updMillRate('+s.id+','+l.id+',this.value)">'):'';
       var layerRate=calcLayerRate(t,l);
       var stdFields=!isMill?('<label>Depth (in)</label><input type="number" value="'+l.depth+'" min=".5" step=".5" style="width:55px" onchange="updLyrDepth('+s.id+','+l.id+',this.value)"/>'+'<label>Days</label><input type="number" value="'+(l.days_override!==null&&l.days_override!==undefined?l.days_override:layerDays.toFixed(1))+'" min="0" step="0.5" style="width:60px" title="Auto: '+layerDays.toFixed(2)+'d" onchange="updLyrDays('+s.id+','+l.id+',this.value,true)"/>'+'<label>MU%</label><input type="number" value="'+l.markup+'" min="0" step="1" style="width:52px" class="lyr-markup" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrMarkup('+s.id+','+l.id+',this.value)"/>'):''
-      // Trucking fields for all layer types
-      var truckFields='<label>Trucks</label><input type="number" value="'+(l.trucks||jcTruckCount)+'" min="0" step="1" style="width:44px" onchange="updTrucks('+s.id+','+l.id+',this.value)">'
-        +'<label>$/hr</label><input type="number" value="'+(l.truck_rate||jcTruckRate)+'" min="0" step="5" style="width:58px" onchange="updTruckRate('+s.id+','+l.id+',this.value)">'
-        +'<label>Hrs</label><input type="number" value="'+(l.truck_hours||jcTruckHours)+'" min="0" step="0.5" style="width:48px" onchange="updTruckHours('+s.id+','+l.id+',this.value)">';
-      // Description field
-      var descField='<div style="margin-top:3px;"><input type="text" value="'+esc(l.description||'')+'" placeholder="Description for PDF..." style="width:100%;font-size:11px;padding:3px 6px;color:var(--dgray);" onchange="updLyrDesc('+s.id+','+l.id+',this.value)"></div>';
+      // Trucking: only # trucks adjustable here, rate/hours in Settings
+      var autoTrucks=calcTruckCount(t,l);
+      var truckFields='<label>Trucks</label><input type="number" value="'+(l.trucks_override!==null&&l.trucks_override!==undefined?l.trucks_override:autoTrucks)+'" min="0" step="1" style="width:44px" title="Auto: '+autoTrucks+' ('+jcTonsPerTruck+'t/truck)" onchange="updTrucks('+s.id+','+l.id+',this.value)">';
+      // Name + description fields (top of layer row)
+      var nameField='<div style="width:100%;display:flex;flex-direction:column;gap:2px;margin-bottom:4px;">'
+        +'<input type="text" value="'+esc(l.name||l.type)+'" placeholder="Item name" style="width:100%;font-size:13px;font-weight:600;padding:3px 6px;" onchange="updLyrName('+s.id+','+l.id+',this.value)">'
+        +'<input type="text" value="'+esc(l.description||'')+'" placeholder="Description for PDF..." style="width:100%;font-size:11px;padding:3px 6px;color:var(--dgray);" onchange="updLyrDesc('+s.id+','+l.id+',this.value)">'
+        +'</div>';
       lrows+='<div class="lyr-row" style="flex-wrap:wrap;">'
+        +nameField
         +'<select onchange="updLyrType('+s.id+','+l.id+',this.value)">'+typeOpts+'</select>'
         +millFields+stdFields+truckFields
         +muBadge+'<span class="lres" data-lyr="'+s.id+'-'+l.id+'">'+resHTML+'</span>'
         +'<button class="btn-ico" onclick="remLyr('+s.id+','+l.id+')">x</button>'
-        +descField
         +'</div>';
     });
     div.innerHTML='<div class="sec-hdr">'
@@ -2011,13 +2015,18 @@ function updExtraNum(id,f,v){
 // Mill & Pave: (surface asphalt + crew*days + mill_fee*days + trucking) * (1 + markup/100)
 function calcLayerDays(tons, layer){
   if(layer.days_override !== null && layer.days_override !== undefined) return layer.days_override;
-  return jcProductivity > 0 ? tons / jcProductivity : 0;
+  if(jcProductivity <= 0 || tons <= 0) return 0;
+  return Math.ceil(tons / jcProductivity * 2) / 2; // round up to nearest 0.5
 }
-function calcTrucking(layer, days){
-  var trucks = layer.trucks !== undefined ? layer.trucks : jcTruckCount;
-  var rate = layer.truck_rate !== undefined ? layer.truck_rate : jcTruckRate;
-  var hours = layer.truck_hours !== undefined ? layer.truck_hours : jcTruckHours;
-  return trucks * rate * hours * days;
+function calcTruckCount(tons, layer){
+  if(layer.trucks_override !== null && layer.trucks_override !== undefined) return layer.trucks_override;
+  if(tons <= 0 || jcTonsPerTruck <= 0) return 0;
+  return Math.ceil(tons / jcTonsPerTruck);
+}
+function calcTrucking(tons, layer, days){
+  var trucks = calcTruckCount(tons, layer);
+  var dailyRate = jcTruckRate * jcTruckHours; // $/hr * hrs/day = $/day per truck
+  return trucks * dailyRate * days;
 }
 function calcLayerBid(tons, layer){
   var isMill = layer.type === 'Mill & Pave';
@@ -2026,14 +2035,14 @@ function calcLayerBid(tons, layer){
     var millDays = layer.mill_days || 0;
     var millCost = millDays * (layer.mill_rate || jcMillFee);
     var crewCost = millDays * jcCrewRate;
-    var truckCost = calcTrucking(layer, millDays);
+    var truckCost = calcTrucking(tons, layer, millDays);
     var mu = layer.markup / 100;
     return (millCost + crewCost + truckCost) * (1 + mu);
   }
   var mat = tons * (MAT[layer.type]||0);
   var days = calcLayerDays(tons, layer);
   var crew = days * jcCrewRate;
-  var truckCost = calcTrucking(layer, days);
+  var truckCost = calcTrucking(tons, layer, days);
   var mu = layer.markup / 100;
   return (mat + crew + truckCost) * (1 + mu);
 }
@@ -2058,7 +2067,7 @@ function recalc(){
       var bC=calcLayerBid(t,l);
       var lDays=isMill?(l.mill_days||0):calcLayerDays(t,l);
       var crewC=lDays*jcCrewRate;
-      var truckC=calcTrucking(l,lDays);
+      var truckC=calcTrucking(t,l,lDays);
       var mp=mu(mC,bC);
       gT+=t;gM+=mC;gB+=bC;gCrew+=crewC;gTruck+=truckC;
       var tr=document.createElement('tr');
