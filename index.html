@@ -930,7 +930,7 @@ function boot(){
     addSection('Light Duty Asphalt Pavement',[{type:'ABC base',depth:6,rate:50},{type:'S9.5C',depth:2,rate:150}]);
     addSection('Heavy Duty Asphalt Pavement',[{type:'ABC base',depth:8,rate:50},{type:'I19.0C',depth:2.5,rate:150},{type:'S9.5C',depth:1.5,rate:150}]);
   } else {renderAll();renderConc();renderExtra();}
-  renderClients();
+  loadClientsForAutocomplete();
   updateMatIndicator();
   checkMobile();
   renderTopbar('build');
@@ -2695,6 +2695,17 @@ function loadProposalFromPipeline(id) {
 // == Clients ==
 var clientsList = [];
 var editingClientId = null;
+
+async function loadClientsForAutocomplete(){
+  try{
+    var r=await fetch('/clients/list');
+    var d=await r.json();
+    if(d.ok&&d.clients){
+      clientsList=d.clients;
+      clients=clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||''};});
+    }
+  }catch(e){}
+}
 
 async function renderClients() {
   var container = document.getElementById('clients-list');
