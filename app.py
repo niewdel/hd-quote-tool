@@ -61,7 +61,6 @@ def login():
     data = request.get_json() or {}
     username = str(data.get('username','')).strip().lower()
     pin = str(data.get('pin','')).strip()
-    # Try Supabase user lookup
     try:
         r = http.get(sb_url('hd_users', f'?username=eq.{username}&active=eq.true&limit=1'), headers=sb_headers(), timeout=5)
         if r.status_code == 200:
@@ -74,20 +73,19 @@ def login():
                 session['role'] = user.get('role', 'user')
                 session.permanent = True
                 log_access(user['username'], user.get('full_name',''), 'login', True)
-                return jsonify({'ok':True,'role':session['role'],'full_name':session['full_name']})
+                return jsonify({'ok':True,'role':session['role'],'full_name':session['full_name'],'username':session['username']})
             else:
                 log_access(username, '', 'login', False)
                 return jsonify({'error':'Incorrect username or PIN'}), 401
     except Exception:
         pass
-    # Fallback: legacy PIN
     if pin == APP_PIN:
         session['authenticated'] = True
         session['username'] = 'admin'
         session['full_name'] = 'Admin'
         session['role'] = 'admin'
         session.permanent = True
-        return jsonify({'ok':True,'role':'admin','full_name':'Admin'})
+        return jsonify({'ok':True,'role':'admin','full_name':'Admin','username':'admin'})
     return jsonify({'error':'Incorrect username or PIN'}), 401
 
 @app.route('/auth/logout', methods=['POST'])
@@ -106,8 +104,8 @@ def auth_check():
 def get_users():
     try:
         r = http.get(sb_url('hd_users','?order=created_at.asc'), headers=sb_headers(), timeout=5)
-        users = r.json() if r.status_code == 200 else []
-        for u in users: u.pop('pin_hash', None)
+        users = r.json() if r.status_code==200 else []
+        for u in users: u.pop('pin_hash',None)
         return jsonify({'ok':True,'users':users})
     except Exception as e:
         return jsonify({'ok':False,'error':str(e)}), 500
