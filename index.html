@@ -356,6 +356,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Build Proposal
       </div>
       <div class="nav-item" onclick="showPanel('lineitems',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v2H2zm0 4h8v1H2zm0 3h10v1H2zm0 3h6v1H2z"/><path d="M13 7l2 2-2 2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Line Items</div>
+      <div class="nav-item" onclick="showPanel('crewcosts',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 1v14M8 3v12M12 5v10"/><circle cx="4" cy="1" r="1"/><circle cx="8" cy="3" r="1"/><circle cx="12" cy="5" r="1"/></svg>Crew Costs</div>
       <div class="nav-item" onclick="showPanel('jobcost',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3v1.5H10v1H8.5V9H10v1H8.5V11.5h-1V10H6V9h1.5V6.5H6v-1h1.5V4h1z"/></svg>Job Cost</div>
       <div class="nav-item" onclick="showPanel('co',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h8l3 3v9H2V2zm5 4H4v1h3V6zm5 2H4v1h6V8zm0 2H4v1h6v-1z"/></svg>Change Orders</div>
       <div class="nav-item" onclick="showPanel('saved',this)">
@@ -499,6 +500,22 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div style="margin-top:12px;display:flex;gap:8px;">
             <button class="btn btn-sec btn-sm" onclick="refreshLineItems()">Refresh from Build</button>
           </div>
+        </div>
+      </div></div>
+
+      <!-- CREW COSTS PANEL -->
+      <div class="panel" id="panel-crewcosts"><div class="content">
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Crew Costs by Material</span>
+            <span style="font-size:11px;color:var(--dgray);margin-left:8px;">Set crew rate, productivity, and trucking per material type</span>
+          </div>
+          <div id="crew-costs-table" style="overflow-x:auto;"></div>
+          <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn btn-red btn-sm" onclick="saveCrewCosts()">Save</button>
+            <button class="btn btn-sec btn-sm" onclick="resetCrewCosts()">Reset Defaults</button>
+          </div>
+          <div id="cc-indicator" style="margin-top:6px;font-size:11px;color:var(--dgray);"></div>
         </div>
       </div></div>
 
@@ -838,6 +855,28 @@ var TONS_PER_TRUCK_DEFAULT = 100; // tons per truck per day
 var jcTruckRate = TRUCK_RATE_DEFAULT;
 var jcTruckHours = TRUCK_HOURS_DEFAULT;
 var jcTonsPerTruck = TONS_PER_TRUCK_DEFAULT;
+
+// Per-material crew cost profiles (override globals when set)
+var CREW_COSTS_DEFAULT = {
+  'ABC base':  {crew_rate:2500, productivity:800, tons_per_truck:200, truck_daily_rate:1000},
+  'Mill & Pave':{crew_rate:5000, productivity:400, tons_per_truck:100, truck_daily_rate:800},
+  'B25.0C':    {crew_rate:5000, productivity:400, tons_per_truck:100, truck_daily_rate:800},
+  'I19.0C':    {crew_rate:5000, productivity:400, tons_per_truck:100, truck_daily_rate:800},
+  'S9.5B':     {crew_rate:5000, productivity:400, tons_per_truck:100, truck_daily_rate:800},
+  'S9.5C':     {crew_rate:5000, productivity:400, tons_per_truck:100, truck_daily_rate:800}
+};
+var CREW_COSTS = JSON.parse(JSON.stringify(CREW_COSTS_DEFAULT));
+
+function getCrewParam(matType, param){
+  var c = CREW_COSTS[matType];
+  if(c && c[param] !== undefined && c[param] !== null) return c[param];
+  // Fall back to globals
+  if(param === 'crew_rate') return jcCrewRate;
+  if(param === 'productivity') return jcProductivity;
+  if(param === 'tons_per_truck') return jcTonsPerTruck;
+  if(param === 'truck_daily_rate') return jcTruckRate * jcTruckHours;
+  return 0;
+}
 var MAT_DEFAULT = {'ABC base':45,'Mill & Pave':35,'B25.0C':85,'I19.0C':92,'S9.5B':95,'S9.5C':95};
 var DRATE_DEFAULT = {'ABC base':50,'Mill & Pave':150,'B25.0C':150,'I19.0C':150,'S9.5B':150,'S9.5C':150};
 var LBS_DEFAULT = {'ABC base':150,'Mill & Pave':115,'B25.0C':115,'I19.0C':115,'S9.5B':115,'S9.5C':115};
@@ -1131,6 +1170,7 @@ async function exportJobCostPDF(){
 
 function initJobCost(){
   loadJCDefaults();
+  loadCrewCosts();
   renderJCDefaults();
   var jcDaysEl=document.getElementById('jc-days');
   if(jcDaysEl)jcDaysEl.addEventListener('input',function(){renderJobCost();});
@@ -1594,11 +1634,12 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={build:'Build Proposal',lineitems:'Line Items',jobcost:'Job Cost',saved:'Saved Proposals',settings:'Settings',co:'Change Orders',analytics:'Analytics',pipeline:'Pipeline',clients:'Clients',admin:'Admin Panel',workorders:'Work Orders'}[id]||id;
+  var _panelTitle={build:'Build Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Cost',saved:'Saved Proposals',settings:'Settings',co:'Change Orders',analytics:'Analytics',pipeline:'Pipeline',clients:'Clients',admin:'Admin Panel',workorders:'Work Orders'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved')renderSaved();
   if(id==='lineitems')renderLineItems();
+  if(id==='crewcosts')renderCrewCosts();
   if(id==='co'){populateCOProposalDropdown();loadCOList();}
   if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');}
   if(id==='jobcost')renderJobCost();
@@ -1890,7 +1931,7 @@ function updateLyrResult(sid2,lid2){
   var mp=mu(matC,bidC);
   var lDays=calcLayerDays(t,l);
   var truckCost=calcTrucking(t,l,lDays);
-  var crewCost=lDays*jcCrewRate;
+  var crewCost=lDays*getCrewParam(l.type,'crew_rate');
   var millCost=isMill?lDays*(l.mill_rate||jcMillFee):0;
   var resEl=document.querySelector('.lres[data-lyr="'+sid2+'-'+lid2+'"]');
   var muEl=document.querySelector('.mubadge[data-lyr="'+sid2+'-'+lid2+'"]');
@@ -1918,7 +1959,7 @@ function renderAll(){
       var lmp=mu(matC,bidC);
       var layerDays=calcLayerDays(t,l);
       var truckCost=calcTrucking(t,l,layerDays);
-      var crewCost=layerDays*jcCrewRate;
+      var crewCost=layerDays*getCrewParam(l.type,'crew_rate');
       var millCost=isMill?layerDays*(l.mill_rate||jcMillFee):0;
       var ppt=t>0?'<b>$'+(bidC/t).toFixed(2)+'/t</b> ':'';
       var millStr=isMill&&millCost>0?' mill:<b>$'+fi(millCost)+'</b>':'';
@@ -1930,7 +1971,8 @@ function renderAll(){
       var stdFields='<label>Depth (in)</label><input type="number" value="'+l.depth+'" min=".5" step=".5" style="width:55px" onchange="updLyrDepth('+s.id+','+l.id+',this.value)"/>'+'<label>Days</label><input type="number" value="'+(l.days_override!==null&&l.days_override!==undefined?l.days_override:layerDays.toFixed(1))+'" min="0" step="0.5" style="width:60px" title="Auto: '+layerDays.toFixed(2)+'d" onchange="updLyrDays('+s.id+','+l.id+',this.value,true)"/>'+'<label>MU%</label><input type="number" value="'+l.markup+'" min="0" step="1" style="width:52px" class="lyr-markup" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrMarkup('+s.id+','+l.id+',this.value)"/>'
       // Trucking: only # trucks adjustable here, rate/hours in Settings
       var autoTrucks=calcTruckCount(t,l);
-      var truckFields='<label>Trucks</label><input type="number" value="'+(l.trucks_override!==null&&l.trucks_override!==undefined?l.trucks_override:autoTrucks)+'" min="0" step="1" style="width:44px" title="Auto: '+autoTrucks+' ('+jcTonsPerTruck+'t/truck)" onchange="updTrucks('+s.id+','+l.id+',this.value)">';
+      var tptVal=getCrewParam(l.type,'tons_per_truck');
+      var truckFields='<label>Trucks</label><input type="number" value="'+(l.trucks_override!==null&&l.trucks_override!==undefined?l.trucks_override:autoTrucks)+'" min="0" step="1" style="width:44px" title="Auto: '+autoTrucks+' ('+tptVal+'t/truck/day)" onchange="updTrucks('+s.id+','+l.id+',this.value)">';
       // Name + description fields (top of layer row)
       var nameField='<div style="width:100%;display:flex;flex-direction:column;gap:2px;margin-bottom:4px;">'
         +'<input type="text" value="'+esc(l.name||l.type)+'" placeholder="Item name" style="width:100%;font-size:13px;font-weight:600;padding:3px 6px;" onchange="updLyrName('+s.id+','+l.id+',this.value)">'
@@ -2030,26 +2072,32 @@ function updExtraNum(id,f,v){
 // Mill & Pave: (surface asphalt + crew*days + mill_fee*days + trucking) * (1 + markup/100)
 function calcLayerDays(tons, layer){
   if(layer.days_override !== null && layer.days_override !== undefined) return layer.days_override;
-  if(jcProductivity <= 0 || tons <= 0) return 0;
-  return Math.ceil(tons / jcProductivity * 2) / 2; // round up to nearest 0.5
+  var prod = getCrewParam(layer.type, 'productivity');
+  if(prod <= 0 || tons <= 0) return 0;
+  return Math.ceil(tons / prod * 2) / 2; // round up to nearest 0.5
 }
 function calcTruckCount(tons, layer){
   if(layer.trucks_override !== null && layer.trucks_override !== undefined) return layer.trucks_override;
-  if(tons <= 0 || jcTonsPerTruck <= 0) return 0;
-  var base = Math.ceil(tons / jcTonsPerTruck);
+  var tpt = getCrewParam(layer.type, 'tons_per_truck');
+  if(tons <= 0 || tpt <= 0) return 0;
+  var days = calcLayerDays(tons, layer);
+  if(days <= 0) return 0;
+  var tonsPerDay = tons / days;
+  var base = Math.ceil(tonsPerDay / tpt);
   // Mill & Pave needs 1.5x trucks for material removal
   if(layer.type === 'Mill & Pave') return Math.ceil(base * 1.5);
   return base;
 }
 function calcTrucking(tons, layer, days){
   var trucks = calcTruckCount(tons, layer);
-  var dailyRate = jcTruckRate * jcTruckHours; // $/hr * hrs/day = $/day per truck
+  var dailyRate = getCrewParam(layer.type, 'truck_daily_rate');
   return trucks * dailyRate * days;
 }
 function calcLayerBid(tons, layer){
   var mat = tons * (MAT[layer.type]||0);
   var days = calcLayerDays(tons, layer);
-  var crew = days * jcCrewRate;
+  var crewRate = getCrewParam(layer.type, 'crew_rate');
+  var crew = days * crewRate;
   var truckCost = calcTrucking(tons, layer, days);
   // Mill & Pave adds milling fee on top of standard asphalt bid
   var millCost = (layer.type === 'Mill & Pave') ? days * (layer.mill_rate || jcMillFee) : 0;
@@ -2076,7 +2124,7 @@ function recalc(){
       var mC=t*(MAT[l.type]||0);
       var bC=calcLayerBid(t,l);
       var lDays=calcLayerDays(t,l);
-      var crewC=lDays*jcCrewRate;
+      var crewC=lDays*getCrewParam(l.type,'crew_rate');
       var truckC=calcTrucking(t,l,lDays);
       var millC=isMill?lDays*(l.mill_rate||jcMillFee):0;
       var mp=mu(mC,bC);
@@ -2167,6 +2215,69 @@ function buildPayload(){
     ],
     _date_iso:date,
   };
+}
+
+// -- Crew Costs tab ------------------------------------------------------------
+function loadCrewCosts(){
+  try{
+    var s=localStorage.getItem('hd_crew_costs');
+    if(s) CREW_COSTS=JSON.parse(s);
+  }catch(e){}
+}
+function saveCrewCosts(){
+  // Read values from table inputs
+  var wrap=document.getElementById('crew-costs-table');
+  if(!wrap)return;
+  var inputs=wrap.querySelectorAll('input[data-mat]');
+  inputs.forEach(function(inp){
+    var mat=inp.getAttribute('data-mat');
+    var field=inp.getAttribute('data-field');
+    if(!CREW_COSTS[mat])CREW_COSTS[mat]={};
+    CREW_COSTS[mat][field]=parseFloat(inp.value)||0;
+  });
+  try{localStorage.setItem('hd_crew_costs',JSON.stringify(CREW_COSTS));}catch(e){}
+  var ind=document.getElementById('cc-indicator');
+  if(ind){ind.textContent='Saved.';setTimeout(function(){ind.textContent='';},2000);}
+  recalc();
+}
+function resetCrewCosts(){
+  CREW_COSTS=JSON.parse(JSON.stringify(CREW_COSTS_DEFAULT));
+  try{localStorage.removeItem('hd_crew_costs');}catch(e){}
+  renderCrewCosts();
+  recalc();
+}
+function renderCrewCosts(){
+  var wrap=document.getElementById('crew-costs-table');if(!wrap)return;
+  var tbl=document.createElement('table');
+  tbl.className='tbl';tbl.style.width='100%';tbl.style.fontSize='12px';
+  var thead=document.createElement('thead');
+  thead.innerHTML='<tr><th style="text-align:left;">Material</th><th style="text-align:right;">Crew $/day</th><th style="text-align:right;">Productivity t/day</th><th style="text-align:right;">Tons/truck/day</th><th style="text-align:right;">Truck $/day</th></tr>';
+  tbl.appendChild(thead);
+  var tbody=document.createElement('tbody');
+  LTYPES.forEach(function(mat,idx){
+    var c=CREW_COSTS[mat]||{};
+    var def=CREW_COSTS_DEFAULT[mat]||{crew_rate:jcCrewRate,productivity:jcProductivity,tons_per_truck:jcTonsPerTruck,truck_daily_rate:jcTruckRate*jcTruckHours};
+    var tr=document.createElement('tr');
+    if(idx%2)tr.style.background='var(--lgray)';
+    var tdName=document.createElement('td');
+    tdName.innerHTML='<span class="badge '+(LBADGE[mat]||'b-misc')+'" style="font-size:10px;">'+esc(mat)+'</span>';
+    tr.appendChild(tdName);
+    var fields=['crew_rate','productivity','tons_per_truck','truck_daily_rate'];
+    fields.forEach(function(f){
+      var td=document.createElement('td');td.style.textAlign='right';
+      var inp=document.createElement('input');
+      inp.type='number';inp.min='0';inp.step=f==='truck_daily_rate'?'50':'any';
+      inp.value=c[f]!==undefined?c[f]:def[f];
+      inp.style.cssText='width:90px;font-size:12px;padding:3px 6px;text-align:right;border:1px solid #ddd;border-radius:3px;';
+      inp.setAttribute('data-mat',mat);inp.setAttribute('data-field',f);
+      inp.placeholder=def[f];
+      td.appendChild(inp);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+  wrap.innerHTML='';wrap.appendChild(tbl);
 }
 
 // -- Line Items tab ------------------------------------------------------------
