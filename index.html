@@ -2136,15 +2136,18 @@ function updConcField(id,f,v){
   var i=concItems.find(function(x){return x.id===id;});if(!i)return;
   i[f]=parseFloat(v)||0;recalc();updateConcResult(id);
 }
-function concBid(i){var m=parseFloat(i.mat)||0;return (m+i.sub)*(1+(i.markup/100));}
 function calcConcCY(item){var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];if(!item.qty||item.qty<=0)return 0;return item.qty*(item.cy_per_lf||ct.cy_per_lf||0);}
+function concMatCost(i){var cy=calcConcCY(i);return cy*(parseFloat(i.mat)||0);}
+function concLaborCost(i){return (i.qty||0)*(i.sub||0);}
+function concBidTotal(i){return (concMatCost(i)+concLaborCost(i))*(1+(i.markup/100));}
+function concBidPerUnit(i){if(!i.qty||i.qty<=0)return 0;return concBidTotal(i)/i.qty;}
 function updateConcResult(id){
   var item=concItems.find(function(x){return x.id===id;});if(!item)return;
   var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];
-  var matCost=item.qty*(parseFloat(item.mat)||0),subC=item.qty*item.sub,bR=concBid(item),bidC=item.qty*bR,mp=mu(matCost+subC,bidC);
+  var cy=calcConcCY(item);var matC=concMatCost(item);var labC=concLaborCost(item);var bidC=concBidTotal(item);var bR=concBidPerUnit(item);var mp=mu(matC+labC,bidC);
   var resEl=document.querySelector('.lres[data-conc="'+id+'"]');
   var muEl=document.querySelector('.mubadge[data-conc="'+id+'"]');
-  if(resEl)resEl.innerHTML=item.qty>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  mat+sub <b>$'+fi(matCost+subC)+'</b>  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty and rates</span>';
+  if(resEl)resEl.innerHTML=item.qty>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  mat <b>$'+fi(matC)+'</b> ('+cy.toFixed(2)+' CY)  labor <b>$'+fi(labC)+'</b>  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty and rates</span>';
   if(muEl){muEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
 }
 function renderConc(){
@@ -2152,14 +2155,14 @@ function renderConc(){
   c.innerHTML='';em.style.display=concItems.length?'none':'block';
   concItems.forEach(function(item){
     var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];
-    var matCost=item.qty*(parseFloat(item.mat)||0),subC=item.qty*item.sub,bR=concBid(item),bidC=item.qty*bR,mp=mu(matCost+subC,bidC);
-    var cy=calcConcCY(item);var cyStr=cy>0?' <span style="color:#27500A;font-weight:600;">'+cy.toFixed(2)+' CY</span>':'';var resHTML=item.qty>0&&item.sub>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  -  sub <b>$'+fi(subC)+'</b>  -  bid <b>$'+fi(bidC)+'</b>'+cyStr):(item.qty>0&&cy>0?'<span style="color:#27500A;font-weight:600;">'+cy.toFixed(2)+' CY</span>':'<span style="opacity:.5">enter qty &amp; sub rate</span>');
+    var cy=calcConcCY(item);var matC=concMatCost(item);var labC=concLaborCost(item);var bidC=concBidTotal(item);var bR=concBidPerUnit(item);var mp=mu(matC+labC,bidC);
+    var resHTML=item.qty>0&&item.sub>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  mat <b>$'+fi(matC)+'</b> ('+cy.toFixed(2)+' CY)  labor <b>$'+fi(labC)+'</b>  bid <b>$'+fi(bidC)+'</b>'):(item.qty>0&&cy>0?'<span style="color:#27500A;font-weight:600;">'+cy.toFixed(2)+' CY</span>':'<span style="opacity:.5">enter qty &amp; sub rate</span>');
     var muBadge='<span class="mubadge '+(mp>=0?'p':'n')+'" data-conc="'+item.id+'">'+(item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'')+'</span>';
     var ctOpts=CTYPES.map(function(ct2){return '<option value="'+ct2.id+'"'+(ct2.id===item.type?' selected':'')+'>'+ct2.name+'</option>';}).join('');
     var row=document.createElement('div');row.className='lyr-row';
     row.innerHTML='<select onchange="updConcType('+item.id+',this.value)" style="min-width:138px">'+ctOpts+'</select>'
       +'<label>'+ct.unit+'</label><input type="number" value="'+(item.qty||'')+'" placeholder="0" min="0" step="1" style="width:74px" onchange="updConcField('+item.id+',\'qty\',this.value)">'
-      +'<label>Mat $/'+ct.unit+'</label><input type="number" value="'+(item.mat!==undefined?item.mat:200)+'" placeholder="200" min="0" step="1" style="width:72px" onchange="updConcField('+item.id+',\'mat\',parseFloat(this.value)||0)"/>'
+      +'<label>Mat $/CY</label><input type="number" value="'+(item.mat!==undefined?item.mat:200)+'" placeholder="200" min="0" step="1" style="width:72px" onchange="updConcField('+item.id+',\'mat\',parseFloat(this.value)||0)"/>'
       +'<label>Sub $/'+ct.unit+'</label><input type="number" value="'+(item.sub||'')+'" placeholder="0.00" min="0" step=".25" style="width:76px" onchange="updConcField('+item.id+',\'sub\',this.value)">'
       +'<label>Markup %</label><input type="number" value="'+item.markup+'" min="0" step="1" style="width:58px" onchange="updConcField('+item.id+',\'markup\',this.value)">'
       +muBadge+'<span class="lres" data-conc="'+item.id+'">'+resHTML+'</span>'
@@ -2267,13 +2270,13 @@ function recalc(){
   concItems.forEach(function(i){
     if(!i.qty||!i.sub)return;
     var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];
-    var matC=i.qty*(parseFloat(i.mat)||0),subC=i.qty*i.sub,bC=i.qty*concBid(i),mp=mu(matC+subC,bC);
-    gM+=matC+subC;gB+=bC;
+    var matC=concMatCost(i);var labC=concLaborCost(i);var bidC=concBidTotal(i);var cy=calcConcCY(i);var mp=mu(matC+labC,bidC);
+    gM+=matC+labC;gB+=bidC;
     var tr=document.createElement('tr');
     tr.innerHTML='<td><small>Concrete</small></td><td><span class="badge b-conc">'+esc(ct.name)+'</span></td>'
       +'<td>-</td><td>-</td><td>'+i.qty.toLocaleString()+' '+ct.unit+'</td><td>'+ct.unit+'</td>'
-      +'<td>-</td><td>-</td><td>$'+fi(subC)+'</td><td>-</td><td>-</td>'
-      +'<td>$'+fi(bC)+'</td>'
+      +'<td>$'+fi(matC)+' ('+cy.toFixed(1)+' CY)</td><td>-</td><td>$'+fi(labC)+'</td><td>-</td><td>-</td>'
+      +'<td>$'+fi(bidC)+'</td>'
       +'<td class="'+(mp>=0?'gp':'gn')+'">'+mp.toFixed(1)+'%</td>';
     bk.appendChild(tr);
   });
@@ -2425,7 +2428,7 @@ function buildRawLineItems(){
   concItems.forEach(function(i){
     if(!i.qty||!i.sub)return;
     var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];
-    var bR=concBid(i),bC=i.qty*bR;
+    var bR=concBidPerUnit(i),bC=concBidTotal(i);
     items.push({
       key:'conc-'+i.id,badge:'Concrete',badgeCls:'b-conc',
       name:ct.name,description:i.description||ct.desc,
