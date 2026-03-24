@@ -323,35 +323,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
     </div>
   </div>
   <div class="login-footer">Confidential &nbsp;&middot;&nbsp; Not for distribution</div>
-</div>
-
-
-
-
-<div class="panel" id="panel-admin">
-  <div class="card">
-    <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">User Management</span><button class="btn btn-red btn-sm" onclick="openAddUserModal()">+ Add User</button></div>
-    <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
-  </div>
-  <div class="card" style="margin-top:16px;">
-    <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">Activity Log</span><select id="log-user-filter" onchange="loadLogs()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:12px;"><option value="">All Users</option></select><button class="btn btn-sec btn-sm" onclick="loadLogs()">Refresh</button></div>
-    <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Result</th><th>IP Address</th></tr></thead><tbody id="logs-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
-  </div>
-</div>
-<div class="modal-overlay hidden" id="user-modal">
-  <div class="modal" style="max-width:420px;">
-    <div class="modal-hdr"><h3 id="user-modal-title">Add User</h3><button class="btn-ico" onclick="closeUserModal()" style="font-size:18px;">&#10005;</button></div>
-    <div class="modal-body">
-      <label>Full Name</label><input type="text" id="edit-full-name" placeholder="e.g. John Smith"/>
-      <label>Username <span style="font-size:11px;color:var(--dgray);">(lowercase, no spaces)</span></label><input type="text" id="edit-username" placeholder="e.g. jsmith" style="text-transform:lowercase;"/>
-      <label>PIN <span id="pin-hint" style="font-size:11px;color:var(--dgray);">(4-8 digits)</span></label><input type="password" id="edit-pin" placeholder="Enter PIN" maxlength="8"/>
-      <label>Role</label><select id="edit-role"><option value="user">Standard User</option><option value="admin">Admin</option></select>
-      <div id="user-modal-err" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
-    </div>
-    <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeUserModal()">Cancel</button><button class="btn btn-red btn-sm" onclick="saveUser()">Save User</button></div>
-  </div>
-</div>
-<!-- APP -->
+</div><!-- APP -->
 <!-- Mobile top bar -->
 <div class="mobile-bar" id="mobile-bar" style="display:none;">
   <button class="mob-menu-btn" onclick="toggleMobileNav()" aria-label="Menu">
@@ -731,6 +703,30 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
       </div>
 
+
+      <div class="panel" id="panel-admin">
+  <div class="card">
+    <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">User Management</span><button class="btn btn-red btn-sm" onclick="openAddUserModal()">+ Add User</button></div>
+    <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">Activity Log</span><select id="log-user-filter" onchange="loadLogs()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:12px;"><option value="">All Users</option></select><button class="btn btn-sec btn-sm" onclick="loadLogs()">Refresh</button></div>
+    <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Result</th><th>IP Address</th></tr></thead><tbody id="logs-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
+  </div>
+</div>
+<div class="modal-overlay hidden" id="user-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-hdr"><h3 id="user-modal-title">Add User</h3><button class="btn-ico" onclick="closeUserModal()" style="font-size:18px;">&#10005;</button></div>
+    <div class="modal-body">
+      <label>Full Name</label><input type="text" id="edit-full-name" placeholder="e.g. John Smith"/>
+      <label>Username <span style="font-size:11px;color:var(--dgray);">(lowercase, no spaces)</span></label><input type="text" id="edit-username" placeholder="e.g. jsmith" style="text-transform:lowercase;"/>
+      <label>PIN <span id="pin-hint" style="font-size:11px;color:var(--dgray);">(4-8 digits)</span></label><input type="password" id="edit-pin" placeholder="Enter PIN" maxlength="8"/>
+      <label>Role</label><select id="edit-role"><option value="user">Standard User</option><option value="admin">Admin</option></select>
+      <div id="user-modal-err" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeUserModal()">Cancel</button><button class="btn btn-red btn-sm" onclick="saveUser()">Save User</button></div>
+  </div>
+</div>
     </div><!-- /content -->
   </div><!-- /main -->
 
