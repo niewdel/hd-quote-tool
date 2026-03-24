@@ -2243,6 +2243,7 @@ function setSitePlan(inp){
   reader.readAsDataURL(inp.files[0]);
 }
 
+var clientTimer=null;
 function onClientInput(v){
   clearTimeout(clientTimer);
   var sug=document.getElementById('client-sug');
@@ -2269,6 +2270,10 @@ function selectClientById(id){
   if(!c)return;
   document.getElementById('proj-client').value=c.name;
   document.getElementById('client-sug').style.display='none';
+  // Auto-fill address fields
+  if(c.address){var addrEl=document.getElementById('proj-addr');if(addrEl)addrEl.value=c.address;}
+  if(c.city_state){var csEl=document.getElementById('proj-cs');if(csEl)csEl.value=c.city_state;}
+  // Show info bar
   var bar=document.getElementById('client-bar');
   var parts=[c.company,c.phone,c.email].filter(Boolean);
   if(parts.length){bar.style.display='block';bar.textContent=parts.join(' \u00b7 ');}
@@ -2702,9 +2707,12 @@ async function loadClientsForAutocomplete(){
     var d=await r.json();
     if(d.ok&&d.clients){
       clientsList=d.clients;
-      clients=clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||''};});
+      clients=clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||'',address:c.address||'',city_state:c.city_state||''};});
+      console.log('Clients loaded for autocomplete:',clients.length);
+    } else {
+      console.warn('Client load returned:',d);
     }
-  }catch(e){}
+  }catch(e){console.error('Failed to load clients for autocomplete:',e);}
 }
 
 async function renderClients() {
@@ -2734,7 +2742,7 @@ async function renderClients() {
         +'<button class="btn-ico" onclick="deleteClient('+c.id+')">x</button>';
       container.appendChild(card);
     });
-    clients = clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||''};});
+    clients = clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||'',address:c.address||'',city_state:c.city_state||''};});
   } catch(e){container.innerHTML='<p style="color:var(--red);font-size:13px;">Error: '+e.message+'</p>';}
 }
 
