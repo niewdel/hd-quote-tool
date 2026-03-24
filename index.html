@@ -827,7 +827,7 @@ async function doLogin(){
 
 
 function showAdminElements(){
-  if(window._userRole==='admin'){document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='';});}
+  if(window._userRole==='admin'){document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='block';});}
 }
 function boot(){
   loadStorage();
