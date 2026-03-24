@@ -964,7 +964,8 @@ function loadStorage(){
 }
 
 // -- Helpers -------------------------------------------------------------------
-function tons(sf,d,lbs){return(sf*(d/12)*lbs)/2000;}
+function tons(sf,d,lbs){return Math.ceil((sf*(d/12)*lbs)/2000);}
+function calcSY(sf){return Math.ceil(sf/9);}
 function wf(){return 1+(parseFloat(document.getElementById('waste').value)||0)/100;}
 function mob(){return parseFloat(document.getElementById('mob').value)||0;}
 function cont(){var el=document.getElementById('contingency');return el?parseFloat(el.value)||0:0;}
@@ -1849,10 +1850,10 @@ function secTot(s){
 function updateSecFooter(sid2){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var foot=document.querySelector('.sec-foot[data-sid="'+sid2+'"]');if(!foot)return;
-  var sf=s.sf||0,sy=sf/9,st=secTot(s),mp=mu(st.mat,st.bid);
+  var sf=s.sf||0,sy=calcSY(sf),st=secTot(s),mp=mu(st.mat,st.bid);
   foot.innerHTML='<span>SF: <b>'+sf.toLocaleString()+'</b></span>'
-    +'<span>SY: <b>'+(sf>0?sy.toFixed(1):'-')+'</b></span>'
-    +'<span>Tons: <b>'+(sf>0?st.tons.toFixed(2):'-')+'</b></span>'
+    +'<span>SY: <b>'+(sf>0?sy.toLocaleString():'-')+'</b></span>'
+    +'<span>Tons: <b>'+(sf>0?st.tons.toLocaleString():'-')+'</b></span>'
     +'<span>Mat: <b>'+(sf>0?'$'+fi(st.mat):'-')+'</b></span>'
     +'<span>Bid: <b>'+(sf>0?'$'+fi(st.bid):'-')+'</b></span>'
     +'<span>MU: <b class="'+(mp>=0?'gp':'gn')+'">'+(sf>0?mp.toFixed(1)+'%':'-')+'</b></span>';
@@ -1876,7 +1877,7 @@ function updateLyrResult(sid2,lid2){
   var muEl=document.querySelector('.mubadge[data-lyr="'+sid2+'-'+lid2+'"]');
   if(resEl){
     if(isMill){var millCost=(l.mill_days||0)*(l.mill_rate||jcMillFee);resEl.innerHTML=(l.mill_days>0)?'Mill: <b>$'+fi(millCost)+'</b> + Crew: <b>$'+fi(crewCost)+'</b> + Truck: <b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter days</span>';}
-    else resEl.innerHTML=sf>0?('<b>'+t.toFixed(2)+'t</b> <b>'+lDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter SF above</span>';
+    else resEl.innerHTML=sf>0?('<b>'+t.toLocaleString()+'t</b> <b>'+lDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter SF above</span>';
   }
   if(muEl){muEl.textContent=bidC>0?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
   updateSecFooter(sid2);
@@ -1885,7 +1886,7 @@ function updateLyrResult(sid2,lid2){
 function renderAll(){
   var c=document.getElementById('sections');c.innerHTML='';
   sections.forEach(function(s){
-    var sf=s.sf||0,sy=sf/9,st=secTot(s),mp=mu(st.mat,st.bid);
+    var sf=s.sf||0,sy=calcSY(sf),st=secTot(s),mp=mu(st.mat,st.bid);
     var div=document.createElement('div');div.className='sec';
     var lrows='';
     s.layers.forEach(function(l){
@@ -1903,7 +1904,7 @@ function renderAll(){
         var millCost=(l.mill_days||0)*(l.mill_rate||jcMillFee);
         resHTML=(l.mill_days>0)?'Mill: <b>$'+fi(millCost)+'</b> + Crew: <b>$'+fi(crewCost)+'</b> + Truck: <b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter days</span>';
       } else {
-        resHTML=sf>0?'<b>'+t.toFixed(2)+'t</b> <b>'+layerDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter SF above</span>';
+        resHTML=sf>0?'<b>'+t.toLocaleString()+'t</b> <b>'+layerDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter SF above</span>';
       }
       var muBadge='<span class="mubadge '+(lmp>=0?'p':'n')+'" data-lyr="'+s.id+'-'+l.id+'">'+(bidC>0?lmp.toFixed(1)+'% MU':'')+'</span>';
       var typeOpts=LTYPES.map(function(t2){return '<option'+(t2===l.type?' selected':'')+'>'+t2+'</option>';}).join('');
@@ -1929,7 +1930,7 @@ function renderAll(){
       +'<div style="display:flex;align-items:center;gap:6px;">'
       +'<label style="margin:0;font-size:11px;color:var(--dgray);text-transform:none;letter-spacing:0;font-weight:normal;">SF</label>'
       +'<input type="number" value="'+(sf||'')+'" placeholder="0" min="0" step="1" style="width:95px" onchange="updSecSF('+s.id+',this.value)">'
-      +'<span style="font-size:12px;color:var(--dgray);">= <b>'+(sf>0?sy.toFixed(1):'-')+'</b> SY</span>'
+      +'<span style="font-size:12px;color:var(--dgray);">= <b>'+(sf>0?sy.toLocaleString():'-')+'</b> SY</span>'
       +'</div>'
       +'<button class="btn btn-sec btn-sm" onclick="addLyr('+s.id+')">+ Layer</button>'
       +'<button class="btn-ico" onclick="remSec('+s.id+')" style="margin-left:auto;">x Remove</button>'
@@ -1937,8 +1938,8 @@ function renderAll(){
       +'<div>'+lrows+'</div>'
       +'<div class="sec-foot" data-sid="'+s.id+'">'
       +'<span>SF: <b>'+sf.toLocaleString()+'</b></span>'
-      +'<span>SY: <b>'+(sf>0?sy.toFixed(1):'-')+'</b></span>'
-      +'<span>Tons: <b>'+(sf>0?st.tons.toFixed(2):'-')+'</b></span>'
+      +'<span>SY: <b>'+(sf>0?sy.toLocaleString():'-')+'</b></span>'
+      +'<span>Tons: <b>'+(sf>0?st.tons.toLocaleString():'-')+'</b></span>'
       +'<span>Mat: <b>'+(sf>0?'$'+fi(st.mat):'-')+'</b></span>'
       +'<span>Bid: <b>'+(sf>0?'$'+fi(st.bid):'-')+'</b></span>'
       +'<span>MU: <b class="'+(mp>=0?'gp':'gn')+'">'+(sf>0?mp.toFixed(1)+'%':'-')+'</b></span>'
@@ -2048,7 +2049,7 @@ function recalc(){
   var gSF=0,gSY=0,gT=0,gB=0; gM=0;
   var gCrew=0,gTruck=0;
   sections.forEach(function(s){
-    var sf=s.sf||0,sy=sf/9;gSF+=sf;gSY+=sy;
+    var sf=s.sf||0,sy=calcSY(sf);gSF+=sf;gSY+=sy;
     s.layers.forEach(function(l){
       var isMill=l.type==='Mill & Pave';
       var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
@@ -2064,10 +2065,10 @@ function recalc(){
       tr.innerHTML='<td><small>'+esc(s.name)+'</small></td>'
         +'<td><span class="badge '+(LBADGE[l.type]||'')+'">'+esc(l.type)+'</span></td>'
         +'<td>'+(sf>0?sf.toLocaleString():'-')+'</td>'
-        +'<td>'+(sf>0?sy.toFixed(1):'-')+'</td>'
+        +'<td>'+(sf>0?sy.toLocaleString():'-')+'</td>'
         +'<td>'+(!isMill?l.depth+'"':isMill?(l.mill_days||0)+' day(s)':'-')+'</td>'
         +'<td>'+(!isMill?'ton':'day')+'</td>'
-        +'<td>'+(t>0?t.toFixed(2):'-')+'</td>'
+        +'<td>'+(t>0?t.toLocaleString():'-')+'</td>'
         +'<td>'+(lDays>0?lDays.toFixed(1):'-')+'</td>'
         +'<td>'+(mC>0?'$'+fi(mC):isMill?'$'+fi((l.mill_days||0)*(l.mill_rate||jcMillFee)):'-')+'</td>'
         +'<td>'+(crewC>0?'$'+fi(crewC):'-')+'</td>'
@@ -2109,8 +2110,8 @@ function recalc(){
   if(ccEl)ccEl.style.display=contv>0?'':'none';
   var cmEl=document.getElementById('m-cont');
   if(cmEl)cmEl.textContent=contv>0?'$'+fi(contv):'-';
-  document.getElementById('m-sy').textContent=gSY>0?gSY.toFixed(1):'-';
-  document.getElementById('m-tons').textContent=gT>0?gT.toFixed(2):'-';
+  document.getElementById('m-sy').textContent=gSY>0?gSY.toLocaleString():'-';
+  document.getElementById('m-tons').textContent=gT>0?gT.toLocaleString():'-';
   document.getElementById('m-mat').textContent=gM>0?'$'+fi(gM):'-';
   document.getElementById('m-crew').textContent=gCrew>0?'$'+fi(gCrew):'-';
   document.getElementById('m-truck').textContent=gTruck>0?'$'+fi(gTruck):'-';
@@ -2131,7 +2132,7 @@ function buildPayload(){
   var fmtDate=date?new Date(date+'T12:00:00').toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}):'';
   var line_items=[],total=0;
   sections.forEach(function(s){
-    var sf=s.sf||0,sy=sf/9;
+    var sf=s.sf||0,sy=calcSY(sf);
     s.layers.forEach(function(l){
       var isMill=l.type==='Mill & Pave';
       var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
@@ -2143,7 +2144,7 @@ function buildPayload(){
       if(sf>0||isMill)line_items.push({
         name:s.name+' \u2014 '+l.type,
         description:desc,
-        qty:isMill?(l.mill_days||0):parseFloat(sy.toFixed(1)),
+        qty:isMill?(l.mill_days||0):sy,
         unit:isMill?'day':'SY',
         price:isMill?parseFloat((bC/Math.max(l.mill_days||1,1)).toFixed(2)):parseFloat(sy>0?(bC/sy).toFixed(2):'0'),
         subtotal:parseFloat(bC.toFixed(2))
