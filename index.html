@@ -2513,6 +2513,23 @@ function openEditUserModal(u){_editingUserId=u.id;document.getElementById('user-
 function closeUserModal(){document.getElementById('user-modal').classList.add('hidden');_editingUserId=null;}
 async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pin=document.getElementById('edit-pin').value.trim();var role=document.getElementById('edit-role').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,role:role};if(pin)upd.pin=pin;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pin||pin.length<4){errEl.textContent='PIN must be at least 4 digits.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,pin:pin,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
 async function deactivateUser(uid,username,active){if(!confirm((active?'Deactivate':'Reactivate')+' "'+username+'"?'))return;var r=await fetch('/admin/users/'+uid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!active})});var d=await r.json();if(d.ok){loadUsers();toast('User '+(active?'deactivated':'reactivated'),'ok');}else toast('Error: '+(d.error||'failed'),'err');}
+
+// Startup: check auth on every page load so _userRole is set from server
+(async function(){
+  try{
+    var r=await fetch('/auth/check');
+    var d=await r.json();
+    if(d.authenticated){
+      window._userRole=d.role||'user';
+      window._userName=d.full_name||'';
+      window._userUsername=d.username||'';
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').className='on';
+      boot();
+      showAdminElements();
+    }
+  }catch(e){}
+})();
 </script>
 
 <!-- Client Modal -->
