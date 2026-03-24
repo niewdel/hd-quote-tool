@@ -1035,20 +1035,34 @@ function renderBadgeList(){
     var b = BADGE_DEFS[cls];
     var row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr);';
-    row.innerHTML =
-      '<span class="badge '+cls+'" style="min-width:60px;text-align:center;">'+b.label+'</span>'
-      +'<input type="text" value="'+b.label+'" placeholder="Label" style="width:120px;" data-badge-cls="'+cls+'" data-badge-field="label">'
-      +'<input type="color" value="'+b.color+'" style="width:40px;height:28px;padding:2px;border:1px solid var(--bdr);border-radius:4px;cursor:pointer;" data-badge-cls="'+cls+'" data-badge-field="color">'
-      +'<span style="font-size:11px;color:var(--dgray);flex:1;">CSS: '+cls+'</span>'
-      +'<button class="btn-ico" style="color:var(--red);" onclick="deleteBadge(''+cls+'')">&#215;</button>';
-    // live update
-    row.querySelectorAll('[data-badge-cls]').forEach(function(inp){
-      inp.addEventListener('change',function(){
-        var c2=this.getAttribute('data-badge-cls'), f=this.getAttribute('data-badge-field');
-        if(BADGE_DEFS[c2]) BADGE_DEFS[c2][f]=this.value;
-        renderBadgeList();
-      });
-    });
+    // Build badge preview
+    var preview = document.createElement('span');
+    preview.className = 'badge ' + cls;
+    preview.style.cssText = 'min-width:60px;text-align:center;';
+    preview.textContent = b.label;
+    row.appendChild(preview);
+    // Label input
+    var lblInp = document.createElement('input');
+    lblInp.type = 'text'; lblInp.value = b.label; lblInp.placeholder = 'Label';
+    lblInp.style.cssText = 'width:120px;';
+    lblInp.addEventListener('change', (function(cc){ return function(){ BADGE_DEFS[cc].label=this.value; renderBadgeList(); }; })(cls));
+    row.appendChild(lblInp);
+    // Color input
+    var colInp = document.createElement('input');
+    colInp.type = 'color'; colInp.value = b.color;
+    colInp.style.cssText = 'width:40px;height:28px;padding:2px;border:1px solid var(--bdr);border-radius:4px;cursor:pointer;';
+    colInp.addEventListener('change', (function(cc){ return function(){ BADGE_DEFS[cc].color=this.value; renderBadgeList(); }; })(cls));
+    row.appendChild(colInp);
+    // CSS class label
+    var lbl = document.createElement('span');
+    lbl.style.cssText = 'font-size:11px;color:var(--dgray);flex:1;';
+    lbl.textContent = 'CSS: ' + cls;
+    row.appendChild(lbl);
+    // Delete button
+    var del = document.createElement('button');
+    del.className = 'btn-ico'; del.style.color = 'var(--red)'; del.textContent = '×';
+    del.addEventListener('click', (function(cc){ return function(){ deleteBadge(cc); }; })(cls));
+    row.appendChild(del);
     c.appendChild(row);
   });
 }
@@ -1080,36 +1094,46 @@ function saveBadges(){
 function renderLibraryList(){
   var c = document.getElementById('library-list');
   if(!c) return;
+  c.innerHTML='';
   if(!BID_LIBRARY.length){
     c.innerHTML='<p style="font-size:12px;color:var(--dgray);">No items yet. Add reusable line items to quickly insert into proposals.</p>';
     return;
   }
-  c.innerHTML='';
+  // Header
+  var hdr=document.createElement('div');
+  hdr.style.cssText='display:grid;grid-template-columns:1fr 1fr 70px 90px 28px;gap:6px;padding:0 0 6px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--bdr);margin-bottom:4px;';
+  hdr.innerHTML='<span>Name</span><span>Description</span><span>Unit</span><span>$/Unit</span><span></span>';
+  c.appendChild(hdr);
   BID_LIBRARY.forEach(function(item){
-    var row = document.createElement('div');
-    row.style.cssText='display:grid;grid-template-columns:1fr 1fr 70px 80px 28px;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr);';
-    row.innerHTML=
-      '<input type="text" value="'+esc(item.name)+'" placeholder="Item name" data-lib-id="'+item.id+'" data-lib-f="name" style="font-size:12px;">'
-      +'<input type="text" value="'+esc(item.desc||'')+'" placeholder="Description" data-lib-id="'+item.id+'" data-lib-f="desc" style="font-size:12px;">'
-      +'<select data-lib-id="'+item.id+'" data-lib-f="unit" style="font-size:12px;">'
-        +['LS','EA','LF','SY','SF','TON','CY'].map(function(u){return '<option'+(u===item.unit?' selected':'')+'>'+u+'</option>';}).join('')
-      +'</select>'
-      +'<input type="number" value="'+(item.rate||'')+'" placeholder="$/unit" min="0" step="0.01" data-lib-id="'+item.id+'" data-lib-f="rate" style="font-size:12px;text-align:right;">'
-      +'<button class="btn-ico" style="color:var(--red);" onclick="deleteLibItem('+item.id+')">&#215;</button>';
-    row.querySelectorAll('[data-lib-id]').forEach(function(inp){
-      inp.addEventListener('change',function(){
-        var id=parseInt(this.getAttribute('data-lib-id')), f=this.getAttribute('data-lib-f');
-        var it=BID_LIBRARY.find(function(x){return x.id===id;});
-        if(it) it[f] = f==='rate'?(parseFloat(this.value)||0):this.value;
-      });
+    var row=document.createElement('div');
+    row.style.cssText='display:grid;grid-template-columns:1fr 1fr 70px 90px 28px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);';
+    // Name
+    var ni=document.createElement('input'); ni.type='text'; ni.value=item.name||''; ni.placeholder='Item name'; ni.style.fontSize='12px';
+    ni.addEventListener('change',(function(it){return function(){it.name=this.value;};})(item));
+    row.appendChild(ni);
+    // Desc
+    var di=document.createElement('input'); di.type='text'; di.value=item.desc||''; di.placeholder='Description'; di.style.fontSize='12px';
+    di.addEventListener('change',(function(it){return function(){it.desc=this.value;};})(item));
+    row.appendChild(di);
+    // Unit
+    var us=document.createElement('select'); us.style.fontSize='12px';
+    ['LS','EA','LF','SY','SF','TON','CY'].forEach(function(u){
+      var o=document.createElement('option'); o.value=u; o.textContent=u;
+      if(u===item.unit) o.selected=true;
+      us.appendChild(o);
     });
+    us.addEventListener('change',(function(it){return function(){it.unit=this.value;};})(item));
+    row.appendChild(us);
+    // Rate
+    var ri=document.createElement('input'); ri.type='number'; ri.value=item.rate||''; ri.placeholder='0.00'; ri.min='0'; ri.step='0.01'; ri.style.fontSize='12px';
+    ri.addEventListener('change',(function(it){return function(){it.rate=parseFloat(this.value)||0;};})(item));
+    row.appendChild(ri);
+    // Delete
+    var db=document.createElement('button'); db.className='btn-ico'; db.style.color='var(--red)'; db.textContent='×';
+    db.addEventListener('click',(function(id){return function(){deleteLibItem(id);};})(item.id));
+    row.appendChild(db);
     c.appendChild(row);
   });
-  // Header labels above first row
-  var hdr = document.createElement('div');
-  hdr.style.cssText='display:grid;grid-template-columns:1fr 1fr 70px 80px 28px;gap:6px;padding:0 0 4px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.5px;';
-  hdr.innerHTML='<span>Name</span><span>Description</span><span>Unit</span><span>$/Unit</span><span></span>';
-  c.insertBefore(hdr, c.firstChild);
 }
 function addLibraryItem(){
   BID_LIBRARY.push({id:_libId++,name:'',desc:'',unit:'LS',rate:0});
@@ -1767,17 +1791,50 @@ function updExtraDesc(id,v){var i=extraItems.find(function(x){return x.id===id;}
     var row=document.createElement('div');
     row.className='lyr-row';
     row.style.cssText='flex-wrap:wrap;gap:6px;align-items:flex-start;padding:8px 0;';
-    var unitOpts=['LS','EA','LF','SY','SF','TON','CY'].map(function(u){return '<option'+(u===i.unit?' selected':'')+'>'+u+'</option>';}).join('');
-    row.innerHTML=
-      '<div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:160px;">'
-        +'<input type="text" value="'+esc(i.name)+'" placeholder="Item name" style="width:100%;font-weight:500;" onchange="updExtraName('+i.id+',this.value)">'
-        +'<input type="text" value="'+esc(i.desc||'')+'" placeholder="Description (appears on proposal)" style="width:100%;font-size:11px;color:var(--dgray);" onchange="updExtraDesc('+i.id+',this.value)">'
-      +'</div>'
-      +'<label>Qty</label><input type="number" value="'+i.qty+'" min="0" step="1" style="width:60px" onchange="updExtraNum('+i.id+",'qty',this.value)">"
-      +'<label>Unit</label><select onchange="updExtraUnit('+i.id+',this.value)" style="width:66px">'+unitOpts+'</select>'
-      +'<label>$/unit</label><input type="number" value="'+(i.price||'')+'" placeholder="0.00" min="0" step=".01" style="width:80px" onchange="updExtraNum('+i.id+",'price',this.value)">"
-      +'<span class="lres" data-extra="'+i.id+'">'+(i.subtotal>0?'Subtotal: <b>$'+fi(i.subtotal)+'</b>':'')+'</span>'
-      +'<button class="btn-ico" onclick="remExtra('+i.id+')">&#215;</button>';
+    var unitOpts=['LS','EA','LF','SY','SF','TON','CY'].map(function(u){
+      return '<option'+(u===i.unit?' selected':'')+'>'+u+'</option>';
+    }).join('');
+    // Name + desc wrapper
+    var nameWrap = document.createElement('div');
+    nameWrap.style.cssText='display:flex;flex-direction:column;gap:3px;flex:1;min-width:160px;';
+    var nameInp = document.createElement('input');
+    nameInp.type='text'; nameInp.value=i.name||''; nameInp.placeholder='Item name';
+    nameInp.style.cssText='width:100%;font-weight:500;';
+    nameInp.addEventListener('change',(function(id){return function(){updExtraName(id,this.value);};})(i.id));
+    var descInp = document.createElement('input');
+    descInp.type='text'; descInp.value=i.desc||''; descInp.placeholder='Description (appears on proposal)';
+    descInp.style.cssText='width:100%;font-size:11px;color:var(--dgray);';
+    descInp.addEventListener('change',(function(id){return function(){updExtraDesc(id,this.value);};})(i.id));
+    nameWrap.appendChild(nameInp);
+    nameWrap.appendChild(descInp);
+    row.appendChild(nameWrap);
+    // Qty
+    var qtyLbl=document.createElement('label'); qtyLbl.textContent='Qty'; row.appendChild(qtyLbl);
+    var qtyInp=document.createElement('input');
+    qtyInp.type='number'; qtyInp.value=i.qty; qtyInp.min='0'; qtyInp.step='1'; qtyInp.style.width='60px';
+    qtyInp.addEventListener('change',(function(id){return function(){updExtraNum(id,'qty',this.value);};})(i.id));
+    row.appendChild(qtyInp);
+    // Unit
+    var unitLbl=document.createElement('label'); unitLbl.textContent='Unit'; row.appendChild(unitLbl);
+    var unitSel=document.createElement('select'); unitSel.style.width='66px';
+    unitSel.innerHTML=unitOpts;
+    unitSel.addEventListener('change',(function(id){return function(){updExtraUnit(id,this.value);};})(i.id));
+    row.appendChild(unitSel);
+    // Price
+    var priceLbl=document.createElement('label'); priceLbl.textContent='$/unit'; row.appendChild(priceLbl);
+    var priceInp=document.createElement('input');
+    priceInp.type='number'; priceInp.value=i.price||''; priceInp.placeholder='0.00';
+    priceInp.min='0'; priceInp.step='.01'; priceInp.style.width='80px';
+    priceInp.addEventListener('change',(function(id){return function(){updExtraNum(id,'price',this.value);};})(i.id));
+    row.appendChild(priceInp);
+    // Result span
+    var res=document.createElement('span'); res.className='lres'; res.setAttribute('data-extra',i.id);
+    res.innerHTML=i.subtotal>0?'Subtotal: <b>$'+fi(i.subtotal)+'</b>':'';
+    row.appendChild(res);
+    // Delete
+    var del=document.createElement('button'); del.className='btn-ico'; del.innerHTML='&#215;';
+    del.addEventListener('click',(function(id){return function(){remExtra(id);};})(i.id));
+    row.appendChild(del);
     c.appendChild(row);
   });
   recalc();
