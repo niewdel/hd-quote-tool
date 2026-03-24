@@ -846,7 +846,7 @@ function boot(){
   updateMatIndicator();
   checkMobile();
   renderTopbar('build');
-  if(window._userRole==='admin'){var an=document.getElementById('nav-admin');if(an)an.style.display='';}
+  
   document.addEventListener('click',function(e){
     if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))
       document.getElementById('client-sug').style.display='none';
