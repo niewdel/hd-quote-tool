@@ -351,7 +351,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
     </div>
     <nav>
       <div class="nav-item on" onclick="showPanel('dashboard',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg>Dashboard</div>
-      <div class="nav-item" onclick="showPanel('pipeline',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 3h3v10H1zm4 0h3v10H5zm4 0h3v10H9zm4 0h2v10h-2z"/></svg>Project Pipeline</div>
       <div class="nav-item" onclick="showPanel('build',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Create Proposal
       </div>
@@ -364,7 +363,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" onclick="showPanel('analytics',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v3H1zm4-4h3v7H5zm4-4h3v11H9zm4-6h2v17h-2z"/></svg>Analytics</div>
       <div class="nav-item" onclick="showPanel('lineitems',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v2H2zm0 4h8v1H2zm0 3h10v1H2zm0 3h6v1H2z"/><path d="M13 7l2 2-2 2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Line Items</div>
       <div class="nav-item" onclick="showPanel('crewcosts',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 1v14M8 3v12M12 5v10"/><circle cx="4" cy="1" r="1"/><circle cx="8" cy="3" r="1"/><circle cx="12" cy="5" r="1"/></svg>Crew Costs</div>
-      <div class="nav-item" onclick="showPanel('jobcost',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3v1.5H10v1H8.5V9H10v1H8.5V11.5h-1V10H6V9h1.5V6.5H6v-1h1.5V4h1z"/></svg>Est. vs Actuals</div>
+      <div class="nav-item" onclick="showPanel('jobcost',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3v1.5H10v1H8.5V9H10v1H8.5V11.5h-1V10H6V9h1.5V6.5H6v-1h1.5V4h1z"/></svg>Job Costing</div>
       <div class="nav-item" onclick="showPanel('settings',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings
       </div>
@@ -387,11 +386,29 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
       <!-- DASHBOARD PANEL -->
       <div class="panel on" id="panel-dashboard">
-        <div class="content" style="padding:16px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px;" id="dash-stats"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+        <div class="content" style="padding:16px;max-width:none;">
+          <!-- Stats + Quick Links row -->
+          <div style="display:flex;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:0;" id="dash-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;"></div>
+            <div style="display:flex;gap:8px;align-items:flex-start;flex-shrink:0;">
+              <button class="btn btn-red btn-sm" onclick="openProjectModal()">+ New Project</button>
+              <button class="btn btn-sec btn-sm" onclick="showPanel('build',document.querySelector('[onclick*=build]'))">+ Create Proposal</button>
+              <button class="btn btn-sec btn-sm" onclick="showPanel('co',document.querySelector('[onclick*=\\'co\\']'))">+ Create CO</button>
+            </div>
+          </div>
+          <!-- Pipeline Board -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-hdr"><span class="card-title">Project Pipeline</span><button class="btn btn-sec btn-sm" onclick="renderPipeline()">Refresh</button></div>
+            <div class="card-body" style="padding:8px;overflow-x:auto;">
+              <div id="pipeline-board">
+                <div style="color:var(--dgray);font-size:13px;padding:20px;">Loading pipeline...</div>
+              </div>
+            </div>
+          </div>
+          <!-- Bid Calendar + Documents row -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
             <div class="card">
-              <div class="card-hdr"><span class="card-title">Crew Schedule</span></div>
+              <div class="card-hdr"><span class="card-title">Bid Calendar</span></div>
               <div class="card-body" style="padding:0;">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bdr);">
                   <button class="btn btn-sec btn-sm" onclick="dashCalNav(-1)">&lsaquo; Prev</button>
@@ -399,65 +416,42 @@ tr:nth-child(even) td{background:#FAFAFA;}
                   <button class="btn btn-sec btn-sm" onclick="dashCalNav(1)">Next &rsaquo;</button>
                 </div>
                 <div id="dash-cal-grid" style="padding:8px;"></div>
+                <div style="padding:0 14px 10px;">
+                  <div id="dash-cal-selected-label" style="font-weight:600;font-size:13px;margin-bottom:6px;display:none;">Bids for <span id="dash-cal-selected-date"></span></div>
+                  <div id="dash-day-entries">
+                    <p style="font-size:12px;color:var(--dgray);">Click a date to view bid deadlines.</p>
+                  </div>
+                </div>
               </div>
             </div>
             <div>
               <div class="card" style="margin-bottom:14px;">
-                <div class="card-hdr"><span class="card-title">Schedule for <span id="dash-cal-selected-date"></span></span></div>
-                <div class="card-body" id="dash-day-entries">
-                  <p style="font-size:12px;color:var(--dgray);">Click a date on the calendar to view or add crew assignments.</p>
+                <div class="card-hdr"><span class="card-title">Company Handbook</span></div>
+                <div class="card-body">
+                  <div id="dash-handbook-content"></div>
+                  <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+                    <label class="btn btn-sec btn-sm" style="cursor:pointer;margin:0;"><input type="file" accept=".pdf" style="display:none;" onchange="uploadDashPDF('handbook',this)"/>Upload Handbook PDF</label>
+                    <span id="dash-handbook-filename" style="font-size:11px;color:var(--dgray);"></span>
+                  </div>
                 </div>
               </div>
               <div class="card">
-                <div class="card-hdr"><span class="card-title">Quick Links</span></div>
-                <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
-                  <button class="btn btn-sec btn-sm" style="text-align:left;" onclick="showPanel('build',document.querySelector('[onclick*=build]'))">+ Create New Proposal</button>
-                  <button class="btn btn-sec btn-sm" style="text-align:left;" onclick="showPanel('co',document.querySelector('[onclick*=\\'co\\']'))">+ Create Change Order</button>
-                  <button class="btn btn-sec btn-sm" style="text-align:left;" onclick="showPanel('clients',document.querySelector('[onclick*=clients]'))">View Clients</button>
-                  <button class="btn btn-sec btn-sm" style="text-align:left;" onclick="showPanel('pipeline',document.querySelector('[onclick*=pipeline]'))">View Pipeline</button>
+                <div class="card-hdr"><span class="card-title">Email Signature</span></div>
+                <div class="card-body" id="dash-signature">
+                  <p style="font-size:11px;color:var(--dgray);margin-bottom:8px;">Copy this signature and paste it into your Gmail settings. Replace the variables with your info. Copy the logo separately.</p>
+                  <div id="dash-sig-content" style="font-family:Arial,sans-serif;font-size:13px;line-height:1.6;border:1px solid var(--bdr);border-radius:6px;padding:16px;background:#FAFAFA;user-select:all;">
+                    <p style="font-weight:700;color:var(--red);margin-bottom:0;font-size:14px;" id="dash-sig-name">Full Name</p>
+                    <p style="color:#555;font-size:12px;margin-bottom:4px;" id="dash-sig-title">Company Title</p>
+                    <p style="font-size:12px;color:#555;margin-bottom:1px;">E: <span id="dash-sig-email" style="color:#0055B2;">email@hdgrading.com</span></p>
+                    <p style="font-size:12px;color:#555;margin-bottom:8px;">C: <span id="dash-sig-phone">Cell Number</span> | O: 704-791-8982</p>
+                    <img src="hd_logo_cropped.png" alt="HD Hauling &amp; Grading" style="height:70px;width:auto;display:block;margin-bottom:8px;"/>
+                    <p style="font-size:8px;color:#888;line-height:1.3;margin:0;"><strong>CONFIDENTIALITY NOTICE:</strong> This email and any attachments are intended solely for the named recipient(s) and may contain confidential information. If you have received this email in error, please immediately notify the sender and permanently delete this email and any attachments without reading, forwarding, copying, or disclosing their contents. Any unauthorized use, disclosure, or distribution is prohibited and may be unlawful.</p>
+                  </div>
+                  <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <button class="btn btn-sec btn-sm" onclick="copySignature()">Copy Signature Text</button>
+                    <button class="btn btn-sec btn-sm" onclick="window.open('https://mail.google.com/mail/u/0/#settings/general','_blank')">Open Gmail Settings</button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div class="card">
-              <div class="card-hdr"><span class="card-title">Company Handbook</span></div>
-              <div class="card-body" id="dash-handbook">
-                <div style="font-size:13px;line-height:1.6;">
-                  <p style="font-weight:600;margin-bottom:8px;color:var(--red);">HD Hauling &amp; Grading — Standard Operating Procedures</p>
-                  <p style="margin-bottom:10px;">All work is performed in accordance with NCDOT standards and specifications.</p>
-                  <p style="font-weight:600;margin-bottom:4px;">Safety Requirements</p>
-                  <ul style="margin:0 0 10px 18px;font-size:12px;">
-                    <li>Hard hats, high-vis vests, and steel-toe boots required on all job sites</li>
-                    <li>Daily safety briefing before operations begin</li>
-                    <li>All equipment inspected before each shift</li>
-                  </ul>
-                  <p style="font-weight:600;margin-bottom:4px;">Job Site Protocol</p>
-                  <ul style="margin:0 0 10px 18px;font-size:12px;">
-                    <li>Crew foreman checks in with site contact upon arrival</li>
-                    <li>Photos taken before, during, and after each phase</li>
-                    <li>Daily progress reports submitted by end of shift</li>
-                  </ul>
-                  <p style="font-weight:600;margin-bottom:4px;">Payment Terms</p>
-                  <ul style="margin:0 0 0 18px;font-size:12px;">
-                    <li>Net 30 on all invoices</li>
-                    <li>Change orders require written approval before work begins</li>
-                    <li>Retainage: 5% held until project completion</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-hdr"><span class="card-title">Email Signature Template</span></div>
-              <div class="card-body" id="dash-signature">
-                <div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.5;border:1px solid var(--bdr);border-radius:6px;padding:14px;background:#FAFAFA;">
-                  <p style="font-weight:700;color:#111;margin-bottom:0;" id="dash-sig-name">Your Name</p>
-                  <p style="color:var(--red);font-size:12px;margin-bottom:6px;">HD Hauling &amp; Grading</p>
-                  <p style="font-size:11px;color:#555;margin-bottom:1px;" id="dash-sig-phone">Phone: (555) 000-0000</p>
-                  <p style="font-size:11px;color:#555;margin-bottom:1px;" id="dash-sig-email">Email: info@hdhauling.com</p>
-                  <p style="font-size:11px;color:#555;">Web: hdhauling.com</p>
-                </div>
-                <button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="copySignature()">Copy Signature to Clipboard</button>
               </div>
             </div>
           </div>
@@ -676,12 +670,43 @@ tr:nth-child(even) td{background:#FAFAFA;}
       </div>
 
       <!-- PIPELINE PANEL -->
-      <div class="panel" id="panel-pipeline"><div class="content" style="padding:16px;max-width:none;">
-          <div id="pipeline-board" style="overflow-x:auto;">
-            <div style="color:var(--dgray);font-size:13px;padding:20px;">Loading pipeline...</div>
+      <!-- PROJECT SUMMARY PANEL -->
+      <div class="panel" id="panel-project"><div class="content" style="padding:16px;">
+        <div style="margin-bottom:14px;">
+          <button class="btn btn-sec btn-sm" onclick="showPanel('dashboard',document.querySelector('[onclick*=dashboard]'))">&lsaquo; Back to Dashboard</button>
+        </div>
+        <div id="project-summary-header" style="margin-bottom:16px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Proposals</span></div>
+            <div class="card-body" id="ps-proposals"><p style="color:var(--dgray);font-size:12px;">No proposals linked.</p></div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Change Orders</span></div>
+            <div class="card-body" id="ps-change-orders"><p style="color:var(--dgray);font-size:12px;">No change orders.</p></div>
           </div>
         </div>
-      </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Site Plan</span></div>
+            <div class="card-body" id="ps-site-plan">
+              <p style="color:var(--dgray);font-size:12px;">No site plan uploaded.</p>
+              <label class="btn btn-sec btn-sm" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Upload Site Plan</label>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Job Costing — Estimates vs Actuals</span></div>
+            <div class="card-body" id="ps-job-costing"><p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Work Orders &amp; Notes</span></div>
+          <div class="card-body" id="ps-work-orders">
+            <div id="ps-wo-list"></div>
+            <button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="addProjectNote()">+ Add Note</button>
+          </div>
+        </div>
+      </div></div>
 
       <!-- CLIENTS PANEL -->
       <div class="panel" id="panel-clients"><div class="content">
@@ -1751,10 +1776,9 @@ function renderAnalytics(){
 
 // ---- Dashboard ----
 var dashCalDate = new Date();
-var dashSchedule = JSON.parse(localStorage.getItem('hd_crew_schedule')||'{}');
 var dashSelectedDate = null;
-
 var dashBidDueDates = {}; // {dateKey: [{name,client,time,id}]}
+var _currentProjectId = null;
 
 function loadDashBidDates(){
   dashBidDueDates={};
@@ -1776,6 +1800,7 @@ function renderDashboard(){
   loadDashBidDates();
   renderDashCal();
   renderDashSignature();
+  renderDashHandbook();
 }
 
 function renderDashStats(){
@@ -1820,16 +1845,14 @@ function renderDashCal(){
     var cell=document.createElement('div');
     var dateKey=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     var isToday=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
-    var hasEntries=dashSchedule[dateKey]&&dashSchedule[dateKey].length>0;
     var hasBids=dashBidDueDates[dateKey]&&dashBidDueDates[dateKey].length>0;
     var isSelected=dashSelectedDate===dateKey;
     cell.style.cssText='padding:8px 4px;text-align:center;font-size:12px;border-radius:4px;cursor:pointer;position:relative;'
       +(isSelected?'background:var(--red);color:#fff;font-weight:700;':(isToday?'background:#FEE;font-weight:600;border:1px solid var(--red);':(hasBids?'background:#FFF8E6;border:1px solid #E6A800;':'background:#FAFAFA;')))
-      +((hasEntries||hasBids)&&!isSelected?'font-weight:600;':'');
+      +(hasBids&&!isSelected?'font-weight:600;':'');
     cell.textContent=d;
-    if(hasEntries||hasBids){var dots=document.createElement('div');dots.style.cssText='display:flex;gap:3px;justify-content:center;margin-top:2px;';
-      if(hasEntries){var dot=document.createElement('div');dot.style.cssText='width:5px;height:5px;border-radius:50%;background:'+(isSelected?'#fff':'var(--red)')+';';dots.appendChild(dot);}
-      if(hasBids){var bdot=document.createElement('div');bdot.style.cssText='width:5px;height:5px;border-radius:50%;background:'+(isSelected?'#fff':'#E6A800')+';';dots.appendChild(bdot);}
+    if(hasBids){var dots=document.createElement('div');dots.style.cssText='display:flex;gap:3px;justify-content:center;margin-top:2px;';
+      var bdot=document.createElement('div');bdot.style.cssText='width:5px;height:5px;border-radius:50%;background:'+(isSelected?'#fff':'#E6A800')+';';dots.appendChild(bdot);
       cell.appendChild(dots);}
     (function(dk){cell.addEventListener('click',function(){dashSelectedDate=dk;renderDashCal();renderDayEntries(dk);});})(dateKey);
     body.appendChild(cell);
@@ -1846,82 +1869,27 @@ function dashCalNav(dir){
 function renderDayEntries(dateKey){
   var c=document.getElementById('dash-day-entries');
   var dateLabel=document.getElementById('dash-cal-selected-date');
+  var labelWrap=document.getElementById('dash-cal-selected-label');
   if(!c)return;
   var d=new Date(dateKey+'T12:00:00');
   if(dateLabel)dateLabel.textContent=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-  var entries=dashSchedule[dateKey]||[];
+  if(labelWrap)labelWrap.style.display='block';
   var bids=dashBidDueDates[dateKey]||[];
   c.innerHTML='';
-  // Bid due dates first
   if(bids.length){
-    var bidHdr=document.createElement('div');bidHdr.style.cssText='font-size:10px;font-weight:700;color:#E6A800;text-transform:uppercase;letter-spacing:.05em;padding:4px 0 2px;';
-    bidHdr.textContent='Bids Due';c.appendChild(bidHdr);
     bids.forEach(function(b){
       var row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);background:#FFFBEB;margin:0 -15px;padding-left:15px;padding-right:15px;';
+      row.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr);cursor:pointer;';
       row.innerHTML='<div style="flex:1;"><div style="font-weight:600;font-size:13px;color:#B27D00;">'+esc(b.name)+'</div>'
         +'<div style="font-size:11px;color:var(--dgray);">'+esc(b.client)+(b.time?' — Due by '+b.time:'')+'</div></div>'
-        +'<span style="font-size:18px;">⚠</span>';
+        +'<span style="font-size:14px;color:#E6A800;">&#9654;</span>';
+      (function(bid){row.addEventListener('click',function(){openProjectSummary(bid.id);});})(b);
       c.appendChild(row);
     });
+  } else {
+    var empty=document.createElement('p');empty.style.cssText='font-size:12px;color:var(--dgray);';
+    empty.textContent='No bids due on this date.';c.appendChild(empty);
   }
-  // Crew entries
-  if(entries.length){
-    var crewHdr=document.createElement('div');crewHdr.style.cssText='font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.05em;padding:8px 0 2px;';
-    crewHdr.textContent='Crew Schedule';c.appendChild(crewHdr);
-    entries.forEach(function(e,idx){
-      var row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bdr);';
-      var info=document.createElement('div');info.style.flex='1';
-      info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(e.crew||'')+'</div>'
-        +'<div style="font-size:11px;color:var(--dgray);">'+esc(e.project||'')+' — '+esc(e.notes||'')+'</div>';
-      row.appendChild(info);
-      var del=document.createElement('button');del.className='btn-ico';del.style.color='var(--red)';del.textContent='×';
-      (function(dk,i){del.addEventListener('click',function(){dashSchedule[dk].splice(i,1);if(!dashSchedule[dk].length)delete dashSchedule[dk];saveDashSchedule();renderDayEntries(dk);renderDashCal();});})(dateKey,idx);
-      row.appendChild(del);
-      c.appendChild(row);
-    });
-  }
-  if(!entries.length&&!bids.length){
-    var empty=document.createElement('p');empty.style.cssText='font-size:12px;color:var(--dgray);margin-bottom:10px;';
-    empty.textContent='No entries for this date.';c.appendChild(empty);
-  }
-  var addBtn=document.createElement('button');addBtn.className='btn btn-red btn-sm';addBtn.textContent='+ Add Crew Assignment';
-  addBtn.addEventListener('click',function(){openCrewEntryModal(dateKey);});
-  c.appendChild(addBtn);
-}
-
-function openCrewEntryModal(dateKey){
-  var ex=document.getElementById('crew-entry-modal');if(ex)ex.remove();
-  var modal=document.createElement('div');modal.id='crew-entry-modal';
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
-  var box=document.createElement('div');
-  box.style.cssText='background:#fff;border-radius:10px;padding:20px;width:360px;max-width:90vw;';
-  box.innerHTML='<h3 style="margin:0 0 14px;font-size:15px;">Add Crew Assignment</h3>'
-    +'<label style="margin-bottom:3px;">Crew Name</label><input id="ce-crew" type="text" placeholder="e.g. Paving Crew A" style="width:100%;margin-bottom:10px;"/>'
-    +'<label style="margin-bottom:3px;">Project / Location</label><input id="ce-project" type="text" placeholder="e.g. CK Beam - Main St" style="width:100%;margin-bottom:10px;"/>'
-    +'<label style="margin-bottom:3px;">Notes</label><input id="ce-notes" type="text" placeholder="e.g. ABC base, 6 loads" style="width:100%;margin-bottom:14px;"/>'
-    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
-    +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'crew-entry-modal\').remove()">Cancel</button>'
-    +'<button class="btn btn-red btn-sm" id="ce-save">Save</button></div>';
-  modal.appendChild(box);
-  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
-  document.body.appendChild(modal);
-  document.getElementById('ce-save').addEventListener('click',function(){
-    var crew=document.getElementById('ce-crew').value.trim();
-    var project=document.getElementById('ce-project').value.trim();
-    var notes=document.getElementById('ce-notes').value.trim();
-    if(!crew){toast('Enter a crew name','err');return;}
-    if(!dashSchedule[dateKey])dashSchedule[dateKey]=[];
-    dashSchedule[dateKey].push({crew:crew,project:project,notes:notes});
-    saveDashSchedule();
-    modal.remove();
-    renderDayEntries(dateKey);renderDashCal();
-  });
-}
-
-function saveDashSchedule(){
-  localStorage.setItem('hd_crew_schedule',JSON.stringify(dashSchedule));
 }
 
 function renderDashSignature(){
@@ -1929,14 +1897,247 @@ function renderDashSignature(){
   var phoneEl=document.getElementById('dash-sig-phone');
   var emailEl=document.getElementById('dash-sig-email');
   if(nameEl&&window._userName)nameEl.textContent=window._userName;
-  if(phoneEl&&sender.phone)phoneEl.textContent='Phone: '+sender.phone;
-  if(emailEl&&sender.email)emailEl.textContent='Email: '+sender.email;
+  if(phoneEl&&sender.phone)phoneEl.textContent=sender.phone;
+  if(emailEl&&sender.email)emailEl.textContent=sender.email;
 }
 
 function copySignature(){
-  var name=window._userName||'Your Name';
-  var sig=name+'\nHD Hauling & Grading\nPhone: '+(sender.phone||'(555) 000-0000')+'\nEmail: '+(sender.email||'info@hdhauling.com')+'\nWeb: hdhauling.com';
-  navigator.clipboard.writeText(sig).then(function(){toast('Signature copied','ok');}).catch(function(){toast('Copy failed','err');});
+  var name=window._userName||'Full Name';
+  var email=sender.email||'email@hdgrading.com';
+  var phone=sender.phone||'Cell Number';
+  var sig=name+'\nCompany Title\nE: '+email+'\nC: '+phone+' | O: 704-791-8982\n\nCONFIDENTIALITY NOTICE: This email and any attachments are intended solely for the named recipient(s) and may contain confidential information. If you have received this email in error, please immediately notify the sender and permanently delete this email and any attachments without reading, forwarding, copying, or disclosing their contents. Any unauthorized use, disclosure, or distribution is prohibited and may be unlawful.';
+  navigator.clipboard.writeText(sig).then(function(){toast('Signature text copied — paste into Gmail, then copy & paste the logo separately','ok');}).catch(function(){toast('Copy failed','err');});
+}
+
+function openProjectSummary(projectId){
+  _currentProjectId=projectId;
+  showPanel('project',null);
+}
+
+function renderProjectSummary(){
+  if(!_currentProjectId)return;
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  if(!proj){
+    // Try fetching from pipeline list
+    fetch('/pipeline/list').then(function(r){return r.json();}).then(function(d){
+      if(!d.ok)return;
+      pipelineProposals=d.proposals;
+      proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+      if(proj)_renderProjectSummaryInner(proj);
+    });
+    return;
+  }
+  _renderProjectSummaryInner(proj);
+}
+
+function _renderProjectSummaryInner(proj){
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap||'{}'):proj.snap||{};
+  // Header
+  var hdr=document.getElementById('project-summary-header');
+  if(hdr){
+    var stageName=(proj.pipeline_stages?proj.pipeline_stages.name:'Unassigned');
+    var stageColor=(proj.pipeline_stages?proj.pipeline_stages.color:'#999');
+    var dueStr='';
+    if(snap.bid_due_date){
+      var dp=snap.bid_due_date.split('-');
+      dueStr='Bid Due: '+dp[1]+'/'+dp[2]+'/'+dp[0]+(snap.bid_due_time?' @ '+snap.bid_due_time:'');
+    }
+    hdr.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
+      +'<h2 style="margin:0;font-size:20px;">'+esc(proj.name||'Untitled Project')+'</h2>'
+      +'<span style="font-size:10px;font-weight:700;color:#fff;background:'+stageColor+';padding:2px 8px;border-radius:3px;text-transform:uppercase;">'+esc(stageName)+'</span>'
+      +'</div>'
+      +'<div style="font-size:13px;color:var(--dgray);margin-top:4px;">'
+      +(proj.client?esc(proj.client):'No client')
+      +(snap.address?' — '+esc(snap.address):'')
+      +'</div>'
+      +(dueStr?'<div style="font-size:12px;color:var(--red);font-weight:600;margin-top:4px;">'+dueStr+'</div>':'')
+      +(snap.notes?'<div style="font-size:12px;color:var(--dgray);margin-top:6px;padding:8px 12px;background:#FAFAFA;border-radius:6px;border:1px solid var(--bdr);">'+esc(snap.notes)+'</div>':'');
+  }
+  // Proposals card
+  var psProposals=document.getElementById('ps-proposals');
+  if(psProposals){
+    var linked=snap.linked_proposals||[];
+    if(linked.length){
+      psProposals.innerHTML='';
+      linked.forEach(function(qid){
+        var q=savedQuotes.find(function(x){return x.id===qid;});
+        var row=document.createElement('div');
+        row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);';
+        if(q){
+          row.innerHTML='<div><div style="font-weight:600;font-size:13px;">'+esc(q.name||'Untitled')+'</div>'
+            +'<div style="font-size:11px;color:var(--dgray);">$'+(q.total?Math.round(q.total).toLocaleString():'0')+' — '+esc(q.date||'')+'</div></div>';
+          var openBtn=document.createElement('button');openBtn.className='btn btn-sec btn-sm';openBtn.textContent='Open';
+          (function(id){openBtn.addEventListener('click',function(){loadProposalFromPipeline(id);});})(qid);
+          row.appendChild(openBtn);
+        } else {
+          row.innerHTML='<div style="font-size:12px;color:var(--dgray);">Proposal #'+qid+' (not found in saved)</div>';
+        }
+        psProposals.appendChild(row);
+      });
+    } else {
+      psProposals.innerHTML='<p style="color:var(--dgray);font-size:12px;">No proposals linked.</p>'
+        +'<button class="btn btn-sec btn-sm" style="margin-top:6px;" onclick="attachProposalToProject('+_currentProjectId+')">+ Attach Proposal</button>';
+    }
+  }
+  // Change orders card
+  var psCO=document.getElementById('ps-change-orders');
+  if(psCO){
+    var coList=snap.change_orders||[];
+    if(coList.length){
+      psCO.innerHTML='';
+      coList.forEach(function(co){
+        var row=document.createElement('div');
+        row.style.cssText='padding:6px 0;border-bottom:1px solid var(--bdr);font-size:13px;';
+        row.textContent=esc(co.name||'Change Order')+' — $'+(co.total?Math.round(co.total).toLocaleString():'0');
+        psCO.appendChild(row);
+      });
+    } else {
+      psCO.innerHTML='<p style="color:var(--dgray);font-size:12px;">No change orders.</p>';
+    }
+  }
+  // Site plan
+  var psSP=document.getElementById('ps-site-plan');
+  if(psSP){
+    var spData=snap.site_plan||localStorage.getItem('hd_project_siteplan_'+_currentProjectId);
+    if(spData){
+      psSP.innerHTML='<img src="'+spData+'" style="max-width:100%;border-radius:6px;border:1px solid var(--bdr);"/>'
+        +'<label class="btn btn-sec btn-sm" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Replace Site Plan</label>';
+    }
+  }
+  // Job costing
+  var psJC=document.getElementById('ps-job-costing');
+  if(psJC){
+    var linked=snap.linked_proposals||[];
+    if(linked.length){
+      psJC.innerHTML='<p style="font-size:12px;color:var(--dgray);">Open a linked proposal to view Estimates vs Actuals.</p>';
+      linked.forEach(function(qid){
+        var q=savedQuotes.find(function(x){return x.id===qid;});
+        if(q){
+          var btn=document.createElement('button');btn.className='btn btn-sec btn-sm';btn.style.marginTop='6px';
+          btn.textContent='View Job Costing: '+esc(q.name||'Proposal');
+          (function(id){btn.addEventListener('click',function(){
+            loadQuote(id);
+            showPanel('jobcost',document.querySelector('[onclick*=jobcost]'));
+          });})(qid);
+          psJC.appendChild(btn);
+        }
+      });
+    } else {
+      psJC.innerHTML='<p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p>';
+    }
+  }
+  // Work orders / notes
+  var psWO=document.getElementById('ps-wo-list');
+  if(psWO){
+    var notes=snap.work_notes||[];
+    psWO.innerHTML='';
+    if(notes.length){
+      notes.forEach(function(n,idx){
+        var row=document.createElement('div');
+        row.style.cssText='padding:8px 0;border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;gap:8px;';
+        var info=document.createElement('div');info.style.flex='1';
+        info.innerHTML='<div style="font-size:11px;color:var(--dgray);">'+esc(n.date||'')+'</div>'
+          +'<div style="font-size:13px;">'+esc(n.text||'')+'</div>';
+        row.appendChild(info);
+        var del=document.createElement('button');del.className='btn-ico';del.style.color='var(--red)';del.textContent='×';
+        (function(i){del.addEventListener('click',function(){
+          snap.work_notes.splice(i,1);
+          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+            .then(function(){renderProjectSummary();});
+        });})(idx);
+        row.appendChild(del);
+        psWO.appendChild(row);
+      });
+    }
+  }
+}
+
+function editCurrentProject(){
+  if(!_currentProjectId)return;
+  var p=pipelineProposals.find(function(x){return x.id===_currentProjectId;});
+  if(!p)return;
+  var snap=typeof p.snap==='string'?JSON.parse(p.snap):p.snap||{};
+  openProjectModal({
+    name:p.name,client:p.client,address:snap.address||'',city_state:snap.city_state||'',
+    bid_due_date:snap.bid_due_date||'',bid_due_time:snap.bid_due_time||'',
+    stage_id:p.stage_id,notes:snap.notes||'',_rawSnap:snap
+  },_currentProjectId);
+}
+
+function addProjectNote(){
+  if(!_currentProjectId)return;
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var ex=document.getElementById('add-note-modal');if(ex)ex.remove();
+  var modal=document.createElement('div');modal.id='add-note-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:10px;padding:20px;width:400px;max-width:92vw;';
+  box.innerHTML='<h3 style="margin:0 0 14px;font-size:15px;">Add Note</h3>'
+    +'<textarea id="pn-text" rows="4" placeholder="Enter note or work order details..." style="width:100%;margin-bottom:14px;resize:vertical;"></textarea>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'add-note-modal\').remove()">Cancel</button>'
+    +'<button class="btn btn-red btn-sm" id="pn-save">Save Note</button></div>';
+  modal.appendChild(box);
+  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+  document.getElementById('pn-save').addEventListener('click',function(){
+    var text=document.getElementById('pn-text').value.trim();
+    if(!text){toast('Enter a note','err');return;}
+    if(!snap.work_notes)snap.work_notes=[];
+    snap.work_notes.push({text:text,date:new Date().toISOString().split('T')[0]});
+    fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+      .then(function(r){return r.json();}).then(function(d){
+        if(d.ok){
+          // Update local data
+          proj.snap=snap;
+          toast('Note added','ok');modal.remove();renderProjectSummary();
+        } else toast(d.error||'Failed','err');
+      }).catch(function(e){toast('Error: '+e.message,'err');});
+  });
+}
+
+function uploadProjectSitePlan(input){
+  if(!input.files||!input.files[0]||!_currentProjectId)return;
+  var file=input.files[0];
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var dataUrl=e.target.result;
+    localStorage.setItem('hd_project_siteplan_'+_currentProjectId,dataUrl);
+    toast('Site plan uploaded','ok');
+    renderProjectSummary();
+  };
+  reader.readAsDataURL(file);
+}
+
+function uploadDashPDF(type,input){
+  if(!input.files||!input.files[0])return;
+  var file=input.files[0];
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var dataUrl=e.target.result;
+    localStorage.setItem('hd_dash_'+type,dataUrl);
+    var fnameEl=document.getElementById('dash-'+type+'-filename');
+    if(fnameEl)fnameEl.textContent=file.name;
+    var contentEl=document.getElementById('dash-'+type+'-content');
+    if(contentEl){
+      contentEl.innerHTML='<iframe src="'+dataUrl+'" style="width:100%;height:400px;border:1px solid var(--bdr);border-radius:6px;" frameborder="0"></iframe>';
+    }
+    toast(type.charAt(0).toUpperCase()+type.slice(1)+' uploaded','ok');
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderDashHandbook(){
+  var el=document.getElementById('dash-handbook-content');
+  if(!el)return;
+  var data=localStorage.getItem('hd_dash_handbook');
+  var fnameEl=document.getElementById('dash-handbook-filename');
+  if(data){
+    el.innerHTML='<iframe src="'+data+'" style="width:100%;height:350px;border:1px solid var(--bdr);border-radius:6px;" frameborder="0"></iframe>';
+    if(fnameEl)fnameEl.textContent='Uploaded';
+  }
 }
 
 // ---- Change Orders ----
@@ -2158,8 +2359,9 @@ async function loadCOList(){
 }
 
 var TOPBAR_CFG = {
-  dashboard:[],
+  dashboard:[{html:'+ New Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'}],
   savedco:[],
+  project:[{html:'Edit Project',cls:'btn btn-sec btn-sm',fn:'editCurrentProject()'},{html:'Back to Dashboard',cls:'btn btn-sec btn-sm',fn:"showPanel('dashboard',document.querySelector('[onclick*=dashboard]'))"}],
   build:[
     {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
     {html:"Reset",cls:"btn btn-sec btn-sm",fn:"resetAll()"},
@@ -2202,13 +2404,14 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Estimates vs Actuals',saved:'Saved Proposals',settings:'Settings',co:'Create CO',savedco:"Saved CO's",analytics:'Analytics',pipeline:'Project Pipeline',clients:'Clients',admin:'Admin Panel'}[id]||id;
+  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Proposals',settings:'Settings',co:'Create CO',savedco:"Saved CO's",analytics:'Analytics',pipeline:'Project Pipeline',project:'Project Summary',clients:'Clients',admin:'Admin Panel'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved')renderSaved();
   if(id==='lineitems')renderLineItems();
   if(id==='crewcosts')renderCrewCosts();
-  if(id==='dashboard')renderDashboard();
+  if(id==='dashboard'){renderDashboard();setTimeout(renderPipeline,50);}
+  if(id==='project')renderProjectSummary();
   if(id==='co'){populateCOProposalDropdown();}
   if(id==='savedco')loadCOList();
   if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');}
@@ -3551,8 +3754,9 @@ async function renderPipeline() {
         }
         var actions='';
         if(isProject){
-          actions='<button class="btn btn-sec btn-sm kb-open-btn" onclick="editProject('+p.id+')">Edit</button>'
-            +'<button class="btn btn-sec btn-sm kb-open-btn" onclick="attachProposalToProject('+p.id+')">Attach Proposal</button>';
+          actions='<button class="btn btn-sec btn-sm kb-open-btn" onclick="openProjectSummary('+p.id+')">View</button>'
+            +'<button class="btn btn-sec btn-sm kb-open-btn" onclick="editProject('+p.id+')">Edit</button>'
+            +'<button class="btn btn-sec btn-sm kb-open-btn" onclick="attachProposalToProject('+p.id+')">Attach</button>';
           if(snap.linked_proposals&&snap.linked_proposals.length){
             actions+='<button class="btn btn-sec btn-sm kb-open-btn" onclick="loadProposalFromPipeline('+snap.linked_proposals[0]+')">Open Proposal</button>';
           }
@@ -3560,7 +3764,7 @@ async function renderPipeline() {
           actions='<button class="btn btn-sec btn-sm kb-open-btn" onclick="loadProposalFromPipeline('+p.id+')">Open</button>';
         }
         var addrLine=isProject&&snap.address?'<div style="font-size:10px;color:var(--dgray);margin-top:1px;">'+esc(snap.address)+'</div>':'';
-        card.innerHTML = '<div class="kb-card-name">'+esc(p.name||'Untitled')+typeBadge+'</div>'
+        card.innerHTML = '<div class="kb-card-name"'+(isProject?' style="cursor:pointer;" onclick="openProjectSummary('+p.id+')"':'')+'>'+esc(p.name||'Untitled')+typeBadge+'</div>'
           +'<div class="kb-card-client">'+esc(p.client||'')+addrLine+'</div>'
           +'<div class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'-')+'</div>'
           +'<div class="kb-card-date">'+(p.date||((p.created_at||'').split('T')[0])||'')+dueStr+'</div>'
@@ -3691,7 +3895,7 @@ function openProjectModal(existingData, editId){
       var updateBody={name:payload.name,client:payload.client,snap:snap};
       fetch('/projects/update/'+editId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(updateBody)})
         .then(function(r){return r.json();}).then(function(rd){
-          if(rd.ok){if(payload.stage_id)fetch('/pipeline/move/'+editId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage_id:payload.stage_id})});toast('Project updated','ok');modal.remove();renderPipeline();}
+          if(rd.ok){if(payload.stage_id)fetch('/pipeline/move/'+editId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage_id:payload.stage_id})});toast('Project updated','ok');modal.remove();renderPipeline();if(_currentProjectId===editId){fetch('/pipeline/list').then(function(r){return r.json();}).then(function(dd){if(dd.ok)pipelineProposals=dd.proposals;renderProjectSummary();});}}
           else toast(rd.error||'Update failed','err');
         }).catch(function(e){toast('Error: '+e.message,'err');});
     } else {
@@ -3741,7 +3945,7 @@ function attachProposalToProject(projectId){
         if(snap.linked_proposals.indexOf(qid)<0)snap.linked_proposals.push(qid);
         fetch('/projects/update/'+projectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap,total:qtotal})})
           .then(function(r){return r.json();}).then(function(rd){
-            if(rd.ok){toast('Proposal attached','ok');modal.remove();renderPipeline();}
+            if(rd.ok){toast('Proposal attached','ok');modal.remove();renderPipeline();if(_currentProjectId===projectId){fetch('/pipeline/list').then(function(r){return r.json();}).then(function(dd){if(dd.ok)pipelineProposals=dd.proposals;renderProjectSummary();});}}
             else toast(rd.error||'Failed','err');
           });
       });})(q.id,q.total||0);
