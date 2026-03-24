@@ -728,16 +728,15 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <button class="btn btn-sec btn-sm" onclick="addMaterial()">+ Add Material</button>
             </div>
             <div class="card-body">
-              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Manage materials used in proposals. Changes update all MU% calculations instantly.</p>
+              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Reference table for material costs. Attach materials to line items in the Bid Library tab.</p>
               <div style="overflow-x:auto;">
                 <table style="width:100%;border-collapse:collapse;font-size:12px;" id="mat-table">
                   <thead>
                     <tr style="background:var(--lgray);">
                       <th style="padding:7px 10px;text-align:left;font-weight:600;">Material</th>
-                      <th style="padding:7px 10px;text-align:right;font-weight:600;">Cost $/ton</th>
-                      <th style="padding:7px 10px;text-align:right;font-weight:600;">Default Rate $/ton</th>
-                      <th style="padding:7px 10px;text-align:right;font-weight:600;">Default Depth"</th>
-                      <th style="padding:7px 10px;text-align:center;font-weight:600;">Badge</th>
+                      <th style="padding:7px 10px;text-align:center;font-weight:600;">Category</th>
+                      <th style="padding:7px 10px;text-align:right;font-weight:600;">Cost $/unit</th>
+                      <th style="padding:7px 10px;text-align:center;font-weight:600;">Unit</th>
                       <th style="padding:7px 4px;"></th>
                     </tr>
                   </thead>
@@ -878,6 +877,10 @@ function getCrewParam(matType, param){
   return 0;
 }
 var MAT_DEFAULT = {'ABC base':45,'Mill & Pave':35,'B25.0C':85,'I19.0C':92,'S9.5B':95,'S9.5C':95};
+var MAT_UNIT = {'ABC base':'TON','Mill & Pave':'TON','B25.0C':'TON','I19.0C':'TON','S9.5B':'TON','S9.5C':'TON'};
+var MAT_UNIT_DEFAULT = {'ABC base':'TON','Mill & Pave':'TON','B25.0C':'TON','I19.0C':'TON','S9.5B':'TON','S9.5C':'TON'};
+var MAT_CATEGORY = {'ABC base':'Stone','Mill & Pave':'Asphalt','B25.0C':'Asphalt','I19.0C':'Asphalt','S9.5B':'Asphalt','S9.5C':'Asphalt'};
+var MAT_CATEGORY_DEFAULT = {'ABC base':'Stone','Mill & Pave':'Asphalt','B25.0C':'Asphalt','I19.0C':'Asphalt','S9.5B':'Asphalt','S9.5C':'Asphalt'};
 var DRATE_DEFAULT = {'ABC base':50,'Mill & Pave':150,'B25.0C':150,'I19.0C':150,'S9.5B':150,'S9.5C':150};
 var LBS_DEFAULT = {'ABC base':150,'Mill & Pave':115,'B25.0C':115,'I19.0C':115,'S9.5B':115,'S9.5C':115};
 var DDEPTH_DEFAULT = {'ABC base':6,'Mill & Pave':2,'B25.0C':5,'I19.0C':4,'S9.5B':3,'S9.5C':3};
@@ -965,12 +968,12 @@ function renderLibraryList(){
   var c=document.getElementById("library-list");if(!c)return;c.innerHTML="";
   if(!BID_LIBRARY.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>No items yet. Click + Add Item to create standard line items.</p>";return;}
   var hdr=document.createElement("div");
-  hdr.style.cssText="display:grid;grid-template-columns:110px 1fr 1fr 70px 90px 28px;gap:6px;padding:0 0 6px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;border-bottom:2px solid var(--bdr);margin-bottom:4px;";
-  hdr.innerHTML="<span>Badge</span><span>Name</span><span>Description</span><span>Unit</span><span>$/Unit</span><span></span>";
+  hdr.style.cssText="display:grid;grid-template-columns:110px 110px 1fr 1fr 70px 90px 28px;gap:6px;padding:0 0 6px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;border-bottom:2px solid var(--bdr);margin-bottom:4px;";
+  hdr.innerHTML="<span>Badge</span><span>Material</span><span>Name</span><span>Description</span><span>Unit</span><span>$/Unit</span><span></span>";
   c.appendChild(hdr);
   BID_LIBRARY.forEach(function(item){
     var row=document.createElement("div");
-    row.style.cssText="display:grid;grid-template-columns:110px 1fr 1fr 70px 90px 28px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);";
+    row.style.cssText="display:grid;grid-template-columns:110px 110px 1fr 1fr 70px 90px 28px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);";
     // Badge dropdown
     var bs=document.createElement("select");bs.style.fontSize="11px";
     var noneOpt=document.createElement("option");noneOpt.value="";noneOpt.textContent="None";
@@ -981,8 +984,31 @@ function renderLibraryList(){
       if(cls===item.badge)o.selected=true;
       bs.appendChild(o);
     });
-    bs.addEventListener("change",(function(it){return function(){it.badge=this.value;};})(item));
+    var newBadgeOpt=document.createElement("option");newBadgeOpt.value="__new__";newBadgeOpt.textContent="+ New Badge";
+    bs.appendChild(newBadgeOpt);
+    bs.addEventListener("change",(function(it){return function(){
+      if(this.value==="__new__"){
+        var label=prompt("New badge label:");
+        if(!label){this.value=it.badge||"";return;}
+        var cls="b-"+label.toLowerCase().replace(/[^a-z0-9]/g,"-");
+        if(!BADGE_DEFS[cls])BADGE_DEFS[cls]={label:label,color:"#444"};
+        it.badge=cls;
+        renderLibraryList();renderBadgeList();
+      } else {it.badge=this.value;}
+    };})(item));
     row.appendChild(bs);
+    // Material dropdown
+    var ms=document.createElement("select");ms.style.fontSize="11px";
+    var mNone=document.createElement("option");mNone.value="";mNone.textContent="None";
+    if(!item.material)mNone.selected=true;
+    ms.appendChild(mNone);
+    Object.keys(MAT).forEach(function(matName){
+      var o=document.createElement("option");o.value=matName;o.textContent=matName;
+      if(matName===item.material)o.selected=true;
+      ms.appendChild(o);
+    });
+    ms.addEventListener("change",(function(it){return function(){it.material=this.value;};})(item));
+    row.appendChild(ms);
     // Name
     var ni=document.createElement("input");ni.type="text";ni.value=item.name||"";ni.placeholder="Item name";ni.style.fontSize="12px";
     ni.addEventListener("change",(function(it){return function(){it.name=this.value;};})(item));row.appendChild(ni);
@@ -1003,7 +1029,7 @@ function renderLibraryList(){
     c.appendChild(row);
   });
 }
-function addLibraryItem(){BID_LIBRARY.push({id:_libId++,name:"",desc:"",unit:"LS",rate:0,badge:""});renderLibraryList();}
+function addLibraryItem(){BID_LIBRARY.push({id:_libId++,name:"",desc:"",unit:"LS",rate:0,badge:"",material:""});renderLibraryList();}
 function saveLibrary(){localStorage.setItem("hd_bid_library",JSON.stringify(BID_LIBRARY));toast("Library saved","ok");}
 function openLibraryPicker(){
   if(!BID_LIBRARY.length){toast("Library empty — add items in Settings > Bid Library","err");return;}
@@ -1100,6 +1126,8 @@ function loadStorage(){
       if(mpd.lbs)Object.assign(LBS,mpd.lbs);
       if(mpd.ddepth)Object.assign(DDEPTH,mpd.ddepth);
       if(mpd.lbadge)Object.assign(LBADGE,mpd.lbadge);
+      if(mpd.mat_unit)Object.assign(MAT_UNIT,mpd.mat_unit);
+      if(mpd.mat_category)Object.assign(MAT_CATEGORY,mpd.mat_category);
       if(mpd.ltypes&&mpd.ltypes.length){LTYPES.length=0;mpd.ltypes.forEach(function(t){LTYPES.push(t);});}
     }catch(e){}}
   }catch(e){}
@@ -1217,7 +1245,7 @@ function renderJobCost(){
   if(g('jcs-overhead'))g('jcs-overhead').textContent=jc.overhead>0?'$'+fi(jc.overhead):'-';
   if(g('jcs-total-cost'))g('jcs-total-cost').textContent=jc.totalCost>0?'$'+fi(jc.totalCost):'-';
   if(g('jcs-bid'))g('jcs-bid').textContent=jc.bidPrice>0?'$'+fi(jc.bidPrice):'-';
-  var mc = jc.marginPct!==null?(jc.marginPct>=30?'m-green':jc.marginPct>=15?'m-yellow':'m-red'):'';
+  var mc = jc.marginPct!==null?(jc.marginPct>=20?'m-green':'m-red'):'';
   var mText = jc.marginPct!==null?('$'+fi(jc.marginDollar)+' ('+jc.marginPct.toFixed(1)+'%)'):'-';
   if(g('jcs-margin')){g('jcs-margin').textContent=mText;g('jcs-margin').className=mc;}
   if(g('jc-margin-badge')){
@@ -1397,8 +1425,7 @@ window.addEventListener('resize', checkMobile);
 // ---- Analytics (#10) ----
 function marginClass(pct){
   if(pct===null) return 'm-na';
-  if(pct>=30) return 'm-green';
-  if(pct>=15) return 'm-yellow';
+  if(pct>=20) return 'm-green';
   return 'm-red';
 }
 
@@ -1752,50 +1779,49 @@ function renderMatTable(){
   if(!tbody) return;
   var keys = Object.keys(MAT_DEFAULT).slice();
   Object.keys(MAT).forEach(function(k){ if(keys.indexOf(k)<0) keys.push(k); });
-  var badges = ['b-base','b-millings','b-binder','b-surface','b-conc',''];
-  var badgeLabels = ['Base','Millings','Binder','Surface','Concrete','None'];
+  var categories=['Asphalt','Stone','Concrete','Other'];
+  var units=['TON','CY','SY','LF','EA','LS'];
   tbody.innerHTML = '';
   keys.forEach(function(k){
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid var(--bdr)';
-    // Name — all materials are editable
+    // Name
     var td0 = document.createElement('td'); td0.style.cssText='padding:6px 10px;';
     var ni=document.createElement('input');ni.type='text';ni.value=k;ni.placeholder='Name';
-    ni.style.cssText='width:110px;font-size:12px;';
+    ni.style.cssText='width:120px;font-size:12px;';
     (function(kk){ni.addEventListener('change',function(){renameMaterial(kk,this.value);});})(k);
-    td0.appendChild(ni);
-    tr.appendChild(td0);
-    // Cost $/ton
-    var td1=document.createElement('td');td1.style.cssText='padding:6px 10px;text-align:right;';
-    var i1=document.createElement('input');i1.type='number';i1.value=MAT[k]||0;i1.min=0;i1.step=1;i1.style.cssText='width:70px;text-align:right;';
-    (function(kk){i1.addEventListener('change',function(){MAT[kk]=parseFloat(this.value)||0;renderAll();renderConc();renderExtra();});})(k);
-    td1.appendChild(i1);tr.appendChild(td1);
-    // Default rate $/ton
-    var td2=document.createElement('td');td2.style.cssText='padding:6px 10px;text-align:right;';
-    var i2=document.createElement('input');i2.type='number';i2.value=DRATE[k]||0;i2.min=0;i2.step=1;i2.style.cssText='width:70px;text-align:right;';
-    (function(kk){i2.addEventListener('change',function(){DRATE[kk]=parseFloat(this.value)||0;});})(k);
-    td2.appendChild(i2);tr.appendChild(td2);
-        // Default depth
-    var td4=document.createElement('td');td4.style.cssText='padding:6px 10px;text-align:right;';
-    var i4=document.createElement('input');i4.type='number';i4.value=DDEPTH[k]||3;i4.min=0;i4.step=0.5;i4.style.cssText='width:60px;text-align:right;';
-    (function(kk){i4.addEventListener('change',function(){DDEPTH[kk]=parseFloat(this.value)||3;});})(k);
-    td4.appendChild(i4);tr.appendChild(td4);
-    // Badge
-    var td5=document.createElement('td');td5.style.cssText='padding:6px 10px;text-align:center;';
-    var sel=document.createElement('select');sel.style.cssText='font-size:11px;width:80px;';
-    badges.forEach(function(b,i){
-      var opt=document.createElement('option');opt.value=b;opt.textContent=badgeLabels[i];
-      if((LBADGE[k]||'')=== b) opt.selected=true;
-      sel.appendChild(opt);
+    td0.appendChild(ni);tr.appendChild(td0);
+    // Category
+    var td1=document.createElement('td');td1.style.cssText='padding:6px 10px;text-align:center;';
+    var cs=document.createElement('select');cs.style.cssText='font-size:11px;width:90px;';
+    categories.forEach(function(cat){
+      var o=document.createElement('option');o.value=cat;o.textContent=cat;
+      if((MAT_CATEGORY[k]||'Other')===cat)o.selected=true;
+      cs.appendChild(o);
     });
-    (function(kk){sel.addEventListener('change',function(){LBADGE[kk]=this.value;});})(k);
-    td5.appendChild(sel);tr.appendChild(td5);
-    // Remove — all materials are deletable
-    var td6=document.createElement('td');td6.style.cssText='padding:6px 4px;text-align:center;';
+    (function(kk){cs.addEventListener('change',function(){MAT_CATEGORY[kk]=this.value;});})(k);
+    td1.appendChild(cs);tr.appendChild(td1);
+    // Cost $/unit
+    var td2=document.createElement('td');td2.style.cssText='padding:6px 10px;text-align:right;';
+    var i1=document.createElement('input');i1.type='number';i1.value=MAT[k]||0;i1.min=0;i1.step=1;i1.style.cssText='width:80px;text-align:right;';
+    (function(kk){i1.addEventListener('change',function(){MAT[kk]=parseFloat(this.value)||0;renderAll();renderConc();renderExtra();});})(k);
+    td2.appendChild(i1);tr.appendChild(td2);
+    // Unit
+    var td3=document.createElement('td');td3.style.cssText='padding:6px 10px;text-align:center;';
+    var us=document.createElement('select');us.style.cssText='font-size:11px;width:65px;';
+    units.forEach(function(u){
+      var o=document.createElement('option');o.value=u;o.textContent=u;
+      if((MAT_UNIT[k]||'TON')===u)o.selected=true;
+      us.appendChild(o);
+    });
+    (function(kk){us.addEventListener('change',function(){MAT_UNIT[kk]=this.value;});})(k);
+    td3.appendChild(us);tr.appendChild(td3);
+    // Remove
+    var td4=document.createElement('td');td4.style.cssText='padding:6px 4px;text-align:center;';
     var rb=document.createElement('button');rb.className='btn-ico';rb.textContent='x';
     (function(kk){rb.addEventListener('click',function(){removeMaterial(kk);});})(k);
-    td6.appendChild(rb);
-    tr.appendChild(td6);
+    td4.appendChild(rb);
+    tr.appendChild(td4);
     tbody.appendChild(tr);
   });
 }
@@ -1806,6 +1832,7 @@ function addMaterial(){
   name = name.trim();
   if(MAT.hasOwnProperty(name)){toast('Material already exists','err');return;}
   MAT[name]=0; DRATE[name]=150; LBS[name]=115; DDEPTH[name]=3; LBADGE[name]='b-surface';
+  MAT_UNIT[name]='TON'; MAT_CATEGORY[name]='Other';
   if(LTYPES.indexOf(name)<0) LTYPES.push(name);
   renderMatTable();
   renderPresets();
@@ -1814,7 +1841,7 @@ function addMaterial(){
 
 function removeMaterial(name){
   if(!confirm('Remove "'+name+'" from materials? This will affect any sections using it.')) return;
-  delete MAT[name]; delete DRATE[name]; delete LBS[name]; delete DDEPTH[name]; delete LBADGE[name];
+  delete MAT[name]; delete DRATE[name]; delete LBS[name]; delete DDEPTH[name]; delete LBADGE[name]; delete MAT_UNIT[name]; delete MAT_CATEGORY[name];
   var idx = LTYPES.indexOf(name);
   if(idx>=0) LTYPES.splice(idx,1);
   renderMatTable();
@@ -1829,7 +1856,9 @@ function renameMaterial(oldName, newName){
   if(MAT.hasOwnProperty(newName)){toast('Name already in use','err');return;}
   MAT[newName]=MAT[oldName]; DRATE[newName]=DRATE[oldName];
   LBS[newName]=LBS[oldName]; DDEPTH[newName]=DDEPTH[oldName]; LBADGE[newName]=LBADGE[oldName]||'';
+  MAT_UNIT[newName]=MAT_UNIT[oldName]||'TON'; MAT_CATEGORY[newName]=MAT_CATEGORY[oldName]||'Other';
   delete MAT[oldName]; delete DRATE[oldName]; delete LBS[oldName]; delete DDEPTH[oldName]; delete LBADGE[oldName];
+  delete MAT_UNIT[oldName]; delete MAT_CATEGORY[oldName];
   var idx=LTYPES.indexOf(oldName); if(idx>=0) LTYPES[idx]=newName;
   renderMatTable(); renderPresets(); renderAll();
 }
@@ -1838,11 +1867,12 @@ function renameMaterial(oldName, newName){
 
 function saveMatPrices(){
   var keys = Object.keys(MAT);
-  var saved = {mat:{},drate:{},lbs:{},ddepth:{},lbadge:{},ltypes:LTYPES.slice()};
+  var saved = {mat:{},drate:{},lbs:{},ddepth:{},lbadge:{},mat_unit:{},mat_category:{},ltypes:LTYPES.slice()};
   // Values already updated in-memory via input event listeners
   keys.forEach(function(k){
     saved.mat[k]=MAT[k]; saved.drate[k]=DRATE[k];
     saved.lbs[k]=LBS[k]; saved.ddepth[k]=DDEPTH[k]; saved.lbadge[k]=LBADGE[k];
+    saved.mat_unit[k]=MAT_UNIT[k]||'TON'; saved.mat_category[k]=MAT_CATEGORY[k]||'Other';
   });
   saved.updated = Date.now();
   localStorage.setItem('hd_mat_prices', JSON.stringify(saved));
@@ -1855,12 +1885,14 @@ function saveMatPrices(){
 
 function resetMatPrices(){
   if(!confirm('Reset all materials to defaults? Custom materials will be removed.')) return;
-  Object.keys(MAT).forEach(function(k){delete MAT[k];delete DRATE[k];delete LBS[k];delete DDEPTH[k];delete LBADGE[k];});
+  Object.keys(MAT).forEach(function(k){delete MAT[k];delete DRATE[k];delete LBS[k];delete DDEPTH[k];delete LBADGE[k];delete MAT_UNIT[k];delete MAT_CATEGORY[k];});
   Object.assign(MAT,JSON.parse(JSON.stringify(MAT_DEFAULT)));
   Object.assign(DRATE,JSON.parse(JSON.stringify(DRATE_DEFAULT)));
   Object.assign(LBS,JSON.parse(JSON.stringify(LBS_DEFAULT)));
   Object.assign(DDEPTH,JSON.parse(JSON.stringify(DDEPTH_DEFAULT)));
   Object.assign(LBADGE,JSON.parse(JSON.stringify(LBADGE_DEFAULT)));
+  Object.assign(MAT_UNIT,JSON.parse(JSON.stringify(MAT_UNIT_DEFAULT)));
+  Object.assign(MAT_CATEGORY,JSON.parse(JSON.stringify(MAT_CATEGORY_DEFAULT)));
   LTYPES.length=0; LTYPES_DEFAULT.forEach(function(t){LTYPES.push(t);});
   localStorage.removeItem('hd_mat_prices');
   renderMatTable(); updateMatIndicator();
