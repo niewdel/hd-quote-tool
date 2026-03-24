@@ -461,7 +461,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">-</div><div class="metric-sub">w/ waste</div></div>
           <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">-</div></div>
           <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">-</div></div>
-          <div class="metric"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">$0</div></div>
+          <div class="metric" id="m-cont-card"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">$0</div></div>
           <div class="metric" id="m-phase-card" style="display:none;"><div class="metric-lbl" id="m-phase-lbl">Phase 1</div><div class="metric-val" id="m-phase">-</div></div>
           <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">-</div></div>
           <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">-</div></div>
@@ -638,8 +638,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <!-- Change Orders Panel -->
 
       <!-- Analytics Panel -->
-        >
-          <!-- Equipment Day Rates card -->
+
       <!-- Job Cost Defaults -->
       <div class="card" id="jc-settings-card">
         <div class="card-hdr">
@@ -717,6 +716,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 </div>
     
       <div class="card"><div class="card-hdr"><span class="card-title">Layer Badges</span><button class="btn btn-sec btn-sm" onclick="addBadge()">+ Add Badge</button></div><div class="card-body"><p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Manage badge types shown on layer items.</p><div id="badge-list"></div><div style="margin-top:10px;"><button class="btn btn-red btn-sm" onclick="saveBadges()">Save Badges</button></div></div></div>
+      <div class="card"><div class="card-hdr"><span class="card-title">Preset Manager</span><button class="btn btn-sec btn-sm" onclick="addPreset()">+ Add Preset</button></div><div class="card-body"><p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Manage saved pavement section presets.</p><div id="preset-mgr"></div></div></div>
       <div class="card"><div class="card-hdr"><span class="card-title">Bid Items Library</span><button class="btn btn-sec btn-sm" onclick="addLibraryItem()">+ Add Item</button></div><div class="card-body"><p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Reusable line items — insert into proposals with one click.</p><div id="library-list"></div><div style="margin-top:10px;"><button class="btn btn-red btn-sm" onclick="saveLibrary()">Save Library</button></div></div></div>
     </div><!-- /content -->
   </div><!-- /main -->
@@ -738,8 +738,6 @@ var JC_CREW_RATE_DEFAULT = 5000;
 var JC_PRODUCTIVITY_DEFAULT = 400; // tons/day
 var jcProductivity = JC_PRODUCTIVITY_DEFAULT;
 var JC_OVERHEAD_PCT_DEFAULT = 15;
-var JC_PRODUCTIVITY_DEFAULT = 400; // tons per day
-var jcProductivity = JC_PRODUCTIVITY_DEFAULT;
 var jcCrewRate = JC_CREW_RATE_DEFAULT;
 var jcOverheadPct = JC_OVERHEAD_PCT_DEFAULT;
 var MAT_DEFAULT = {'ABC base':45,'Mill & Pave':35,'B25.0C':85,'I19.0C':92,'S9.5B':95,'S9.5C':95};
@@ -788,6 +786,7 @@ var savedQuotes=[];
 var clients=[];
 var sender={name:'',email:'',phone:''};
 var sitePlanDataUrl=null;
+var gM=0;
 
 // -- Auth ----------------------------------------------------------------------
 async function doLogin(){
@@ -847,7 +846,7 @@ function boot(){
     addSection('Light Duty Asphalt Pavement',[{type:'ABC base',depth:6,rate:50},{type:'S9.5C',depth:2,rate:150}]);
     addSection('Heavy Duty Asphalt Pavement',[{type:'ABC base',depth:8,rate:50},{type:'I19.0C',depth:2.5,rate:150},{type:'S9.5C',depth:1.5,rate:150}]);
   } else {renderAll();renderConc();renderExtra();}
-  loadClients();
+  renderClients();
   updateMatIndicator();
   checkMobile();
   renderTopbar('build');
@@ -876,7 +875,6 @@ function loadStorage(){
     }catch(e){}}
   }catch(e){}
 }
-function saveStorage(){} // quotes now stored server-side
 
 // -- Helpers -------------------------------------------------------------------
 function tons(sf,d,lbs){return(sf*(d/12)*lbs)/2000;}
@@ -925,8 +923,8 @@ function saveJCDefaults(){
   var cr=parseFloat(document.getElementById('jc-default-crew-rate')?document.getElementById('jc-default-crew-rate').value:jcCrewRate)||jcCrewRate;
   var op=parseFloat(document.getElementById('jc-default-overhead-pct')?document.getElementById('jc-default-overhead-pct').value:jcOverheadPct)||jcOverheadPct;
   jcCrewRate=cr; jcOverheadPct=op;
-  var pr=parseFloat(document.getElementById('jc-default-productivity')?document.getElementById('jc-default-productivity').value:PRODUCTIVITY_DEFAULT)||PRODUCTIVITY_DEFAULT;productivity=pr;
-  try{localStorage.setItem('hd_jc_defaults',JSON.stringify({crew_rate:cr,overhead_pct:op,productivity:productivity}));}catch(e){}
+  var pr=parseFloat(document.getElementById('jc-default-productivity')?document.getElementById('jc-default-productivity').value:JC_PRODUCTIVITY_DEFAULT)||JC_PRODUCTIVITY_DEFAULT;jcProductivity=pr;
+  try{localStorage.setItem('hd_jc_defaults',JSON.stringify({crew_rate:cr,overhead_pct:op,productivity:jcProductivity}));}catch(e){}
   renderJCDefaults();
   var ind=document.getElementById('jc-settings-indicator');
   if(ind){ind.textContent='Saved.';setTimeout(function(){ind.textContent='';},2000);}
@@ -941,8 +939,7 @@ function resetJCDefaults(){
 function renderJCDefaults(){
   var cr=document.getElementById('jc-default-crew-rate');if(cr)cr.value=jcCrewRate;
   var op=document.getElementById('jc-default-overhead-pct');if(op)op.value=jcOverheadPct;
-  var pr=document.getElementById('jc-default-jcProductivity');if(pr)pr.value=jcProductivity;
-  var prEl=document.getElementById('jc-default-jcProductivity');if(prEl)prEl.value=jcProductivity;
+  var pr=document.getElementById('jc-default-productivity');if(pr)pr.value=jcProductivity;
   // Also update the build panel fields if they are at default
   var bcr=document.getElementById('jc-crew-rate');if(bcr)bcr.value=jcCrewRate;
   var bop=document.getElementById('jc-overhead-pct');if(bop)bop.value=jcOverheadPct;
@@ -1405,52 +1402,15 @@ function renderTopbar(panelId){
     if(btn)btn.textContent=(typeof multiPhase!=='undefined'&&multiPhase)?(phases.length+' Phases'):'1 Phase';}
 }
 
-var TOPBAR_CFG={
-  build:[
-    
-    {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
-    {html:"Reset",cls:"btn btn-sec btn-sm",fn:"resetAll()"},
-    {id:"site-plan-btn",html:"Upload Site Plan",cls:"btn btn-sec btn-sm",fn:"document.getElementById('site-plan-input').click()"},
-    {id:"email-btn",html:"Email",cls:"btn btn-sec btn-sm",fn:"openEmailModal()"},
-    {id:"docx-btn",html:"Export Word",cls:"btn btn-blue btn-sm",fn:"exportDOCX()"},
-    
-    {id:"pdf-btn",html:"Export PDF",cls:"btn btn-red btn-sm",fn:"exportPDF()"}
-  ],
-  co:[
-    {html:"Reset CO",cls:"btn btn-sec btn-sm",fn:"resetCO()"},
-    {id:"co-pdf-btn",html:"Export CO PDF",cls:"btn btn-red btn-sm",fn:"exportCOPDF()"}
-  ],
-  saved:[
-    {html:"Export All",cls:"btn btn-sec btn-sm",fn:"exportAllQuotes()"},
-    {html:"Import",cls:"btn btn-sec btn-sm",fn:"importQuotes()"}
-  ],
-  analytics:[{html:"Refresh",cls:"btn btn-sec btn-sm",fn:"renderAnalytics()"}],
-  pipeline:[{html:"Refresh",cls:"btn btn-sec btn-sm",fn:"renderPipeline()"}],
-  clients:[{html:"+ Add Client",cls:"btn btn-red btn-sm",fn:"openClientModal()"}],
-  settings:[]
-};
-function renderTopbar(panelId){
-  var c=document.getElementById("topbar-actions");if(!c)return;
-  c.innerHTML="";
-  (TOPBAR_CFG[panelId]||[]).forEach(function(b){
-    var el=document.createElement("button");
-    el.className=b.cls;if(b.id)el.id=b.id;
-    el.innerHTML=b.html;el.setAttribute("onclick",b.fn);
-    c.appendChild(el);
-  });
-  if(panelId==="build"){
-    var btn=document.getElementById("phase-toggle-btn");
-    if(btn)btn.textContent=(typeof multiPhase!=="undefined"&&multiPhase)?(phases.length+" Phases"):"1 Phase";
-  }
-}
 function showPanel(id,el){
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  renderTopbar(id);
-  document.getElementById('topbar-title').textContent={build:'Build Proposal',saved:'Saved Proposals',settings:'Settings',co:'Change Orders',analytics:'Analytics',pipeline:'Pipeline',clients:'Clients'}[id]||id;
+  var _panelTitle={build:'Build Proposal',saved:'Saved Proposals',settings:'Settings',co:'Change Orders',analytics:'Analytics',pipeline:'Pipeline',clients:'Clients',admin:'Admin Panel'}[id]||id;
+  document.getElementById('topbar-title').textContent=_panelTitle;
+  updateMobTitle(_panelTitle);
   if(id==='saved')renderSaved();
   if(id==='settings'){loadSenderUI();renderPresetMgr();renderMatPriceInputs();}
   if(id==='analytics')setTimeout(renderAnalytics,50);
@@ -1646,19 +1606,6 @@ function updLyrDepth(sid2,lid2,v){
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   l.depth=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
 }
-function updLyrDays(sid2,lid2,v){
-  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
-  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
-  l.days_override=(v===''||v===null)?null:parseFloat(v);
-  recalc();updateLyrResult(sid2,lid2);
-}
-function updLyrDays(sid2,lid2,v,isManual){
-  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
-  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
-  if(isManual&&v!==''&&v!==null){l.days_override=parseFloat(v)||0;}
-  else{l.days_override=null;}
-  recalc();renderAll();
-}
 function updLyrRate(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
@@ -1701,57 +1648,6 @@ function updMillRate(sid2,lid2,v){
 }
 
 
-// Layer pricing formula        
-// bid = (mat_cost + crew_cost) * (1 + overhead%) * (1 + markup%)
-function calcLayerDays(t, l){
-  if(l.days_override!==null&&l.days_override!==undefined&&l.days_override!=='') return parseFloat(l.days_override)||0;
-  return productivity>0?t/productivity:0;
-}
-function calcLayerBid(t, l){
-  if(l.type==='Mill & Pave') return (l.mill_days||0)*(l.mill_rate||0);
-  if(t<=0) return 0;
-  var matCost=t*(MAT[l.type]||0);
-  var days=calcLayerDays(t,l);
-  var crewCost=days*jcCrewRate;
-  var subtotal=matCost+crewCost;
-  var ovhEl=document.getElementById('jc-overhead-pct');
-  var ovhPct=ovhEl?parseFloat(ovhEl.value)||jcOverheadPct:jcOverheadPct;
-  var withOverhead=subtotal*(1+ovhPct/100);
-  return withOverhead*(1+(l.markup||0)/100);
-}
-function calcLayerRate(t, l){
-  if(t<=0||l.type==='Mill & Pave') return l.rate||0;
-  return calcLayerBid(t,l)/t;
-}
-
-
-// -- New pricing formula ------------------------------------------------------
-// bid = (mat_cost + crew_cost + overhead) * (1 + markup%)
-// where crew_cost = days * crew_rate, days = tons / productivity
-function calcLayerDays(tons, l) {
-  if (l.days_override !== null && l.days_override !== undefined) return l.days_override;
-  if (tons <= 0) return 0;
-  return tons / jcProductivity;
-}
-
-function calcLayerBid(tons, l) {
-  // If user has manually overridden the rate, use it directly
-  if (l.rate_override !== null && l.rate_override !== undefined) {
-    return tons * l.rate_override;
-  }
-  var matCost = tons * (MAT[l.type] || 0);
-  var days = calcLayerDays(tons, l);
-  var crewCost = days * jcCrewRate;
-  var subtotal = matCost + crewCost;
-  var overhead = subtotal * (jcOverheadPct / 100);
-  var bid = (subtotal + overhead) * (1 + (l.markup / 100));
-  return bid;
-}
-
-function calcLayerRate(tons, l) {
-  if (tons <= 0) return l.rate_override || 0;
-  return calcLayerBid(tons, l) / tons;
-}
 
 function secTot(s){
   var wfv=wf(),tt=0,tm=0,tb=0;
@@ -1927,7 +1823,7 @@ function calcLayerRate(tons, layer){
 function recalc(){
   var bk=document.getElementById('breakdown');bk.innerHTML='';
   var wfv=wf(),mobv=mob();
-  var gSF=0,gSY=0,gT=0,gM=0,gB=0;
+  var gSF=0,gSY=0,gT=0,gB=0; gM=0;
   sections.forEach(function(s){
     var sf=s.sf||0,sy=sf/9;gSF+=sf;gSY+=sy;
     s.layers.forEach(function(l){
@@ -2106,14 +2002,13 @@ function setSitePlan(inp){
   var reader=new FileReader();
   reader.onload=function(e){
     sitePlanDataUrl=e.target.result;
-    document.getElementById('site-plan-label').textContent='OK Plan';
-    document.getElementById('site-plan-btn').style.borderColor='#27500A';
+    var spBtn=document.getElementById('site-plan-btn');
+    if(spBtn){spBtn.textContent='Plan Loaded';spBtn.style.borderColor='#27500A';}
     toast('Site plan loaded','ok');
   };
   reader.readAsDataURL(inp.files[0]);
 }
 
-// -- Notion --------------------------------------------------------------------
 function onClientInput(v){
   clearTimeout(clientTimer);
   var sug=document.getElementById('client-sug');
@@ -2121,18 +2016,23 @@ function onClientInput(v){
   clientTimer=setTimeout(function(){
     var m=clients.filter(function(c){return c.name.toLowerCase().indexOf(v.toLowerCase())>=0;}).slice(0,6);
     if(!m.length){sug.style.display='none';return;}
-    sug.innerHTML=m.map(function(c){
-      var json=JSON.stringify(c).replace(/"/g,'&quot;');
-      return '<div onclick="selectClient(\''+json.replace(/'/g,'x')+'\')" style="padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'\'">'
-        +'<div style="font-weight:600">'+esc(c.name)+'</div>'
-        +'<div style="font-size:11px;color:var(--dgray)">'+(c.company?esc(c.company)+'  -  ':'')+esc(c.phone||c.email||'')+'</div>'
-        +'</div>';
-    }).join('');
+    sug.innerHTML='';
+    m.forEach(function(c){
+      var div=document.createElement('div');
+      div.style.cssText='padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);';
+      div.addEventListener('mouseover',function(){this.style.background='#f5f5f5';});
+      div.addEventListener('mouseout',function(){this.style.background='';});
+      div.addEventListener('click',function(){selectClientById(c.id);});
+      div.innerHTML='<div style="font-weight:600">'+esc(c.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--dgray)">'+(c.company?esc(c.company)+'  -  ':'')+esc(c.phone||c.email||'')+'</div>';
+      sug.appendChild(div);
+    });
     sug.style.display='block';
   },200);
 }
-function selectClient(c){
-  if(typeof c==='string')c=JSON.parse(c);
+function selectClientById(id){
+  var c=clients.find(function(x){return x.id===id;});
+  if(!c)return;
   document.getElementById('proj-client').value=c.name;
   document.getElementById('client-sug').style.display='none';
   var bar=document.getElementById('client-bar');
@@ -2160,7 +2060,8 @@ async function saveQuote(){
   }catch(e){toast('Save error: '+e.message,'err');}
 }
 function loadQuote(id){
-  var q=savedQuotes.find(function(x){return x.id===id;});if(!q)return;
+  var q=savedQuotes.find(function(x){return x.id===id;})||pipelineProposals.find(function(x){return x.id===id;});
+  if(!q){toast('Proposal not found','err');return;}
   var d=typeof q.snap==='string'?JSON.parse(q.snap):q.snap;
   document.getElementById('proj-name').value=d.name||'';
   document.getElementById('proj-client').value=d.client||'';
@@ -2494,10 +2395,10 @@ document.addEventListener('click',function(e){if(e.target.id==='client-modal')cl
 function initLoginCanvas(){var cv=document.getElementById('login-canvas');if(!cv)return;var ctx=cv.getContext('2d');var W,H,pts;var N=55;function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}function rr(a,b){return a+Math.random()*(b-a);}function init(){resize();pts=[];for(var i=0;i<N;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:rr(-0.15,0.15),vy:rr(-0.15,0.15),r:rr(1,2)});}function draw(){ctx.clearRect(0,0,W,H);for(var i=0;i<N;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;}for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){var dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<150){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(170,170,170,'+(1-dist/150)*0.15+')';ctx.lineWidth=0.5;ctx.stroke();}if(dist<75){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(204,0,0,'+(1-dist/75)*0.2+')';ctx.lineWidth=0.6;ctx.stroke();}}for(var i=0;i<N;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,6.28);ctx.fillStyle='rgba(255,255,255,0.22)';ctx.fill();}requestAnimationFrame(draw);}window.addEventListener('resize',resize);init();draw();}initLoginCanvas();
 
 var _editingUserId=null;
-async function loadUsers(){var tbody=document.getElementById('users-tbody');if(!tbody)return;try{var r=await fetch('/admin/users');if(r.status===403){tbody.innerHTML='<tr><td colspan="6" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';d.users.forEach(function(u){var tr=document.createElement('tr');var created=u.created_at?new Date(u.created_at).toLocaleDateString():'-';tr.innerHTML='<td><b>'+esc(u.full_name||u.username)+'</b></td><td style="font-family:monospace;font-size:12px;">'+esc(u.username)+'</td><td><span class="role-badge role-'+u.role+'">'+u.role+'</span></td><td><span class="'+(u.active?'status-active':'status-inactive')+'">'+( u.active?'Active':'Inactive')+'</span></td><td style="font-size:12px;color:var(--dgray);">'+created+'</td><td style="white-space:nowrap;"><button class="btn btn-sec btn-sm" style="margin-right:4px;" onclick="openEditUserModal('+JSON.stringify(u)+')">Edit</button>'+(u.username!==(window._userUsername||'')? '<button class="btn-ico" style="color:var(--red);" onclick="deactivateUser('+u.id+',\''+esc(u.username)+'\','+u.active+')">'+( u.active?'&#10005;':'&#10003;')+'</button>':'')+'</td>';tbody.appendChild(tr);});var sel=document.getElementById('log-user-filter');if(sel){sel.innerHTML='<option value="">All Users</option>';d.users.forEach(function(u){var o=document.createElement('option');o.value=u.username;o.textContent=u.full_name||u.username;sel.appendChild(o);});}}catch(e){tbody.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
+async function loadUsers(){var tbody=document.getElementById('users-tbody');if(!tbody)return;try{var r=await fetch('/admin/users');if(r.status===403){tbody.innerHTML='<tr><td colspan="6" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';window._adminUsers={};d.users.forEach(function(u){window._adminUsers[u.id]=u;var tr=document.createElement('tr');var created=u.created_at?new Date(u.created_at).toLocaleDateString():'-';tr.innerHTML='<td><b>'+esc(u.full_name||u.username)+'</b></td><td style="font-family:monospace;font-size:12px;">'+esc(u.username)+'</td><td><span class="role-badge role-'+u.role+'">'+u.role+'</span></td><td><span class="'+(u.active?'status-active':'status-inactive')+'">'+( u.active?'Active':'Inactive')+'</span></td><td style="font-size:12px;color:var(--dgray);">'+created+'</td><td style="white-space:nowrap;"><button class="btn btn-sec btn-sm" style="margin-right:4px;" onclick="openEditUserModal('+u.id+')">Edit</button>'+(u.username!==(window._userUsername||'')? '<button class="btn-ico" style="color:var(--red);" onclick="deactivateUser('+u.id+',\''+esc(u.username)+'\','+u.active+')">'+( u.active?'&#10005;':'&#10003;')+'</button>':'')+'</td>';tbody.appendChild(tr);});var sel=document.getElementById('log-user-filter');if(sel){sel.innerHTML='<option value="">All Users</option>';d.users.forEach(function(u){var o=document.createElement('option');o.value=u.username;o.textContent=u.full_name||u.username;sel.appendChild(o);});}}catch(e){tbody.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
 async function loadLogs(){var tbody=document.getElementById('logs-tbody');if(!tbody)return;tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">Loading...</td></tr>';try{var f=(document.getElementById('log-user-filter')||{}).value||'';var url='/admin/logs?limit=100'+(f?'&username='+encodeURIComponent(f):'');var r=await fetch(url);if(r.status===403){tbody.innerHTML='<tr><td colspan="5" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';if(!d.logs.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">No activity yet.</td></tr>';return;}d.logs.forEach(function(l){var tr=document.createElement('tr');if(!l.success)tr.className='log-row-fail';var ts=l.logged_at?new Date(l.logged_at).toLocaleString():'-';tr.innerHTML='<td style="font-size:12px;white-space:nowrap;">'+ts+'</td><td><b>'+esc(l.full_name||l.username)+'</b><br><span style="font-size:11px;color:var(--dgray);">'+esc(l.username)+'</span></td><td style="text-transform:capitalize;font-size:12px;">'+esc(l.action)+'</td><td>'+(l.success?'<span style="color:#27500A;font-weight:600;font-size:11px;">Success</span>':'<span style="color:var(--red);font-weight:600;font-size:11px;">Failed</span>')+'</td><td class="log-ip">'+esc(l.ip_address||'-')+'</td>';tbody.appendChild(tr);});}catch(e){tbody.innerHTML='<tr><td colspan="5" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
 function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value='user';document.getElementById('pin-hint').textContent='(4-8 digits)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
-function openEditUserModal(u){_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=true;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value=u.role||'user';document.getElementById('pin-hint').textContent='(leave blank to keep current PIN)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');}
+function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=true;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value=u.role||'user';document.getElementById('pin-hint').textContent='(leave blank to keep current PIN)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');}
 function closeUserModal(){document.getElementById('user-modal').classList.add('hidden');_editingUserId=null;}
 async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pin=document.getElementById('edit-pin').value.trim();var role=document.getElementById('edit-role').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,role:role};if(pin)upd.pin=pin;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pin||pin.length<4){errEl.textContent='PIN must be at least 4 digits.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,pin:pin,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
 async function deactivateUser(uid,username,active){if(!confirm((active?'Deactivate':'Reactivate')+' "'+username+'"?'))return;var r=await fetch('/admin/users/'+uid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!active})});var d=await r.json();if(d.ok){loadUsers();toast('User '+(active?'deactivated':'reactivated'),'ok');}else toast('Error: '+(d.error||'failed'),'err');}

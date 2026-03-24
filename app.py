@@ -170,7 +170,7 @@ def pipeline_stages():
 def pipeline_list():
     try:
         r = http.get(
-            sb_url('proposals', '?select=*,pipeline_stages(name,color,counts_in_ratio,is_closed)&order=created_at.desc'),
+            sb_url('proposals', '?select=*,pipeline_stages!left(name,color,counts_in_ratio,is_closed)&order=created_at.desc'),
             headers=sb_headers(), timeout=10
         )
         r.raise_for_status()
@@ -294,8 +294,14 @@ def update_user(uid):
     if 'pin' in data and data['pin']: update['pin_hash'] = hash_pin(data['pin'])
     if not update: return jsonify({'ok':False,'error':'Nothing to update'}), 400
     try:
-        r = http.patch(sb_url('hd_users', f'?id=eq.{uid}'), headers=sb_headers(), json=update, timeout=5)
-        return jsonify({'ok': r.status_code in (200,204)})
+        headers = {**sb_headers(), 'Prefer': 'return=representation'}
+        r = http.patch(sb_url('hd_users', f'?id=eq.{uid}'), headers=headers, json=update, timeout=5)
+        if r.status_code not in (200, 204):
+            return jsonify({'ok': False, 'error': r.text}), 400
+        rows = r.json() if r.status_code == 200 else []
+        if isinstance(rows, list) and len(rows) == 0:
+            return jsonify({'ok': False, 'error': 'User not found'}), 404
+        return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok':False,'error':str(e)}), 500
 
@@ -398,48 +404,6 @@ def send_email():
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
-
-# ââ Notion ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-
-@app.route('/notion/push', methods=['POST'])
-@require_auth
-def notion_push():
-    if not NOTION_KEY:
-        return jsonify({'ok': False, 'error': 'Notion not configured'}), 500
-    data = request.get_json() or {}
-    payload = {
-        'parent': {'database_id': NOTION_PIPELINE},
-        'properties': {
-            'Name': {'title': [{'text': {'content': data.get('project_name', '')}}]},
-            'Client': {'rich_text': [{'text': {'content': data.get('client_name', '')}}]},
-            'Address': {'rich_text': [{'text': {'content': data.get('address', '')}}]},
-            'Total': {'number': float(data.get('total', 0))},
-        }
-    }
-    if data.get('date_iso'):
-        payload['properties']['Date'] = {'date': {'start': data['date_iso']}}
-    try:
-        r = http.post('https://api.notion.com/v1/pages', headers={
-            'Authorization': f'Bearer {NOTION_KEY}', 'Notion-Version': NOTION_VER,
-            'Content-Type': 'application/json'
-        }, json=payload, timeout=10)
-        return jsonify({'ok': True}) if r.ok else jsonify({'ok': False, 'error': r.text}), 500
-    except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
-
-@app.route('/notion/clients')
-@require_auth
-def notion_clients():
-    if not NOTION_KEY:
-        return jsonify({'results': []}), 200
-    try:
-        r = http.post(f'https://api.notion.com/v1/databases/{NOTION_CLIENTS}/query', headers={
-            'Authorization': f'Bearer {NOTION_KEY}', 'Notion-Version': NOTION_VER,
-            'Content-Type': 'application/json'
-        }, json={}, timeout=10)
-        return jsonify(r.json())
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
