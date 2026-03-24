@@ -3559,8 +3559,9 @@ async function renderPipeline() {
         } else {
           actions='<button class="btn btn-sec btn-sm kb-open-btn" onclick="loadProposalFromPipeline('+p.id+')">Open</button>';
         }
+        var addrLine=isProject&&snap.address?'<div style="font-size:10px;color:var(--dgray);margin-top:1px;">'+esc(snap.address)+'</div>':'';
         card.innerHTML = '<div class="kb-card-name">'+esc(p.name||'Untitled')+typeBadge+'</div>'
-          +'<div class="kb-card-client">'+esc(p.client||'')+'</div>'
+          +'<div class="kb-card-client">'+esc(p.client||'')+addrLine+'</div>'
           +'<div class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'-')+'</div>'
           +'<div class="kb-card-date">'+(p.date||((p.created_at||'').split('T')[0])||'')+dueStr+'</div>'
           +'<div class="kb-card-moves">'
@@ -3598,6 +3599,41 @@ function loadProposalFromPipeline(id) {
 }
 
 // -- Project Create / Edit from Pipeline --
+var _addrTimer=null;
+function initAddrAutocomplete(inputId, sugId){
+  var inp=document.getElementById(inputId);
+  var sug=document.getElementById(sugId);
+  if(!inp||!sug)return;
+  inp.addEventListener('input',function(){
+    clearTimeout(_addrTimer);
+    var q=inp.value.trim();
+    if(q.length<4){sug.style.display='none';sug.innerHTML='';return;}
+    _addrTimer=setTimeout(function(){
+      fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&limit=5&q='+encodeURIComponent(q),{headers:{'Accept':'application/json'}})
+        .then(function(r){return r.json();}).then(function(results){
+          sug.innerHTML='';
+          if(!results.length){sug.style.display='none';return;}
+          sug.style.display='block';
+          results.forEach(function(r){
+            var div=document.createElement('div');
+            div.style.cssText='padding:8px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--bdr);';
+            div.textContent=r.display_name;
+            div.addEventListener('mouseenter',function(){div.style.background='#F0F0F0';});
+            div.addEventListener('mouseleave',function(){div.style.background='';});
+            div.addEventListener('mousedown',function(ev){
+              ev.preventDefault();
+              inp.value=r.display_name;
+              sug.style.display='none';
+            });
+            sug.appendChild(div);
+          });
+        }).catch(function(){sug.style.display='none';});
+    },350);
+  });
+  inp.addEventListener('blur',function(){setTimeout(function(){sug.style.display='none';},200);});
+  inp.addEventListener('focus',function(){if(sug.childNodes.length)sug.style.display='block';});
+}
+
 function openProjectModal(existingData, editId){
   var ex=document.getElementById('project-modal');if(ex)ex.remove();
   var d=existingData||{};
@@ -3609,14 +3645,16 @@ function openProjectModal(existingData, editId){
   // Build stage options
   var stageOpts='<option value="">Select stage...</option>';
   pipelineStages.forEach(function(s){stageOpts+='<option value="'+s.id+'"'+(d.stage_id&&d.stage_id===s.id?' selected':'')+'>'+esc(s.name)+'</option>';});
-  // Build client options
-  var clientOpts='<option value="">Select client...</option>';
-  if(typeof clientsList!=='undefined')clientsList.forEach(function(c){clientOpts+='<option value="'+esc(c.name)+'"'+(d.client===c.name?' selected':'')+'>'+esc(c.name)+(c.company?' ('+esc(c.company)+')':'')+'</option>';});
+  // Build client datalist
+  var clientDL='';
+  if(typeof clientsList!=='undefined')clientsList.forEach(function(c){clientDL+='<option value="'+esc(c.name)+'">'+(c.company?esc(c.company):'')+'</option>';});
+  // Combine address + city_state into one field for existing data
+  var fullAddr=d.address||'';
+  if(d.city_state)fullAddr=fullAddr?(fullAddr+', '+d.city_state):d.city_state;
   box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">'+title+'</h3>'
     +'<label>Project Name *</label><input id="pm-proj-name" type="text" value="'+esc(d.name||'')+'" placeholder="e.g. Main St Repaving" style="width:100%;margin-bottom:10px;"/>'
-    +'<label>Client</label><select id="pm-proj-client" style="width:100%;margin-bottom:10px;">'+clientOpts+'</select>'
-    +'<label>Address</label><input id="pm-proj-addr" type="text" value="'+esc(d.address||'')+'" placeholder="123 Main St" style="width:100%;margin-bottom:10px;"/>'
-    +'<label>City / State</label><input id="pm-proj-cs" type="text" value="'+esc(d.city_state||'')+'" placeholder="Charlotte, NC" style="width:100%;margin-bottom:10px;"/>'
+    +'<label>Client</label><div style="position:relative;margin-bottom:10px;"><input id="pm-proj-client" type="text" list="pm-client-dl" value="'+esc(d.client||'')+'" placeholder="Start typing client name..." autocomplete="off" style="width:100%;"/><datalist id="pm-client-dl">'+clientDL+'</datalist></div>'
+    +'<label>Address</label><div style="position:relative;margin-bottom:10px;"><input id="pm-proj-addr" type="text" value="'+esc(fullAddr)+'" placeholder="Start typing address..." autocomplete="off" style="width:100%;"/><div id="pm-addr-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--bdr);border-radius:0 0 6px 6px;box-shadow:0 4px 12px rgba(0,0,0,.12);max-height:200px;overflow-y:auto;z-index:10;"></div></div>'
     +'<div class="fg fg2" style="margin-bottom:10px;"><div><label>Bid Due Date</label><input id="pm-proj-due-date" type="date" value="'+(d.bid_due_date||'')+'" style="width:100%;"/></div>'
     +'<div><label>Bid Due Time</label><input id="pm-proj-due-time" type="time" value="'+(d.bid_due_time||'')+'" style="width:100%;"/></div></div>'
     +'<label>Pipeline Stage</label><select id="pm-proj-stage" style="width:100%;margin-bottom:10px;">'+stageOpts+'</select>'
@@ -3627,14 +3665,17 @@ function openProjectModal(existingData, editId){
   modal.appendChild(box);
   modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
   document.body.appendChild(modal);
+  // Init address autocomplete
+  initAddrAutocomplete('pm-proj-addr','pm-addr-sug');
   document.getElementById('pm-proj-save').addEventListener('click',function(){
     var name=document.getElementById('pm-proj-name').value.trim();
     if(!name){toast('Enter a project name','err');return;}
+    var addrFull=document.getElementById('pm-proj-addr').value.trim();
     var payload={
       name:name,
-      client:document.getElementById('pm-proj-client').value,
-      address:document.getElementById('pm-proj-addr').value.trim(),
-      city_state:document.getElementById('pm-proj-cs').value.trim(),
+      client:document.getElementById('pm-proj-client').value.trim(),
+      address:addrFull,
+      city_state:'',
       bid_due_date:document.getElementById('pm-proj-due-date').value,
       bid_due_time:document.getElementById('pm-proj-due-time').value,
       stage_id:parseInt(document.getElementById('pm-proj-stage').value)||null,
@@ -3644,7 +3685,7 @@ function openProjectModal(existingData, editId){
     if(editId){
       // Update existing project
       var snap=d._rawSnap||{};
-      snap.is_project=true;snap.address=payload.address;snap.city_state=payload.city_state;
+      snap.is_project=true;snap.address=payload.address;snap.city_state='';
       snap.bid_due_date=payload.bid_due_date;snap.bid_due_time=payload.bid_due_time;
       snap.notes=payload.notes;
       var updateBody={name:payload.name,client:payload.client,snap:snap};
