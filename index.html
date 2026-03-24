@@ -297,6 +297,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 .client-name{font-weight:600;font-size:13px;}
 .client-sub{font-size:11px;color:var(--dgray);margin-top:2px;}
 .kb-stage-select{font-size:11px;padding:2px 5px;border:1px solid var(--bdr);border-radius:4px;background:#fff;cursor:pointer;max-width:130px;}
+.admin-table{width:100%;border-collapse:collapse;font-size:13px;}.admin-table th{background:var(--lgray);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--dgray);border-bottom:2px solid var(--bdr);letter-spacing:.5px;text-transform:uppercase;}.admin-table td{padding:9px 12px;border-bottom:1px solid var(--bdr);vertical-align:middle;}.admin-table tr:hover td{background:var(--lgray);}.role-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}.role-admin{background:#2d1a1a;color:var(--red);}.role-user{background:#f0f0f0;color:#555;}.status-active{color:#27500A;font-weight:600;font-size:11px;}.status-inactive{color:#999;font-size:11px;}.log-row-fail td{color:#cc4444;}.log-ip{font-family:monospace;font-size:11px;color:var(--dgray);}
 </style>
 </head>
 <body>
@@ -312,6 +313,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="login-eyebrow">HD Hauling &amp; Grading</div>
       <div class="login-sub">Internal use only &nbsp;&middot;&nbsp; Authorized access required</div>
       <div class="login-rule"></div>
+      <input class="pin-input" id="login-username" type="text" placeholder="Username" style="font-size:14px;letter-spacing:1px;margin-bottom:10px;text-transform:lowercase;" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off" spellcheck="false"/>
       <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="&bull;&bull;&bull;&bull;" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off"/>
       <button class="pin-btn" onclick="doLogin()">Access Tool</button>
       <div class="pin-err" id="pin-err"></div>
@@ -322,6 +324,30 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
 
 
+
+<div class="panel" id="panel-admin">
+  <div class="card">
+    <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">User Management</span><button class="btn btn-red btn-sm" onclick="openAddUserModal()">+ Add User</button></div>
+    <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">Activity Log</span><select id="log-user-filter" onchange="loadLogs()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:12px;"><option value="">All Users</option></select><button class="btn btn-sec btn-sm" onclick="loadLogs()">Refresh</button></div>
+    <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Result</th><th>IP Address</th></tr></thead><tbody id="logs-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
+  </div>
+</div>
+<div class="modal-overlay hidden" id="user-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-hdr"><h3 id="user-modal-title">Add User</h3><button class="btn-ico" onclick="closeUserModal()" style="font-size:18px;">&#10005;</button></div>
+    <div class="modal-body">
+      <label>Full Name</label><input type="text" id="edit-full-name" placeholder="e.g. John Smith"/>
+      <label>Username <span style="font-size:11px;color:var(--dgray);">(lowercase, no spaces)</span></label><input type="text" id="edit-username" placeholder="e.g. jsmith" style="text-transform:lowercase;"/>
+      <label>PIN <span id="pin-hint" style="font-size:11px;color:var(--dgray);">(4-8 digits)</span></label><input type="password" id="edit-pin" placeholder="Enter PIN" maxlength="8"/>
+      <label>Role</label><select id="edit-role"><option value="user">Standard User</option><option value="admin">Admin</option></select>
+      <div id="user-modal-err" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeUserModal()">Cancel</button><button class="btn btn-red btn-sm" onclick="saveUser()">Save User</button></div>
+  </div>
+</div>
 <!-- APP -->
 <!-- Mobile top bar -->
 <div class="mobile-bar" id="mobile-bar" style="display:none;">
@@ -358,6 +384,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-grp">Admin</div>
       <div class="nav-item" onclick="showPanel('settings',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings
+      </div>
+      <div class="nav-item admin-only" id="nav-admin" onclick="showPanel('admin',this);loadUsers();loadLogs();" style="display:none;">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg>
+        Admin
       </div>
     </nav>
     <div class="sb-foot"><button onclick="doLogout()">Sign out</button></div>
@@ -769,27 +799,29 @@ var sitePlanDataUrl=null;
 // -- Auth ----------------------------------------------------------------------
 async function doLogin(){
   document.getElementById('pin-err').textContent='';
+  var username=(document.getElementById('login-username')?document.getElementById('login-username').value.trim().toLowerCase():'');
   var pin=document.getElementById('pin-inp').value;
+  var btn=document.querySelector('.pin-btn');
+  if(btn){btn.disabled=true;btn.textContent='Checking...';}
+  if(!username){document.getElementById('pin-err').textContent='Please enter your username.';if(btn){btn.disabled=false;btn.textContent='Access Tool';}return;}
   try{
-    var r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:pin})});
+    var r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:username,pin:pin})});
     var d=await r.json();
-    if(d.ok){document.getElementById('login-screen').style.display='none';document.getElementById('app').className='on';boot();}
-    else{document.getElementById('pin-err').textContent='Incorrect PIN.';document.getElementById('pin-inp').value='';}
+    if(d.ok){
+      window._userRole=d.role||'user';
+      window._userName=d.full_name||username;
+      window._userUsername=username;
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').className='on';
+      boot();
+    } else {
+      document.getElementById('pin-err').textContent=d.error||'Incorrect username or PIN.';
+      document.getElementById('pin-inp').value='';
+    }
   }catch(e){document.getElementById('pin-err').textContent='Connection error. Try again.';}
+  finally{if(btn){btn.disabled=false;btn.textContent='Access Tool';}}
 }
-async function doLogout(){
-  await fetch('/auth/logout',{method:'POST'});
-  location.reload();
-}
-(async function(){
-  try{
-    var r=await fetch('/auth/check');
-    var d=await r.json();
-    if(d.authenticated){document.getElementById('login-screen').style.display='none';document.getElementById('app').className='on';boot();}
-  }catch(e){}
-})();
 
-// -- Boot ----------------------------------------------------------------------
 function boot(){
   loadStorage();
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
@@ -808,6 +840,7 @@ function boot(){
   updateMatIndicator();
   checkMobile();
   renderTopbar('build');
+  if(window._userRole==='admin'){var an=document.getElementById('nav-admin');if(an)an.style.display='';}
   document.addEventListener('click',function(e){
     if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))
       document.getElementById('client-sug').style.display='none';
@@ -2463,6 +2496,15 @@ async function deleteClient(id) {
 
 document.addEventListener('click',function(e){if(e.target.id==='client-modal')closeClientModal();});
 function initLoginCanvas(){var cv=document.getElementById('login-canvas');if(!cv)return;var ctx=cv.getContext('2d');var W,H,pts;var N=55;function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}function rr(a,b){return a+Math.random()*(b-a);}function init(){resize();pts=[];for(var i=0;i<N;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:rr(-0.15,0.15),vy:rr(-0.15,0.15),r:rr(1,2)});}function draw(){ctx.clearRect(0,0,W,H);for(var i=0;i<N;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;}for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){var dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<150){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(170,170,170,'+(1-dist/150)*0.15+')';ctx.lineWidth=0.5;ctx.stroke();}if(dist<75){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(204,0,0,'+(1-dist/75)*0.2+')';ctx.lineWidth=0.6;ctx.stroke();}}for(var i=0;i<N;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,6.28);ctx.fillStyle='rgba(255,255,255,0.22)';ctx.fill();}requestAnimationFrame(draw);}window.addEventListener('resize',resize);init();draw();}initLoginCanvas();
+
+var _editingUserId=null;
+async function loadUsers(){var tbody=document.getElementById('users-tbody');if(!tbody)return;try{var r=await fetch('/admin/users');if(r.status===403){tbody.innerHTML='<tr><td colspan="6" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';d.users.forEach(function(u){var tr=document.createElement('tr');var created=u.created_at?new Date(u.created_at).toLocaleDateString():'-';tr.innerHTML='<td><b>'+esc(u.full_name||u.username)+'</b></td><td style="font-family:monospace;font-size:12px;">'+esc(u.username)+'</td><td><span class="role-badge role-'+u.role+'">'+u.role+'</span></td><td><span class="'+(u.active?'status-active':'status-inactive')+'">'+( u.active?'Active':'Inactive')+'</span></td><td style="font-size:12px;color:var(--dgray);">'+created+'</td><td style="white-space:nowrap;"><button class="btn btn-sec btn-sm" style="margin-right:4px;" onclick="openEditUserModal('+JSON.stringify(u)+')">Edit</button>'+(u.username!==(window._userUsername||'')? '<button class="btn-ico" style="color:var(--red);" onclick="deactivateUser('+u.id+',\''+esc(u.username)+'\','+u.active+')">'+( u.active?'&#10005;':'&#10003;')+'</button>':'<span style="font-size:11px;color:var(--dgray);">(you)</span>')+'</td>';tbody.appendChild(tr);});var sel=document.getElementById('log-user-filter');if(sel){sel.innerHTML='<option value="">All Users</option>';d.users.forEach(function(u){var o=document.createElement('option');o.value=u.username;o.textContent=u.full_name||u.username;sel.appendChild(o);});}}catch(e){tbody.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
+async function loadLogs(){var tbody=document.getElementById('logs-tbody');if(!tbody)return;tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">Loading...</td></tr>';try{var f=(document.getElementById('log-user-filter')||{}).value||'';var url='/admin/logs?limit=100'+(f?'&username='+encodeURIComponent(f):'');var r=await fetch(url);if(r.status===403){tbody.innerHTML='<tr><td colspan="5" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';if(!d.logs.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">No activity yet.</td></tr>';return;}d.logs.forEach(function(l){var tr=document.createElement('tr');if(!l.success)tr.className='log-row-fail';var ts=l.logged_at?new Date(l.logged_at).toLocaleString():'-';tr.innerHTML='<td style="font-size:12px;white-space:nowrap;">'+ts+'</td><td><b>'+esc(l.full_name||l.username)+'</b><br><span style="font-size:11px;color:var(--dgray);">'+esc(l.username)+'</span></td><td style="text-transform:capitalize;font-size:12px;">'+esc(l.action)+'</td><td>'+(l.success?'<span style="color:#27500A;font-weight:600;font-size:11px;">Success</span>':'<span style="color:var(--red);font-weight:600;font-size:11px;">Failed</span>')+'</td><td class="log-ip">'+esc(l.ip_address||'-')+'</td>';tbody.appendChild(tr);});}catch(e){tbody.innerHTML='<tr><td colspan="5" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
+function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value='user';document.getElementById('pin-hint').textContent='(4-8 digits)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
+function openEditUserModal(u){_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=true;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value=u.role||'user';document.getElementById('pin-hint').textContent='(leave blank to keep current PIN)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');}
+function closeUserModal(){document.getElementById('user-modal').classList.add('hidden');_editingUserId=null;}
+async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pin=document.getElementById('edit-pin').value.trim();var role=document.getElementById('edit-role').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,role:role};if(pin)upd.pin=pin;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pin||pin.length<4){errEl.textContent='PIN must be at least 4 digits.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,pin:pin,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
+async function deactivateUser(uid,username,active){if(!confirm((active?'Deactivate':'Reactivate')+' "'+username+'"?'))return;var r=await fetch('/admin/users/'+uid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!active})});var d=await r.json();if(d.ok){loadUsers();toast('User '+(active?'deactivated':'reactivated'),'ok');}else toast('Error: '+(d.error||'failed'),'err');}
 </script>
 
 <!-- Client Modal -->
