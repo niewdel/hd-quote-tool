@@ -369,6 +369,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
 .kb-stat-lbl{font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;}
 .kb-stat-val{font-size:19px;font-weight:700;margin-top:2px;}
 /* Client cards */
+.clients-tab-btn{color:var(--dgray);transition:all .15s;}
+.clients-tab-btn:hover{background:rgba(0,0,0,.04);}
+.clients-tab-btn.on{color:var(--red);border-left-color:var(--red) !important;background:#fff;font-weight:700 !important;}
+.sub-card{background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:11px;}
 .client-card{background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:11px;}
 .client-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .client-info{flex:1;}
@@ -433,8 +437,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" data-field-hidden onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents</div>
       <div class="nav-item" data-field-hidden onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
       <div class="nav-item" onclick="showPanel('schedule',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg>Schedule<span class="nav-badge" id="nav-badge-schedule" style="display:none;"></span></div>
-      <div class="nav-item" data-field-hidden onclick="showPanel('reports',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h3v12H2zm4.5 3h3v9h-3zM11 7h3v7h-3z"/></svg>Reports</div>
       <div class="nav-grp">Config</div>
+      <div class="nav-item" data-field-hidden onclick="showPanel('reports',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h3v12H2zm4.5 3h3v9h-3zM11 7h3v7h-3z"/></svg>Reports</div>
       <div class="nav-item" onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
       <div class="nav-item admin-only" id="nav-admin" data-admin-hidden onclick="showPanel('admin',this);loadUsers();showAdminTab('users');">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg>
@@ -743,6 +747,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div class="card-hdr"><span class="card-title">Change Orders</span></div>
             <div class="card-body" id="co-saved-list"><p style="color:var(--dgray);font-size:12px;">No saved change orders yet.</p></div>
           </div>
+          <div class="card" style="margin-top:16px;">
+            <div class="card-hdr"><span class="card-title">Work Orders</span></div>
+            <div class="card-body" id="wo-saved-list"><p style="color:var(--dgray);font-size:12px;">No work orders yet.</p></div>
+          </div>
         </div>
       </div>
 
@@ -780,10 +788,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div class="card" data-field-hidden style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Invoices</span></div>
               <div class="card-body" id="ps-invoices"><p style="color:var(--dgray);font-size:12px;">No invoices yet.</p></div>
-            </div>
-            <div class="card" data-field-hidden style="margin-bottom:14px;">
-              <div class="card-hdr"><span class="card-title">Subcontractors</span></div>
-              <div class="card-body" id="ps-subs"><p style="color:var(--dgray);font-size:12px;">No subcontractors assigned.</p></div>
             </div>
           </div>
           <!-- Right column -->
@@ -842,12 +846,32 @@ tr:nth-child(even) td{background:#FAFAFA;}
       </div></div>
 
       <!-- CLIENTS PANEL -->
-      <div class="panel" id="panel-clients"><div class="content" style="padding:16px;">
-          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
-            <div id="clients-count" style="font-size:13px;color:var(--dgray);"></div>
-            <input id="clients-search" type="text" placeholder="Search clients..." oninput="filterClients(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
+      <div class="panel" id="panel-clients"><div class="content" style="padding:0;">
+          <div style="display:flex;min-height:calc(100vh - 80px);">
+            <!-- Left tab nav -->
+            <div id="clients-tab-nav" style="width:160px;border-right:1px solid var(--bdr);padding:16px 0;flex-shrink:0;background:var(--lgray);">
+              <div class="clients-tab-btn on" data-ctab="clients" onclick="showClientsTab('clients')" style="padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-left:3px solid transparent;">Clients</div>
+              <div class="clients-tab-btn" data-ctab="subs" onclick="showClientsTab('subs')" style="padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-left:3px solid transparent;">Subcontractors</div>
+            </div>
+            <!-- Tab content -->
+            <div style="flex:1;padding:16px;">
+              <div id="clients-tab-clients">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+                  <div id="clients-count" style="font-size:13px;color:var(--dgray);"></div>
+                  <input id="clients-search" type="text" placeholder="Search clients..." oninput="filterClients(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
+                </div>
+                <div id="clients-list"></div>
+              </div>
+              <div id="clients-tab-subs" style="display:none;">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+                  <div id="subs-count" style="font-size:13px;color:var(--dgray);"></div>
+                  <input id="subs-search" type="text" placeholder="Search subcontractors..." oninput="filterSubs(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
+                  <button class="btn btn-red btn-sm" onclick="openSubModal()">+ Add Sub</button>
+                </div>
+                <div id="subs-list"><p style="color:var(--dgray);font-size:13px;">Loading subcontractors...</p></div>
+              </div>
+            </div>
           </div>
-          <div id="clients-list"></div>
         </div>
       </div>
 
@@ -2916,42 +2940,6 @@ function _renderProjectSummaryInner(proj){
     psInv.appendChild(invBtn);
   }
 
-  // ── Subcontractors Card ──
-  var psSubs=document.getElementById('ps-subs');
-  if(psSubs&&canSeePricing()){
-    var subList=snap.subcontractors||[];
-    psSubs.innerHTML='';
-    if(subList.length){
-      subList.forEach(function(sub,idx){
-        var row=document.createElement('div');
-        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);';
-        var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
-        info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(sub.name||'')+'</div>'
-          +'<div style="font-size:11px;color:var(--dgray);">'+esc(sub.trade||'')+(sub.phone?' &middot; '+esc(sub.phone):'')+(sub.quote_amount?' &middot; $'+Math.round(sub.quote_amount).toLocaleString():'')+'</div>';
-        row.appendChild(info);
-        var statusColors={pending:'#999',confirmed:'#2B5FA6',complete:'#27500A'};
-        var badge=document.createElement('span');
-        badge.style.cssText='font-size:10px;font-weight:700;color:#fff;background:'+(statusColors[sub.status]||'#999')+';padding:3px 10px;border-radius:4px;text-transform:uppercase;flex-shrink:0;';
-        badge.textContent=(sub.status||'pending').charAt(0).toUpperCase()+(sub.status||'pending').slice(1);
-        row.appendChild(badge);
-        var del=document.createElement('button');del.className='btn-ico';del.style.cssText='color:var(--dgray);font-size:14px;';del.textContent='\u00d7';del.title='Remove';
-        (function(i){del.addEventListener('click',function(){
-          if(!confirm('Remove this subcontractor?'))return;
-          snap.subcontractors.splice(i,1);
-          addProjectActivity(snap,'note','Subcontractor removed');
-          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
-            .then(function(){renderProjectSummary();});
-        });})(idx);
-        row.appendChild(del);
-        psSubs.appendChild(row);
-      });
-    }
-    var subBtn=document.createElement('button');subBtn.className='btn btn-red btn-sm';subBtn.style.marginTop='10px';
-    subBtn.textContent='+ Add Sub';
-    subBtn.addEventListener('click',function(){openSubcontractorForm(snap);});
-    psSubs.appendChild(subBtn);
-  }
-
   // ── Equipment Card ──
   var psEquip=document.getElementById('ps-equipment');
   if(psEquip){
@@ -3803,11 +3791,14 @@ async function loadCOList(){
     savedCOs.forEach(function(co){
       var div=document.createElement('div');
       div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
+      var coSnap=typeof co.snap==='string'?JSON.parse(co.snap||'{}'):co.snap||{};
+      var coDocNum=coSnap.project_number?(coSnap.project_number+'-CO'+(co.co_number||1)):'';
+      var coDocLabel=coDocNum?'<span style="background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;margin-right:6px;">'+esc(coDocNum)+'</span>':'';
       var createdBy=co.created_by?'<span style="background:#eee;color:var(--dgray);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase;margin-left:6px;">'+esc(co.created_by)+'</span>':'';
       var ts=co.created_at?new Date(co.created_at).toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}):'';
       var netChange=(co.add_total||0)-(co.deduct_total||0);
       var netStr=netChange>=0?'+$'+Math.round(netChange).toLocaleString():'-$'+Math.round(Math.abs(netChange)).toLocaleString();
-      div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">CO #'+(co.co_number||1)+' — '+esc(co.project_name||'')+createdBy+'</div>'
+      div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+coDocLabel+'CO #'+(co.co_number||1)+' — '+esc(co.project_name||'')+createdBy+'</div>'
         +'<div style="font-size:11px;color:var(--dgray);">'+(co.client_name?esc(co.client_name)+' &middot; ':'')+ts+' &middot; '+netStr+' &middot; Revised $'+Math.round(co.revised_total||0).toLocaleString()+'</div></div>'
         +'<button class="btn btn-sec btn-sm" onclick="loadCO('+co.id+')">Load</button>'
         +'<button class="btn btn-sec btn-sm" onclick="exportCOFromSaved('+co.id+')" title="Export PDF">PDF</button>'
@@ -3817,6 +3808,52 @@ async function loadCOList(){
       c.appendChild(div);
     });
   }catch(e){c.innerHTML='<p style="color:var(--dgray);font-size:12px;">Error loading change orders.</p>';}
+}
+
+function loadWOList(){
+  var c=document.getElementById('wo-saved-list');
+  if(!c)return;
+  // Gather all work orders from all projects
+  var allWOs=[];
+  (pipelineProposals||[]).forEach(function(proj){
+    var snap=typeof proj.snap==='string'?JSON.parse(proj.snap||'{}'):proj.snap||{};
+    if(!snap.work_orders||!snap.work_orders.length)return;
+    var projNum=snap.project_number||'';
+    snap.work_orders.forEach(function(wo,idx){
+      allWOs.push({wo:wo,proj:proj,snap:snap,projNum:projNum,woIdx:idx+1});
+    });
+  });
+  if(!allWOs.length){c.innerHTML='<p style="color:var(--dgray);font-size:12px;">No work orders yet.</p>';return;}
+  // Sort by date descending
+  allWOs.sort(function(a,b){return (b.wo.date||'').localeCompare(a.wo.date||'');});
+  c.innerHTML='';
+  allWOs.forEach(function(item){
+    var wo=item.wo,proj=item.proj,snap=item.snap;
+    var woDocNum=item.projNum?item.projNum+'-WO'+item.woIdx:'';
+    var woDocLabel=woDocNum?'<span style="background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;margin-right:6px;">'+esc(woDocNum)+'</span>':'';
+    var statusColors={pending:'#999',active:'#2196F3',complete:'#4CAF50'};
+    var statusBadge='<span style="font-size:10px;font-weight:700;color:#fff;background:'+(statusColors[wo.status]||'#999')+';padding:1px 8px;border-radius:3px;text-transform:uppercase;margin-left:6px;">'+esc((wo.status||'pending'))+'</span>';
+    var div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
+    var dateStr=wo.scheduled_date?new Date(wo.scheduled_date+'T00:00:00').toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}):(wo.date||'');
+    div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+woDocLabel+esc(wo.name)+statusBadge+'</div>'
+      +'<div style="font-size:11px;color:var(--dgray);">'+esc(proj.name||'')+(proj.client?' &middot; '+esc(proj.client):'')+(dateStr?' &middot; '+dateStr:'')+(wo.assigned_to?' &middot; '+esc(wo.assigned_to):'')+'</div></div>'
+      +'<button class="btn btn-sec btn-sm" onclick="openProjectWO('+proj.id+','+wo.id+')">View</button>'
+      +'<button class="btn btn-sec btn-sm" onclick="exportWOFromSaved('+proj.id+','+wo.id+')" title="Export PDF">PDF</button>';
+    c.appendChild(div);
+  });
+}
+
+function openProjectWO(projId,woId){
+  window._currentProjectId=projId;
+  window._currentWorkOrderId=woId;
+  showPanel('workorder',null);
+}
+
+function exportWOFromSaved(projId,woId){
+  window._currentProjectId=projId;
+  window._currentWorkOrderId=woId;
+  exportWorkOrderPDF();
 }
 
 function loadCO(id){
@@ -4001,7 +4038,7 @@ function showPanel(id,el){
   var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients','client-summary':'Client Summary',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule',reports:'Reports'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
-  if(id==='saved'){renderSaved();loadCOList();}
+  if(id==='saved'){renderSaved();loadCOList();loadWOList();}
   if(id==='projects'){renderProjectsList();renderProjectStats();}
   if(id==='lineitems')renderLineItems();
   if(id==='crewcosts')renderCrewCosts();
@@ -4348,6 +4385,8 @@ function updateConcResult(id){
     ?('<b>'+item.qty.toLocaleString()+'</b> '+ct.unit+d+'<b>'+cy.toFixed(2)+'</b> CY'+d+'Mat <b>$'+fi(matC)+'</b>'+d+'Labor <b>$'+fi(labC)+'</b>'+d+'Cost <b>$'+fi(costC)+'</b>'+d+'Total <b style="color:var(--red);">$'+fi(bidC)+'</b>'+(bidPerCY>0?d+'<b style="color:var(--red);">$'+Math.round(bidPerCY).toLocaleString()+'/CY</b>':''))
     :(item.qty>0&&cy>0?'<span style="color:#27500A;font-weight:600;">'+cy.toFixed(2)+' CY</span>':'<span style="opacity:.5">enter qty &amp; rates</span>');
   if(muEl){muEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'%':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
+  var bpuEl=document.querySelector('[data-conc-bpu="'+id+'"]');
+  if(bpuEl)bpuEl.textContent=item.qty>0&&bidC>0?'$'+bR.toFixed(2):'—';
 }
 function renderConc(){
   var c=document.getElementById('conc-rows'),em=document.getElementById('conc-empty');
@@ -4377,7 +4416,7 @@ function renderConc(){
       +'<div class="lyr-field"><label>'+ct.unit+'</label><input type="number" value="'+(item.qty||'')+'" placeholder="0" min="0" step="1" onchange="updConcField('+item.id+',\'qty\',this.value)"></div>'
       +'<div class="lyr-field"><label>Mat $/CY</label><input type="number" value="'+(item.mat!==undefined?item.mat:200)+'" placeholder="200" min="0" step="1" onchange="updConcField('+item.id+',\'mat\',parseFloat(this.value)||0)"></div>'
       +'<div class="lyr-field"><label>Sub $/'+ct.unit+'</label><input type="number" value="'+(item.sub||'')+'" placeholder="0" min="0" step=".25" onchange="updConcField('+item.id+',\'sub\',this.value)"></div>'
-      +'<div class="lyr-field"><label>$/'+ct.unit+'</label><span style="display:block;font-size:13px;font-weight:700;color:var(--red);padding:4px 0;">'+(item.qty>0&&bidC>0?'$'+bR.toFixed(2):'—')+'</span></div>'
+      +'<div class="lyr-field"><label>$/'+ct.unit+'</label><span data-conc-bpu="'+item.id+'" style="display:block;font-size:13px;font-weight:700;color:var(--red);padding:4px 0;">'+(item.qty>0&&bidC>0?'$'+bR.toFixed(2):'—')+'</span></div>'
       +'<div class="lyr-field"><label>Markup %</label><input type="number" value="'+item.markup+'" min="0" step="1" onchange="updConcField('+item.id+',\'markup\',this.value)"></div>'
       +'<span class="mubadge '+(mp>=0?'p':'n')+'" data-conc="'+item.id+'">'+(item.qty>0&&bidC>0?mp.toFixed(1)+'%':'')+'</span>'
       +'</div>'
@@ -5273,10 +5312,12 @@ async function renderSaved(){
       div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
       var sn=typeof q.snap==='string'?JSON.parse(q.snap||'{}'):q.snap||{};
       var rev=sn.revision||0;
+      var docNum=sn.document_number||sn.project_number||'';
+      var docNumLabel=docNum?'<span style="background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;margin-right:6px;">'+esc(docNum)+'</span>':'';
       var revLabel=rev>0?'<span style="background:#e8f0fe;color:#1a73e8;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">Rev '+String.fromCharCode(64+rev)+'</span>':'';
       var createdBy=q.created_by?'<span style="background:#eee;color:var(--dgray);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase;margin-left:6px;">'+esc(q.created_by)+'</span>':'';
       var ts=q.created_at?new Date(q.created_at).toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}):'';
-      div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+esc(q.name)+revLabel+createdBy+'</div>'
+      div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+docNumLabel+esc(q.name)+revLabel+createdBy+'</div>'
         +'<div style="font-size:11px;color:var(--dgray);">'+(q.client?esc(q.client)+' &middot; ':'')+ts+' &middot; $'+Math.round(q.total).toLocaleString()+'</div></div>'
         +'<button class="btn btn-sec btn-sm" onclick="loadQuote('+q.id+')">Load</button>'
         +'<button class="btn btn-sec btn-sm" onclick="duplicateProposal('+q.id+')" title="Duplicate proposal">Duplicate</button>'
@@ -5857,6 +5898,156 @@ function filterClients(q){
     var text=(card.dataset.name||'')+(card.dataset.company||'')+(card.dataset.email||'')+(card.textContent||'').toLowerCase();
     card.style.display=(!q||text.indexOf(q)>-1)?'':'none';
   });
+}
+
+// -- Clients Tab Switcher --
+function showClientsTab(tab){
+  document.querySelectorAll('.clients-tab-btn').forEach(function(b){b.classList.toggle('on',b.dataset.ctab===tab);});
+  var cTab=document.getElementById('clients-tab-clients');
+  var sTab=document.getElementById('clients-tab-subs');
+  if(cTab)cTab.style.display=tab==='clients'?'':'none';
+  if(sTab)sTab.style.display=tab==='subs'?'':'none';
+  if(tab==='subs')renderSubsList();
+}
+
+// -- Subcontractors Management --
+var subsList=[];
+function renderSubsList(){
+  var c=document.getElementById('subs-list');if(!c)return;
+  // Gather all subs from all projects
+  var allSubs=[];
+  (pipelineProposals||[]).forEach(function(proj){
+    var snap=typeof proj.snap==='string'?JSON.parse(proj.snap||'{}'):proj.snap||{};
+    (snap.subcontractors||[]).forEach(function(sub){
+      allSubs.push({sub:sub,projId:proj.id,projName:proj.name||'Unknown Project'});
+    });
+  });
+  // Also load standalone subs from localStorage
+  var standalone=JSON.parse(localStorage.getItem('hd_subcontractors')||'[]');
+  standalone.forEach(function(sub){allSubs.push({sub:sub,projId:null,projName:''});});
+  subsList=allSubs;
+  var countEl=document.getElementById('subs-count');
+  if(countEl)countEl.innerHTML='<b>'+allSubs.length+'</b> subcontractor'+(allSubs.length!==1?'s':'');
+  c.innerHTML='';
+  if(!allSubs.length){c.innerHTML='<p style="color:var(--dgray);font-size:13px;">No subcontractors yet. Click + Add Sub to get started.</p>';return;}
+  allSubs.forEach(function(item,idx){
+    var sub=item.sub;
+    var statusColors={pending:'#999',approved:'#4CAF50',completed:'#2196F3',paid:'#8BC34A'};
+    var card=document.createElement('div');
+    card.className='sub-card';
+    card.dataset.name=(sub.name||'').toLowerCase();
+    card.dataset.trade=(sub.trade||'').toLowerCase();
+    var initials=(sub.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+    var projLabel=item.projName?'<span style="background:#e8f0fe;color:#1a73e8;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">'+esc(item.projName)+'</span>':'<span style="background:#eee;color:var(--dgray);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">Standalone</span>';
+    var statusBadge='<span style="font-size:10px;font-weight:700;color:#fff;background:'+(statusColors[sub.status]||'#999')+';padding:1px 8px;border-radius:3px;text-transform:uppercase;margin-left:6px;">'+esc((sub.status||'pending'))+'</span>';
+    card.innerHTML='<div style="width:36px;height:36px;border-radius:50%;background:#6B4FA6;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+initials+'</div>'
+      +'<div style="flex:1;">'
+      +'<div style="font-weight:600;font-size:13px;">'+esc(sub.name)+(sub.trade?' <span style="font-weight:400;color:var(--dgray);">— '+esc(sub.trade)+'</span>':'')+projLabel+statusBadge+'</div>'
+      +'<div style="font-size:11px;color:var(--dgray);margin-top:2px;">'+[sub.phone,sub.quote_amount?'$'+Math.round(sub.quote_amount).toLocaleString():''].filter(Boolean).join(' | ')+'</div>'
+      +'</div>'
+      +'<button class="btn btn-sec btn-sm" onclick="editSub('+idx+')">Edit</button>'
+      +'<button class="btn-ico" onclick="deleteSub('+idx+')" style="color:var(--dgray);">x</button>';
+    c.appendChild(card);
+  });
+}
+
+function filterSubs(q){
+  q=q.toLowerCase();
+  document.querySelectorAll('#subs-list .sub-card').forEach(function(card){
+    var text=(card.dataset.name||'')+(card.dataset.trade||'')+(card.textContent||'').toLowerCase();
+    card.style.display=(!q||text.indexOf(q)>-1)?'':'none';
+  });
+}
+
+function openSubModal(editIdx){
+  var editing=null;
+  if(editIdx!==undefined&&subsList[editIdx])editing=subsList[editIdx].sub;
+  var ex=document.getElementById('sub-modal');if(ex)ex.remove();
+  var modal=document.createElement('div');modal.id='sub-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:420px;max-width:92vw;';
+  box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">'+(editing?'Edit':'Add')+' Subcontractor</h3>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Name</label>'
+    +'<input class="inp" id="sub-name" placeholder="Company or contact name" style="margin-bottom:10px;width:100%;" value="'+esc(editing?editing.name:'')+'"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Trade</label>'
+    +'<input class="inp" id="sub-trade" placeholder="e.g. Concrete, Striping, Grading" style="margin-bottom:10px;width:100%;" value="'+esc(editing?editing.trade:'')+'"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Phone</label>'
+    +'<input class="inp" id="sub-phone" placeholder="Phone number" style="margin-bottom:10px;width:100%;" value="'+esc(editing?editing.phone:'')+'"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Email</label>'
+    +'<input class="inp" id="sub-email" placeholder="Email address" style="margin-bottom:10px;width:100%;" value="'+esc(editing?editing.email:'')+'"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Quote Amount ($)</label>'
+    +'<input class="inp" id="sub-quote" type="number" step="0.01" placeholder="0" style="margin-bottom:16px;width:100%;" value="'+(editing?editing.quote_amount||'':'')+'"/>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'sub-modal\').remove()">Cancel</button>'
+    +'<button class="btn btn-red btn-sm" id="sub-save-btn">'+(editing?'Update':'Add Sub')+'</button></div>';
+  modal.appendChild(box);
+  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+  document.getElementById('sub-save-btn').addEventListener('click',function(){
+    var name=document.getElementById('sub-name').value.trim();
+    if(!name){toast('Enter a name','err');return;}
+    var subData={
+      id:editing?editing.id:Date.now(),
+      name:name,
+      trade:document.getElementById('sub-trade').value.trim(),
+      phone:document.getElementById('sub-phone').value.trim(),
+      email:document.getElementById('sub-email').value.trim(),
+      quote_amount:parseFloat(document.getElementById('sub-quote').value)||0,
+      status:editing?editing.status:'pending'
+    };
+    if(editIdx!==undefined&&subsList[editIdx]&&subsList[editIdx].projId){
+      // Update project-linked sub
+      var projId=subsList[editIdx].projId;
+      var proj=pipelineProposals.find(function(p){return p.id===projId;});
+      if(proj){
+        var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+        var sIdx=(snap.subcontractors||[]).findIndex(function(s){return s.id===editing.id;});
+        if(sIdx>-1)snap.subcontractors[sIdx]=subData;
+        fetch('/projects/update/'+projId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+          .then(function(r){return r.json();}).then(function(d){
+            if(d.ok){proj.snap=snap;toast('Subcontractor updated','ok');modal.remove();renderSubsList();}
+            else toast(d.error||'Failed','err');
+          });
+      }
+    } else if(editIdx!==undefined&&subsList[editIdx]&&!subsList[editIdx].projId){
+      // Update standalone sub
+      var standalone=JSON.parse(localStorage.getItem('hd_subcontractors')||'[]');
+      var sIdx2=standalone.findIndex(function(s){return s.id===editing.id;});
+      if(sIdx2>-1)standalone[sIdx2]=subData;
+      localStorage.setItem('hd_subcontractors',JSON.stringify(standalone));
+      toast('Subcontractor updated','ok');modal.remove();renderSubsList();
+    } else {
+      // New standalone sub
+      var standalone2=JSON.parse(localStorage.getItem('hd_subcontractors')||'[]');
+      standalone2.push(subData);
+      localStorage.setItem('hd_subcontractors',JSON.stringify(standalone2));
+      toast('Subcontractor added','ok');modal.remove();renderSubsList();
+    }
+  });
+}
+function editSub(idx){openSubModal(idx);}
+function deleteSub(idx){
+  if(!subsList[idx])return;
+  if(!confirm('Remove this subcontractor?'))return;
+  var item=subsList[idx];
+  if(item.projId){
+    var proj=pipelineProposals.find(function(p){return p.id===item.projId;});
+    if(proj){
+      var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+      snap.subcontractors=(snap.subcontractors||[]).filter(function(s){return s.id!==item.sub.id;});
+      fetch('/projects/update/'+item.projId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+        .then(function(r){return r.json();}).then(function(d){
+          if(d.ok){proj.snap=snap;toast('Subcontractor removed','ok');renderSubsList();}
+          else toast(d.error||'Failed','err');
+        });
+    }
+  } else {
+    var standalone=JSON.parse(localStorage.getItem('hd_subcontractors')||'[]');
+    standalone=standalone.filter(function(s){return s.id!==item.sub.id;});
+    localStorage.setItem('hd_subcontractors',JSON.stringify(standalone));
+    toast('Subcontractor removed','ok');renderSubsList();
+  }
 }
 
 // Client Summary
