@@ -2456,11 +2456,13 @@ function _renderProjectSummaryInner(proj){
       dueStr='Due '+dp[1]+'/'+dp[2]+'/'+dp[0]+(snap.bid_due_time?' @ '+fmt12(snap.bid_due_time):'');
     }
     var projNum=snap.project_number||'';
-    hdr.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">'
-      +(projNum?'<span style="font-size:12px;font-weight:700;color:var(--red);font-family:monospace;letter-spacing:.5px;">'+esc(projNum)+'</span>':'')
+    hdr.innerHTML=(projNum?'<div style="font-size:12px;font-weight:700;color:var(--red);font-family:monospace;letter-spacing:.5px;margin-bottom:4px;">'+esc(projNum)+'</div>':'')
+      +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:4px;">'
+      +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
       +'<h2 style="margin:0;font-size:22px;font-weight:800;">'+esc(proj.name||'Untitled Project')+'</h2>'
       +'<span style="font-size:10px;font-weight:700;color:#fff;background:'+stageColor+';padding:3px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;">'+esc(stageName)+'</span>'
-      +(dueStr?'<span style="font-size:11px;font-weight:700;color:var(--red);margin-left:4px;">'+dueStr+'</span>':'')
+      +'</div>'
+      +(dueStr?'<span style="font-size:11px;font-weight:700;color:var(--red);">'+dueStr+'</span>':'')
       +'</div>'
       +'<div style="font-size:13px;color:var(--dgray);">'
       +(proj.client?esc(proj.client):'No client assigned')
