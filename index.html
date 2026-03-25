@@ -94,6 +94,25 @@ body.dark label{color:#ccc;}
 /* Panels */
 .panel{display:none;}.panel.on{display:block;width:100%;box-sizing:border-box;}
 
+/* Reports Panel */
+.rpt-nav-item{padding:8px 14px;font-size:12px;color:var(--blk);cursor:pointer;border-left:2px solid transparent;transition:all .12s;}
+.rpt-nav-item:hover{background:#F5F5F5;}
+.rpt-nav-active{background:rgba(204,0,0,.06);border-left-color:var(--red);font-weight:600;color:var(--red);}
+body.dark .rpt-nav-item{color:#e0e0e0;}body.dark .rpt-nav-item:hover{background:#2a2a2a;}
+body.dark .rpt-nav-active{background:rgba(204,0,0,.15);color:#ff4444;}
+body.dark #rpt-sidebar{background:#222;border-color:#333;}
+body.dark #rpt-sidebar>div[style*="background:#FAFAFA"]{background:#1a1a1a !important;}
+.rpt-stat{display:flex;flex-direction:column;align-items:center;padding:14px 10px;background:#fff;border:1px solid var(--bdr);border-radius:8px;text-align:center;}
+.rpt-stat-val{font-size:22px;font-weight:700;color:var(--blk);line-height:1.2;}
+.rpt-stat-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);margin-top:2px;}
+.rpt-stat-sub{font-size:11px;color:var(--dgray);margin-top:2px;}
+body.dark .rpt-stat{background:#222;border-color:#333;}.rpt-bar{height:18px;border-radius:3px;min-width:2px;transition:width .3s;}
+.rpt-tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.rpt-tbl th{padding:8px 12px;text-align:left;font-weight:600;background:#FAFAFA;border-bottom:1px solid var(--bdr);}
+.rpt-tbl td{padding:7px 12px;border-bottom:1px solid #eee;}
+.rpt-tbl tr:hover{background:#F9F9F9;}
+body.dark .rpt-tbl th{background:#2a2a2a;}body.dark .rpt-tbl tr:hover{background:#2a2a2a;}
+
 /* Cards */
 .card{background:#fff;border:1px solid var(--bdr);border-radius:var(--rad);margin-bottom:14px;overflow:hidden;}
 .card-hdr{padding:11px 15px;border-bottom:1px solid var(--bdr);background:#FAFAFA;display:flex;align-items:center;justify-content:space-between;}
@@ -406,6 +425,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" data-field-hidden onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents</div>
       <div class="nav-item" data-field-hidden onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
       <div class="nav-item" onclick="showPanel('schedule',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg>Schedule<span class="nav-badge" id="nav-badge-schedule" style="display:none;"></span></div>
+      <div class="nav-item" data-field-hidden onclick="showPanel('reports',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h3v12H2zm4.5 3h3v9h-3zM11 7h3v7h-3z"/></svg>Reports</div>
       <div class="nav-grp">Config</div>
       <div class="nav-item" onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
       <div class="nav-item admin-only" id="nav-admin" data-admin-hidden onclick="showPanel('admin',this);loadUsers();showAdminTab('users');">
@@ -526,7 +546,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
               </div>
             </div>
             <div class="fg fg2">
-              <div><label>Address</label><input id="proj-addr" type="text" placeholder="123 Main St, Greensboro, NC"/></div>
+              <div><label>Job Site Address</label><input id="proj-addr" type="text" placeholder="123 Main St, Greensboro, NC"/></div>
               <div><label>Date</label><input id="proj-date" type="date"/></div>
             </div>
             <input id="proj-cs" type="hidden" value=""/>
@@ -1146,6 +1166,53 @@ tr:nth-child(even) td{background:#FAFAFA;}
         <div class="card">
           <div class="card-hdr"><span class="card-title">Ready to Schedule</span></div>
           <div class="card-body" id="sched-queue" style="min-height:120px;"><p style="color:var(--dgray);font-size:12px;">No jobs waiting.</p></div>
+        </div>
+      </div></div>
+
+      <!-- REPORTS PANEL -->
+      <div class="panel" id="panel-reports" data-field-hidden><div class="content" style="max-width:1200px;">
+        <div style="display:flex;gap:18px;align-items:flex-start;">
+          <!-- Report Sidebar -->
+          <div id="rpt-sidebar" style="width:220px;flex-shrink:0;background:#fff;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;">
+            <div style="padding:10px 14px;background:#FAFAFA;border-bottom:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Estimate Reports</div>
+            <div class="rpt-nav-item rpt-nav-active" onclick="selectReport('monthly-summary',this)">Monthly Estimate Summary</div>
+            <div class="rpt-nav-item" onclick="selectReport('geographic',this)">Geographic Analysis</div>
+            <div class="rpt-nav-item" onclick="selectReport('client-perf',this)">Client Performance</div>
+            <div class="rpt-nav-item" onclick="selectReport('salesperson',this)">Salesperson Performance</div>
+            <div style="padding:10px 14px;background:#FAFAFA;border-bottom:1px solid var(--bdr);border-top:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Job Reports</div>
+            <div class="rpt-nav-item" onclick="selectReport('backlog',this)">Backlog Report</div>
+            <div class="rpt-nav-item" onclick="selectReport('completion',this)">Completion &amp; Schedule</div>
+            <div class="rpt-nav-item" onclick="selectReport('volume',this)">Jobs Per Month</div>
+            <div class="rpt-nav-item" onclick="selectReport('concurrent',this)">Concurrent Jobs</div>
+            <div class="rpt-nav-item" onclick="selectReport('mobilization',this)">Mobilization by Region</div>
+            <div class="rpt-nav-item" onclick="selectReport('material-usage',this)">Material Usage</div>
+            <div class="rpt-nav-item" onclick="selectReport('est-vs-actual',this)">Estimated vs Actual</div>
+            <div class="rpt-nav-item" onclick="selectReport('trucking',this)">Trucking Costs</div>
+            <div style="padding:10px 14px;background:#FAFAFA;border-top:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Executive</div>
+            <div class="rpt-nav-item" onclick="selectReport('executive',this)">Executive Summary</div>
+          </div>
+          <!-- Report Content -->
+          <div style="flex:1;min-width:0;">
+            <!-- Filters Bar -->
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-body" style="padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Date Range</label>
+                <select id="rpt-range" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;">
+                  <option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="this-quarter">This Quarter</option><option value="ytd">Year to Date</option><option value="last-year">Last Year</option><option value="all">All Time</option><option value="custom">Custom Range</option>
+                </select></div>
+                <div id="rpt-custom-dates" style="display:none;"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">From / To</label><div style="display:flex;gap:4px;"><input type="date" id="rpt-from" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/><input type="date" id="rpt-to" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/></div></div>
+                <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Client</label>
+                <select id="rpt-client" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All Clients</option></select></div>
+                <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Salesperson</label>
+                <select id="rpt-salesperson" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All</option></select></div>
+                <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Region</label>
+                <select id="rpt-region" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All Regions</option></select></div>
+                <div style="margin-left:auto;"><button class="btn btn-red btn-sm" onclick="exportReportPDF()">Export PDF</button></div>
+              </div>
+            </div>
+            <!-- Report Output -->
+            <div id="rpt-output"></div>
+          </div>
         </div>
       </div></div>
 
@@ -3876,6 +3943,7 @@ var TOPBAR_CFG = {
     {html:'&lsaquo; Back to Project',cls:'btn btn-sec btn-sm',fn:"showPanel('project',null)"}
   ],
   schedule:[{html:'Export Daily Report',cls:'btn btn-red btn-sm',fn:'exportDailyReport()'},{html:'Mark Day Complete',cls:'btn btn-sec btn-sm',fn:'openMarkDayCompleteModal()'},{html:'Sync to Google Calendar',cls:'btn btn-sec btn-sm',fn:'openCalSyncModal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderSchedule()'}],
+  reports:[{html:'Export PDF',cls:'btn btn-red btn-sm',fn:'exportReportPDF()',minRole:'user'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderCurrentReport()'}],
   admin:[],
   settings:[]
 };
@@ -3910,7 +3978,7 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients','client-summary':'Client Summary',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule'}[id]||id;
+  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients','client-summary':'Client Summary',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule',reports:'Reports'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved'){renderSaved();loadCOList();}
@@ -3928,6 +3996,7 @@ function showPanel(id,el){
   if(id==='client-summary')renderClientSummary();
   if(id==='workorder')renderWorkOrderDetail();
   if(id==='schedule')renderSchedule();
+  if(id==='reports')initReports();
   if(typeof isMobile!=='undefined'&&isMobile)closeMobileNav();
 }
 
@@ -5528,7 +5597,7 @@ function openProjectModal(existingData, editId){
   box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">'+title+'</h3>'
     +'<label>Project Name *</label><input id="pm-proj-name" type="text" value="'+esc(d.name||'')+'" placeholder="e.g. Main St Repaving" style="width:100%;margin-bottom:10px;"/>'
     +'<label>Client</label><div style="position:relative;margin-bottom:10px;"><input id="pm-proj-client" type="text" list="pm-client-dl" value="'+esc(d.client||'')+'" placeholder="Start typing client name..." autocomplete="off" style="width:100%;"/><datalist id="pm-client-dl">'+clientDL+'</datalist></div>'
-    +'<label>Address</label><div style="position:relative;margin-bottom:10px;"><input id="pm-proj-addr" type="text" value="'+esc(fullAddr)+'" placeholder="Start typing address..." autocomplete="off" style="width:100%;"/><div id="pm-addr-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--bdr);border-radius:0 0 6px 6px;box-shadow:0 4px 12px rgba(0,0,0,.12);max-height:200px;overflow-y:auto;z-index:10;"></div></div>'
+    +'<label>Job Site Address</label><div style="position:relative;margin-bottom:10px;"><input id="pm-proj-addr" type="text" value="'+esc(fullAddr)+'" placeholder="Start typing address..." autocomplete="off" style="width:100%;"/><div id="pm-addr-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--bdr);border-radius:0 0 6px 6px;box-shadow:0 4px 12px rgba(0,0,0,.12);max-height:200px;overflow-y:auto;z-index:10;"></div></div>'
     +'<div class="fg fg2" style="margin-bottom:10px;"><div><label>Bid Due Date</label><input id="pm-proj-due-date" type="date" value="'+(d.bid_due_date||'')+'" style="width:100%;"/></div>'
     +'<div><label>Bid Due Time</label><input id="pm-proj-due-time" type="time" value="'+(d.bid_due_time||'')+'" style="width:100%;"/></div></div>'
     +'<label>Pipeline Stage</label><select id="pm-proj-stage" style="width:100%;margin-bottom:10px;">'+stageOpts+'</select>'
@@ -6155,7 +6224,7 @@ function renderWorkOrderDetail(){
   var detHtml='<div style="font-size:13px;line-height:2;">';
   detHtml+='<div><b>Status:</b> '+esc(wo.status?wo.status.charAt(0).toUpperCase()+wo.status.slice(1):'Pending')+'</div>';
   detHtml+='<div><b>Project:</b> '+esc(proj.name||'')+'</div>';
-  if(addr)detHtml+='<div><b>Address:</b> '+esc(addr)+(snap.city_state?', '+esc(snap.city_state):'')+'</div>';
+  if(addr)detHtml+='<div><b>Job Site Address:</b> '+esc(addr)+(snap.city_state?', '+esc(snap.city_state):'')+'</div>';
   if(wo.scheduled_date){detHtml+='<div><b>Scheduled:</b> '+fmtD(wo.scheduled_date)+(wo.scheduled_end_date?' to '+fmtD(wo.scheduled_end_date):'')+'</div>';if(wo.scheduled_time)detHtml+='<div><b>Time:</b> '+fmt12(wo.scheduled_time)+(wo.scheduled_end_time?' - '+fmt12(wo.scheduled_end_time):'')+'</div>';if(wo.scheduled_days&&wo.scheduled_days>1)detHtml+='<div><b>Duration:</b> '+wo.scheduled_days+' days</div>';}
   if(wo.onsite_contact)detHtml+='<div><b>On-Site Contact:</b> '+esc(wo.onsite_contact)+(wo.onsite_phone?' ('+esc(wo.onsite_phone)+')':'')+'</div>';
   if(linkedQ)detHtml+='<div><b>Linked Proposal:</b> '+esc(linkedQ.name||'Proposal')+'</div>';
@@ -6915,6 +6984,773 @@ function toggleDarkMode(){
     if(btn) btn.lastChild.textContent=' Light';
   }
 })();
+
+/* --- Reports --- */
+var _currentReport='monthly-summary';
+
+function selectReport(reportId,el){
+  _currentReport=reportId;
+  document.querySelectorAll('.rpt-nav-item').forEach(function(n){n.classList.remove('rpt-nav-active');});
+  if(el)el.classList.add('rpt-nav-active');
+  renderCurrentReport();
+}
+
+function initReports(){
+  populateReportFilters();
+  renderCurrentReport();
+}
+
+function populateReportFilters(){
+  // Populate client dropdown
+  var cs=document.getElementById('rpt-client');
+  if(cs){
+    var opts='<option value="">All Clients</option>';
+    var seen={};
+    (pipelineProposals||[]).forEach(function(p){
+      var c=p.client||'';if(c&&!seen[c]){seen[c]=true;opts+='<option value="'+esc(c)+'">'+esc(c)+'</option>';}
+    });
+    cs.innerHTML=opts;
+  }
+  // Populate salesperson dropdown
+  var ss=document.getElementById('rpt-salesperson');
+  if(ss){
+    var opts2='<option value="">All</option>';
+    var seen2={};
+    (pipelineProposals||[]).concat(savedQuotes||[]).forEach(function(p){
+      var cb=p.created_by||'';if(cb&&!seen2[cb]){seen2[cb]=true;opts2+='<option value="'+esc(cb)+'">'+esc(cb)+'</option>';}
+    });
+    ss.innerHTML=opts2;
+  }
+  // Populate region dropdown
+  var rs=document.getElementById('rpt-region');
+  if(rs){
+    var opts3='<option value="">All Regions</option>';
+    var seen3={};
+    (pipelineProposals||[]).forEach(function(p){
+      var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+      var cs2=snap.city_state||snap.cs||'';if(cs2&&!seen3[cs2]){seen3[cs2]=true;opts3+='<option value="'+esc(cs2)+'">'+esc(cs2)+'</option>';}
+    });
+    rs.innerHTML=opts3;
+  }
+  // Show/hide custom date inputs
+  var rng=document.getElementById('rpt-range');
+  if(rng)rng.addEventListener('change',function(){
+    document.getElementById('rpt-custom-dates').style.display=this.value==='custom'?'block':'none';
+  });
+}
+
+function getReportDateRange(){
+  var sel=document.getElementById('rpt-range').value;
+  var now=new Date();var y=now.getFullYear();var m=now.getMonth();
+  var from,to;
+  if(sel==='this-month'){from=new Date(y,m,1);to=new Date(y,m+1,0);}
+  else if(sel==='last-month'){from=new Date(y,m-1,1);to=new Date(y,m,0);}
+  else if(sel==='this-quarter'){var q=Math.floor(m/3)*3;from=new Date(y,q,1);to=new Date(y,q+3,0);}
+  else if(sel==='ytd'){from=new Date(y,0,1);to=now;}
+  else if(sel==='last-year'){from=new Date(y-1,0,1);to=new Date(y-1,11,31);}
+  else if(sel==='all'){from=new Date(2000,0,1);to=new Date(2099,11,31);}
+  else if(sel==='custom'){
+    from=document.getElementById('rpt-from').value?new Date(document.getElementById('rpt-from').value):new Date(2000,0,1);
+    to=document.getElementById('rpt-to').value?new Date(document.getElementById('rpt-to').value):now;
+  }
+  return{from:from,to:to};
+}
+
+function getFilteredData(){
+  var range=getReportDateRange();
+  var clientF=document.getElementById('rpt-client').value;
+  var spF=document.getElementById('rpt-salesperson').value;
+  var regionF=document.getElementById('rpt-region').value;
+  var all=(pipelineProposals||[]).map(function(p){
+    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    return{id:p.id,name:p.name||snap.name||'',client:p.client||snap.client||'',total:parseFloat(p.total)||0,
+      stage:p.pipeline_stages?p.pipeline_stages.name:'',stageColor:p.pipeline_stages?p.pipeline_stages.color:'#999',
+      isClosed:p.pipeline_stages?!!p.pipeline_stages.is_closed:false,
+      date:snap.date||p.created_at||'',created_at:p.created_at||'',created_by:p.created_by||'',
+      address:snap.address||snap.addr||'',city_state:snap.city_state||snap.cs||'',
+      is_project:!!snap.is_project,snap:snap,
+      jc_total_cost:parseFloat(snap.jc_total_cost)||0,jc_labor_cost:parseFloat(snap.jc_labor_cost)||0,
+      eva_actuals:snap.eva_actuals||null,
+      work_orders:snap.work_orders||[],linked_proposals:snap.linked_proposals||[],
+      change_orders:snap.change_orders||[],material_tracking:snap.material_tracking||[],
+      invoices:snap.invoices||[],project_number:snap.project_number||''};
+  });
+  // Date filter
+  var fromT=range.from.getTime();var toT=range.to.getTime()+86400000;
+  var filtered=all.filter(function(p){
+    var d=new Date(p.date||p.created_at);var t=d.getTime();
+    if(t<fromT||t>toT)return false;
+    if(clientF&&p.client!==clientF)return false;
+    if(spF&&p.created_by!==spF)return false;
+    if(regionF&&p.city_state!==regionF)return false;
+    return true;
+  });
+  return{all:all,filtered:filtered,range:range};
+}
+
+function renderCurrentReport(){
+  var map={
+    'monthly-summary':renderRptMonthlySummary,
+    'geographic':renderRptGeographic,
+    'client-perf':renderRptClientPerf,
+    'salesperson':renderRptSalesperson,
+    'backlog':renderRptBacklog,
+    'completion':renderRptCompletion,
+    'volume':renderRptVolume,
+    'concurrent':renderRptConcurrent,
+    'mobilization':renderRptMobilization,
+    'material-usage':renderRptMaterialUsage,
+    'est-vs-actual':renderRptEstVsActual,
+    'trucking':renderRptTrucking,
+    'executive':renderRptExecutive
+  };
+  var fn=map[_currentReport];
+  if(fn)fn();
+}
+
+function fmtMoney(v){return '$'+Math.round(v).toLocaleString();}
+function fmtPct(v){return v.toFixed(1)+'%';}
+function rptDateLabel(d){var dt=new Date(d);return isNaN(dt)?'-':((dt.getMonth()+1)+'/'+dt.getDate()+'/'+dt.getFullYear());}
+
+// ==================== ESTIMATE REPORTS ====================
+
+function renderRptMonthlySummary(){
+  var data=getFilteredData();var items=data.filtered;
+  var out=document.getElementById('rpt-output');
+  var estimates=items.filter(function(p){return !p.is_project||p.linked_proposals.length===0;});
+  var projects=items.filter(function(p){return p.is_project;});
+  var won=projects.filter(function(p){return p.stage==='Completed'||p.stage==='Approved'||p.stage==='Scheduled'||p.stage==='In Progress';});
+  var lost=projects.filter(function(p){return p.stage==='Lost';});
+  var totalVal=items.reduce(function(s,p){return s+p.total;},0);
+  var wonVal=won.reduce(function(s,p){return s+p.total;},0);
+  var lostVal=lost.reduce(function(s,p){return s+p.total;},0);
+  var winRate=won.length+lost.length>0?(won.length/(won.length+lost.length)*100):0;
+  var avgSize=items.length?totalVal/items.length:0;
+  // Time to close
+  var closeTimes=[];
+  won.concat(lost).forEach(function(p){
+    if(p.date&&p.created_at){
+      var d1=new Date(p.created_at);var d2=new Date(p.date);
+      var diff=Math.abs(d2-d1)/(1000*60*60*24);
+      if(diff>0&&diff<365)closeTimes.push(diff);
+    }
+  });
+  var avgClose=closeTimes.length?(closeTimes.reduce(function(a,b){return a+b;},0)/closeTimes.length):0;
+  // Pending/stale
+  var pending=items.filter(function(p){return p.stage==='Estimate Sent'||p.stage==='Follow Up'||p.stage==='Under Review';});
+  pending.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+  // Top 5
+  var top5=items.slice().sort(function(a,b){return b.total-a.total;}).slice(0,5);
+  // Month over month (last 12 months)
+  var monthData={};
+  data.all.forEach(function(p){
+    var d=new Date(p.date||p.created_at);if(isNaN(d))return;
+    var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    if(!monthData[key])monthData[key]={count:0,value:0};
+    monthData[key].count++;monthData[key].value+=p.total;
+  });
+  var months=Object.keys(monthData).sort().slice(-12);
+  var maxMonthVal=Math.max.apply(null,months.map(function(k){return monthData[k].value;}).concat([1]));
+
+  var h='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+items.length+'</div><div class="rpt-stat-lbl">Estimates Sent</div><div class="rpt-stat-sub">'+fmtMoney(totalVal)+' total</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:#27500A;">'+won.length+'</div><div class="rpt-stat-lbl">Won</div><div class="rpt-stat-sub">'+fmtMoney(wonVal)+'</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:#A32D2D;">'+lost.length+'</div><div class="rpt-stat-lbl">Lost</div><div class="rpt-stat-sub">'+fmtMoney(lostVal)+'</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+fmtPct(winRate)+'</div><div class="rpt-stat-lbl">Win Rate</div><div class="rpt-stat-sub">Avg close: '+Math.round(avgClose)+' days</div></div>';
+  h+='</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+fmtMoney(avgSize)+'</div><div class="rpt-stat-lbl">Average Estimate Size</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+pending.length+'</div><div class="rpt-stat-lbl">Pending / Stale</div><div class="rpt-stat-sub">Awaiting decision</div></div>';
+  h+='</div>';
+  // Month over month chart
+  if(months.length>1){
+    h+='<div class="card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">Month Over Month</span></div><div class="card-body" style="padding:14px;">';
+    h+='<div style="display:flex;align-items:flex-end;gap:6px;height:120px;">';
+    months.forEach(function(k){
+      var pct=Math.max(5,monthData[k].value/maxMonthVal*100);
+      var lbl=k.split('-');var mName=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(lbl[1])-1];
+      h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;">';
+      h+='<div style="font-size:10px;font-weight:600;margin-bottom:2px;">'+fmtMoney(monthData[k].value)+'</div>';
+      h+='<div class="rpt-bar" style="width:100%;height:'+pct+'%;background:var(--red);"></div>';
+      h+='<div style="font-size:9px;color:var(--dgray);margin-top:4px;">'+mName+'</div>';
+      h+='</div>';
+    });
+    h+='</div></div></div>';
+  }
+  // Conversion funnel
+  var funnelStages=['New Lead','Estimate Sent','Under Review','Approved','Scheduled','In Progress','Completed'];
+  var funnelCounts={};
+  data.all.forEach(function(p){if(p.stage)funnelCounts[p.stage]=(funnelCounts[p.stage]||0)+1;});
+  var maxFunnel=Math.max.apply(null,funnelStages.map(function(s){return funnelCounts[s]||0;}).concat([1]));
+  h+='<div class="card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">Pipeline Funnel</span></div><div class="card-body" style="padding:14px;">';
+  funnelStages.forEach(function(s){
+    var c=funnelCounts[s]||0;var pct=Math.max(2,c/maxFunnel*100);
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
+    h+='<div style="width:110px;font-size:11px;font-weight:600;text-align:right;">'+s+'</div>';
+    h+='<div style="flex:1;background:#eee;border-radius:3px;height:22px;overflow:hidden;"><div class="rpt-bar" style="height:100%;width:'+pct+'%;background:var(--red);"></div></div>';
+    h+='<div style="width:40px;font-size:12px;font-weight:600;">'+c+'</div>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+  // Top 5
+  if(top5.length){
+    h+='<div class="card"><div class="card-hdr"><span class="card-title">Top 5 Estimates</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Name</th><th>Client</th><th>Date</th><th style="text-align:right;">Value</th><th>Stage</th></tr></thead><tbody>';
+    top5.forEach(function(p){
+      h+='<tr><td>'+esc(p.name)+'</td><td>'+esc(p.client)+'</td><td>'+rptDateLabel(p.date)+'</td><td style="text-align:right;font-weight:600;">'+fmtMoney(p.total)+'</td><td><span style="background:'+p.stageColor+';color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;">'+esc(p.stage)+'</span></td></tr>';
+    });
+    h+='</tbody></table></div></div>';
+  }
+  // Pending/stale list
+  if(pending.length){
+    h+='<div class="card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title">Pending &amp; Stale Estimates</span><span style="font-size:11px;color:var(--dgray);margin-left:8px;">Estimates awaiting decision</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Name</th><th>Client</th><th>Sent</th><th style="text-align:right;">Value</th><th>Stage</th><th style="text-align:right;">Days Aging</th></tr></thead><tbody>';
+    pending.forEach(function(p){
+      var aging=Math.round((Date.now()-new Date(p.date||p.created_at).getTime())/(1000*60*60*24));
+      var agingColor=aging>30?'#A32D2D':aging>14?'#B25000':'var(--dgray)';
+      h+='<tr><td>'+esc(p.name)+'</td><td>'+esc(p.client)+'</td><td>'+rptDateLabel(p.date)+'</td><td style="text-align:right;font-weight:600;">'+fmtMoney(p.total)+'</td><td><span style="background:'+p.stageColor+';color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;">'+esc(p.stage)+'</span></td><td style="text-align:right;font-weight:600;color:'+agingColor+';">'+aging+'d</td></tr>';
+    });
+    h+='</tbody></table></div></div>';
+  }
+  out.innerHTML=h;
+}
+
+function renderRptGeographic(){
+  var data=getFilteredData();var items=data.filtered;
+  var out=document.getElementById('rpt-output');
+  // Group by city_state
+  var regions={};
+  items.forEach(function(p){
+    var key=p.city_state||'Unknown';
+    if(!regions[key])regions[key]={count:0,value:0,won:0,lost:0,wonVal:0};
+    regions[key].count++;regions[key].value+=p.total;
+    if(p.stage==='Completed'||p.stage==='Approved'||p.stage==='Scheduled'||p.stage==='In Progress'){regions[key].won++;regions[key].wonVal+=p.total;}
+    if(p.stage==='Lost')regions[key].lost++;
+  });
+  var sorted=Object.keys(regions).sort(function(a,b){return regions[b].value-regions[a].value;});
+  var maxVal=sorted.length?regions[sorted[0]].value:1;
+  var h='<div class="card"><div class="card-hdr"><span class="card-title">Revenue by Region</span><span style="font-size:11px;color:var(--dgray);margin-left:8px;">'+sorted.length+' regions</span></div><div class="card-body" style="padding:14px;">';
+  sorted.forEach(function(r){
+    var d=regions[r];var pct=Math.max(3,d.value/maxVal*100);
+    var wr=d.won+d.lost>0?(d.won/(d.won+d.lost)*100):0;
+    h+='<div style="margin-bottom:10px;">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;">';
+    h+='<span style="font-size:13px;font-weight:600;">'+esc(r)+'</span>';
+    h+='<span style="font-size:12px;color:var(--dgray);">'+d.count+' jobs &middot; '+fmtMoney(d.value)+' &middot; Win: '+fmtPct(wr)+'</span>';
+    h+='</div>';
+    h+='<div style="background:#eee;border-radius:3px;height:18px;overflow:hidden;"><div class="rpt-bar" style="height:100%;width:'+pct+'%;background:var(--red);"></div></div>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+  // Table
+  h+='<div class="card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title">Region Detail</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Region</th><th style="text-align:right;">Jobs</th><th style="text-align:right;">Total Value</th><th style="text-align:right;">Won</th><th style="text-align:right;">Lost</th><th style="text-align:right;">Win Rate</th><th style="text-align:right;">Won Revenue</th></tr></thead><tbody>';
+  sorted.forEach(function(r){
+    var d=regions[r];var wr=d.won+d.lost>0?(d.won/(d.won+d.lost)*100):0;
+    h+='<tr><td style="font-weight:600;">'+esc(r)+'</td><td style="text-align:right;">'+d.count+'</td><td style="text-align:right;">'+fmtMoney(d.value)+'</td><td style="text-align:right;color:#27500A;">'+d.won+'</td><td style="text-align:right;color:#A32D2D;">'+d.lost+'</td><td style="text-align:right;">'+fmtPct(wr)+'</td><td style="text-align:right;font-weight:600;">'+fmtMoney(d.wonVal)+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  // Lost work by region
+  var lostRegions=sorted.filter(function(r){return regions[r].lost>0;});
+  if(lostRegions.length){
+    h+='<div class="card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title">Lost Work by Region</span></div><div class="card-body" style="padding:14px;">';
+    lostRegions.forEach(function(r){
+      var d=regions[r];var lostPct=d.count>0?(d.lost/d.count*100):0;
+      h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
+      h+='<div style="width:140px;font-size:12px;font-weight:600;text-align:right;">'+esc(r)+'</div>';
+      h+='<div style="flex:1;background:#eee;border-radius:3px;height:16px;overflow:hidden;"><div class="rpt-bar" style="height:100%;width:'+Math.max(3,lostPct)+'%;background:#A32D2D;"></div></div>';
+      h+='<div style="width:60px;font-size:11px;">'+d.lost+' lost</div>';
+      h+='</div>';
+    });
+    h+='</div></div>';
+  }
+  out.innerHTML=h;
+}
+
+function renderRptClientPerf(){
+  var data=getFilteredData();var items=data.filtered;
+  var out=document.getElementById('rpt-output');
+  var clients={};
+  items.forEach(function(p){
+    var key=p.client||'Unknown';
+    if(!clients[key])clients[key]={count:0,value:0,won:0,lost:0,wonVal:0,avgSize:0,lastDate:'',margin:0,marginCount:0};
+    clients[key].count++;clients[key].value+=p.total;
+    if(p.stage==='Completed'||p.stage==='Approved'||p.stage==='Scheduled'||p.stage==='In Progress'){clients[key].won++;clients[key].wonVal+=p.total;}
+    if(p.stage==='Lost')clients[key].lost++;
+    if(p.jc_total_cost>0&&p.total>0){var m=(p.total-p.jc_total_cost)/p.total*100;clients[key].margin+=m;clients[key].marginCount++;}
+    if(p.date>clients[key].lastDate)clients[key].lastDate=p.date;
+  });
+  Object.keys(clients).forEach(function(k){clients[k].avgSize=clients[k].count?clients[k].value/clients[k].count:0;});
+  var sorted=Object.keys(clients).sort(function(a,b){return clients[b].value-clients[a].value;});
+  // Summary stats
+  var repeatClients=sorted.filter(function(k){return clients[k].count>=2;}).length;
+  var dormant=sorted.filter(function(k){
+    var d=new Date(clients[k].lastDate);return(Date.now()-d.getTime())>180*86400000;
+  });
+  var h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+sorted.length+'</div><div class="rpt-stat-lbl">Total Clients</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:#27500A;">'+repeatClients+'</div><div class="rpt-stat-lbl">Repeat Clients</div><div class="rpt-stat-sub">2+ jobs</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:#B25000;">'+dormant.length+'</div><div class="rpt-stat-lbl">Dormant Clients</div><div class="rpt-stat-sub">6+ months inactive</div></div>';
+  h+='</div>';
+  // Client table
+  h+='<div class="card"><div class="card-hdr"><span class="card-title">Client Scorecard</span></div><div class="card-body" style="padding:0;overflow-x:auto;"><table class="rpt-tbl"><thead><tr><th>Client</th><th style="text-align:right;">Jobs</th><th style="text-align:right;">Total Value</th><th style="text-align:right;">Won</th><th style="text-align:right;">Win Rate</th><th style="text-align:right;">Avg Job Size</th><th style="text-align:right;">Avg Margin</th><th>Last Activity</th></tr></thead><tbody>';
+  sorted.forEach(function(k){
+    var d=clients[k];var wr=d.won+d.lost>0?(d.won/(d.won+d.lost)*100):0;
+    var avgM=d.marginCount>0?(d.margin/d.marginCount):0;
+    var loyalty=d.count>=5?'&#9733; Preferred':d.count>=2?'Repeat':'';
+    h+='<tr><td style="font-weight:600;">'+esc(k)+(loyalty?' <span style="font-size:10px;color:var(--red);font-weight:700;">'+loyalty+'</span>':'')+'</td><td style="text-align:right;">'+d.count+'</td><td style="text-align:right;">'+fmtMoney(d.value)+'</td><td style="text-align:right;color:#27500A;">'+d.won+'</td><td style="text-align:right;">'+fmtPct(wr)+'</td><td style="text-align:right;">'+fmtMoney(d.avgSize)+'</td><td style="text-align:right;">'+(avgM>0?fmtPct(avgM):'-')+'</td><td>'+rptDateLabel(d.lastDate)+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  // Dormant clients
+  if(dormant.length){
+    h+='<div class="card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title" style="color:#B25000;">Dormant Clients</span><span style="font-size:11px;color:var(--dgray);margin-left:8px;">No activity in 6+ months</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Client</th><th style="text-align:right;">Past Jobs</th><th style="text-align:right;">Total Value</th><th>Last Activity</th><th style="text-align:right;">Days Since</th></tr></thead><tbody>';
+    dormant.forEach(function(k){
+      var d=clients[k];var days=Math.round((Date.now()-new Date(d.lastDate).getTime())/(86400000));
+      h+='<tr><td style="font-weight:600;">'+esc(k)+'</td><td style="text-align:right;">'+d.count+'</td><td style="text-align:right;">'+fmtMoney(d.value)+'</td><td>'+rptDateLabel(d.lastDate)+'</td><td style="text-align:right;color:#B25000;font-weight:600;">'+days+'d</td></tr>';
+    });
+    h+='</tbody></table></div></div>';
+  }
+  out.innerHTML=h;
+}
+
+function renderRptSalesperson(){
+  var data=getFilteredData();var items=data.filtered;
+  var out=document.getElementById('rpt-output');
+  var people={};
+  items.forEach(function(p){
+    var key=p.created_by||'Unknown';
+    if(!people[key])people[key]={count:0,value:0,won:0,lost:0,wonVal:0,margin:0,marginCount:0,closeTimes:[]};
+    people[key].count++;people[key].value+=p.total;
+    if(p.stage==='Completed'||p.stage==='Approved'||p.stage==='Scheduled'||p.stage==='In Progress'){people[key].won++;people[key].wonVal+=p.total;}
+    if(p.stage==='Lost')people[key].lost++;
+    if(p.jc_total_cost>0&&p.total>0){var m=(p.total-p.jc_total_cost)/p.total*100;people[key].margin+=m;people[key].marginCount++;}
+    if(p.date&&p.created_at){var diff=Math.abs(new Date(p.date)-new Date(p.created_at))/(86400000);if(diff>0&&diff<365)people[key].closeTimes.push(diff);}
+  });
+  var sorted=Object.keys(people).sort(function(a,b){return people[b].wonVal-people[a].wonVal;});
+  var h='<div class="card"><div class="card-hdr"><span class="card-title">Salesperson Leaderboard</span></div><div class="card-body" style="padding:0;overflow-x:auto;"><table class="rpt-tbl"><thead><tr><th>Salesperson</th><th style="text-align:right;">Estimates</th><th style="text-align:right;">Total Value</th><th style="text-align:right;">Won</th><th style="text-align:right;">Won Revenue</th><th style="text-align:right;">Win Rate</th><th style="text-align:right;">Avg Deal</th><th style="text-align:right;">Avg Margin</th><th style="text-align:right;">Avg Close (days)</th></tr></thead><tbody>';
+  sorted.forEach(function(k){
+    var d=people[k];var wr=d.won+d.lost>0?(d.won/(d.won+d.lost)*100):0;
+    var avgDeal=d.won>0?d.wonVal/d.won:0;
+    var avgM=d.marginCount>0?(d.margin/d.marginCount):0;
+    var avgClose=d.closeTimes.length?(d.closeTimes.reduce(function(a,b){return a+b;},0)/d.closeTimes.length):0;
+    h+='<tr><td style="font-weight:600;">'+esc(k)+'</td><td style="text-align:right;">'+d.count+'</td><td style="text-align:right;">'+fmtMoney(d.value)+'</td><td style="text-align:right;color:#27500A;">'+d.won+'</td><td style="text-align:right;font-weight:600;">'+fmtMoney(d.wonVal)+'</td><td style="text-align:right;">'+fmtPct(wr)+'</td><td style="text-align:right;">'+fmtMoney(avgDeal)+'</td><td style="text-align:right;">'+(avgM>0?fmtPct(avgM):'-')+'</td><td style="text-align:right;">'+(avgClose>0?Math.round(avgClose):'-')+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  // Activity per month per salesperson
+  var monthPeople={};
+  items.forEach(function(p){
+    var d=new Date(p.date||p.created_at);if(isNaN(d))return;
+    var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    var who=p.created_by||'Unknown';
+    if(!monthPeople[key])monthPeople[key]={};
+    if(!monthPeople[key][who])monthPeople[key][who]=0;
+    monthPeople[key][who]++;
+  });
+  var mpMonths=Object.keys(monthPeople).sort().slice(-6);
+  if(mpMonths.length>1){
+    h+='<div class="card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title">Activity Per Month</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Month</th>';
+    sorted.forEach(function(k){h+='<th style="text-align:right;">'+esc(k)+'</th>';});
+    h+='</tr></thead><tbody>';
+    mpMonths.forEach(function(m){
+      var lbl=m.split('-');var mName=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(lbl[1])-1]+' '+lbl[0];
+      h+='<tr><td style="font-weight:600;">'+mName+'</td>';
+      sorted.forEach(function(k){h+='<td style="text-align:right;">'+(monthPeople[m][k]||0)+'</td>';});
+      h+='</tr>';
+    });
+    h+='</tbody></table></div></div>';
+  }
+  out.innerHTML=h;
+}
+
+// ==================== JOB REPORTS ====================
+
+function renderRptBacklog(){
+  var data=getFilteredData();
+  var out=document.getElementById('rpt-output');
+  // Backlog = approved but not scheduled, scheduled but not started
+  var allProjects=data.all.filter(function(p){return p.is_project;});
+  var approved=allProjects.filter(function(p){return p.stage==='Approved';});
+  var scheduled=allProjects.filter(function(p){return p.stage==='Scheduled';});
+  var inProgress=allProjects.filter(function(p){return p.stage==='In Progress';});
+  var approvedVal=approved.reduce(function(s,p){return s+p.total;},0);
+  var scheduledVal=scheduled.reduce(function(s,p){return s+p.total;},0);
+  var inProgressVal=inProgress.reduce(function(s,p){return s+p.total;},0);
+  var totalBacklog=approvedVal+scheduledVal;
+  var h='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:var(--red);">'+fmtMoney(totalBacklog)+'</div><div class="rpt-stat-lbl">Total Backlog</div><div class="rpt-stat-sub">Approved + Scheduled</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+approved.length+'</div><div class="rpt-stat-lbl">Approved</div><div class="rpt-stat-sub">'+fmtMoney(approvedVal)+'</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+scheduled.length+'</div><div class="rpt-stat-lbl">Scheduled</div><div class="rpt-stat-sub">'+fmtMoney(scheduledVal)+'</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+inProgress.length+'</div><div class="rpt-stat-lbl">In Progress</div><div class="rpt-stat-sub">'+fmtMoney(inProgressVal)+'</div></div>';
+  h+='</div>';
+  // Lists
+  var sections=[{title:'Approved — Not Yet Scheduled',items:approved,color:'#27500A'},{title:'Scheduled — Not Yet Started',items:scheduled,color:'#B25000'},{title:'In Progress',items:inProgress,color:'var(--red)'}];
+  sections.forEach(function(sec){
+    if(!sec.items.length)return;
+    h+='<div class="card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title" style="color:'+sec.color+';">'+sec.title+'</span><span style="font-size:11px;color:var(--dgray);margin-left:8px;">'+sec.items.length+' projects</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Project</th><th>Client</th><th>Location</th><th style="text-align:right;">Value</th><th>Created</th></tr></thead><tbody>';
+    sec.items.forEach(function(p){
+      h+='<tr><td style="font-weight:600;">'+esc(p.project_number||p.name)+'</td><td>'+esc(p.client)+'</td><td>'+esc(p.city_state||p.address)+'</td><td style="text-align:right;font-weight:600;">'+fmtMoney(p.total)+'</td><td>'+rptDateLabel(p.created_at)+'</td></tr>';
+    });
+    h+='</tbody></table></div></div>';
+  });
+  out.innerHTML=h;
+}
+
+function renderRptCompletion(){
+  var data=getFilteredData();var items=data.filtered.filter(function(p){return p.is_project;});
+  var out=document.getElementById('rpt-output');
+  var completed=items.filter(function(p){return p.stage==='Completed';});
+  // Average days: use work order dates or created_at to completion
+  var durations=[];
+  completed.forEach(function(p){
+    var start=new Date(p.created_at);
+    var wos=p.work_orders||[];
+    var lastWO=null;
+    wos.forEach(function(wo){if(wo.scheduled_end_date&&(!lastWO||wo.scheduled_end_date>lastWO))lastWO=wo.scheduled_end_date;});
+    var end=lastWO?new Date(lastWO):new Date(p.date||p.created_at);
+    var days=Math.round((end-start)/(86400000));
+    if(days>0)durations.push({name:p.name,client:p.client,days:days,total:p.total});
+  });
+  var avgDays=durations.length?(durations.reduce(function(s,d){return s+d.days;},0)/durations.length):0;
+  // On-time analysis: check if work orders completed within scheduled dates
+  var onTime=0;var overdue=0;
+  items.forEach(function(p){
+    (p.work_orders||[]).forEach(function(wo){
+      if(wo.status==='complete'){
+        onTime++;
+      }
+    });
+  });
+  var h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+completed.length+'</div><div class="rpt-stat-lbl">Completed Projects</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+Math.round(avgDays)+'</div><div class="rpt-stat-lbl">Avg Days to Complete</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+onTime+'</div><div class="rpt-stat-lbl">Work Orders Completed</div></div>';
+  h+='</div>';
+  // Table of completed jobs with duration
+  if(durations.length){
+    durations.sort(function(a,b){return b.days-a.days;});
+    h+='<div class="card"><div class="card-hdr"><span class="card-title">Completed Jobs — Duration</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Project</th><th>Client</th><th style="text-align:right;">Value</th><th style="text-align:right;">Days</th></tr></thead><tbody>';
+    durations.forEach(function(d){
+      var color=d.days>90?'#A32D2D':d.days>30?'#B25000':'#27500A';
+      h+='<tr><td style="font-weight:600;">'+esc(d.name)+'</td><td>'+esc(d.client)+'</td><td style="text-align:right;">'+fmtMoney(d.total)+'</td><td style="text-align:right;font-weight:600;color:'+color+';">'+d.days+'</td></tr>';
+    });
+    h+='</tbody></table></div></div>';
+  }
+  out.innerHTML=h;
+}
+
+function renderRptVolume(){
+  var data=getFilteredData();
+  var out=document.getElementById('rpt-output');
+  var monthData={};
+  data.all.filter(function(p){return p.is_project;}).forEach(function(p){
+    var d=new Date(p.date||p.created_at);if(isNaN(d))return;
+    var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    if(!monthData[key])monthData[key]={total:0,value:0,completed:0,lost:0};
+    monthData[key].total++;monthData[key].value+=p.total;
+    if(p.stage==='Completed')monthData[key].completed++;
+    if(p.stage==='Lost')monthData[key].lost++;
+  });
+  var months=Object.keys(monthData).sort().slice(-12);
+  var maxCount=Math.max.apply(null,months.map(function(k){return monthData[k].total;}).concat([1]));
+  var h='<div class="card"><div class="card-hdr"><span class="card-title">Jobs Per Month</span></div><div class="card-body" style="padding:14px;">';
+  h+='<div style="display:flex;align-items:flex-end;gap:8px;height:150px;">';
+  months.forEach(function(k){
+    var d=monthData[k];var pct=Math.max(5,d.total/maxCount*100);
+    var lbl=k.split('-');var mName=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(lbl[1])-1];
+    h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;">';
+    h+='<div style="font-size:11px;font-weight:700;margin-bottom:2px;">'+d.total+'</div>';
+    h+='<div class="rpt-bar" style="width:100%;height:'+pct+'%;background:var(--red);"></div>';
+    h+='<div style="font-size:9px;color:var(--dgray);margin-top:4px;">'+mName+'</div>';
+    h+='</div>';
+  });
+  h+='</div></div></div>';
+  // Table
+  h+='<div class="card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title">Monthly Detail</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Month</th><th style="text-align:right;">Total Jobs</th><th style="text-align:right;">Total Value</th><th style="text-align:right;">Completed</th><th style="text-align:right;">Lost</th></tr></thead><tbody>';
+  months.forEach(function(k){
+    var d=monthData[k];var lbl=k.split('-');var mName=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(lbl[1])-1]+' '+lbl[0];
+    h+='<tr><td style="font-weight:600;">'+mName+'</td><td style="text-align:right;">'+d.total+'</td><td style="text-align:right;">'+fmtMoney(d.value)+'</td><td style="text-align:right;color:#27500A;">'+d.completed+'</td><td style="text-align:right;color:#A32D2D;">'+d.lost+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  out.innerHTML=h;
+}
+
+function renderRptConcurrent(){
+  var data=getFilteredData();
+  var out=document.getElementById('rpt-output');
+  // Find overlapping active jobs per week
+  var activeProjects=data.all.filter(function(p){return p.is_project&&(p.stage==='In Progress'||p.stage==='Scheduled');});
+  var weekData={};
+  activeProjects.forEach(function(p){
+    var wos=p.work_orders||[];
+    wos.forEach(function(wo){
+      if(!wo.scheduled_date)return;
+      var d=new Date(wo.scheduled_date);
+      var weekStart=new Date(d);weekStart.setDate(weekStart.getDate()-weekStart.getDay());
+      var key=weekStart.toISOString().split('T')[0];
+      if(!weekData[key])weekData[key]=new Set();
+      weekData[key].add(p.id);
+    });
+  });
+  var weeks=Object.keys(weekData).sort().slice(-16);
+  var maxConcurrent=Math.max.apply(null,weeks.map(function(k){return weekData[k].size;}).concat([1]));
+  var peakWeek=weeks.find(function(k){return weekData[k].size===maxConcurrent;})||'';
+  var h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+activeProjects.length+'</div><div class="rpt-stat-lbl">Active Jobs</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:var(--red);">'+maxConcurrent+'</div><div class="rpt-stat-lbl">Peak Concurrent</div><div class="rpt-stat-sub">Week of '+rptDateLabel(peakWeek)+'</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+(weeks.length?Math.round(weeks.reduce(function(s,k){return s+weekData[k].size;},0)/weeks.length):0)+'</div><div class="rpt-stat-lbl">Avg Concurrent</div></div>';
+  h+='</div>';
+  // Chart
+  if(weeks.length){
+    h+='<div class="card"><div class="card-hdr"><span class="card-title">Concurrent Jobs by Week</span></div><div class="card-body" style="padding:14px;">';
+    h+='<div style="display:flex;align-items:flex-end;gap:4px;height:120px;">';
+    weeks.forEach(function(k){
+      var c=weekData[k].size;var pct=Math.max(5,c/maxConcurrent*100);
+      h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;">';
+      h+='<div style="font-size:10px;font-weight:600;margin-bottom:2px;">'+c+'</div>';
+      h+='<div class="rpt-bar" style="width:100%;height:'+pct+'%;background:var(--red);"></div>';
+      h+='<div style="font-size:8px;color:var(--dgray);margin-top:2px;">'+rptDateLabel(k).slice(0,5)+'</div>';
+      h+='</div>';
+    });
+    h+='</div></div></div>';
+  }
+  out.innerHTML=h;
+}
+
+function renderRptMobilization(){
+  var data=getFilteredData();var items=data.filtered.filter(function(p){return p.is_project;});
+  var out=document.getElementById('rpt-output');
+  var regions={};
+  items.forEach(function(p){
+    var key=p.city_state||'Unknown';
+    if(!regions[key])regions[key]={jobs:0,wos:0,value:0};
+    regions[key].jobs++;regions[key].value+=p.total;
+    regions[key].wos+=(p.work_orders||[]).length;
+  });
+  var sorted=Object.keys(regions).sort(function(a,b){return regions[b].wos-regions[a].wos;});
+  var maxWO=sorted.length?regions[sorted[0]].wos:1;
+  var h='<div class="card"><div class="card-hdr"><span class="card-title">Mobilization Frequency by Region</span></div><div class="card-body" style="padding:14px;">';
+  sorted.forEach(function(r){
+    var d=regions[r];var pct=Math.max(3,d.wos/maxWO*100);
+    h+='<div style="margin-bottom:8px;">';
+    h+='<div style="display:flex;justify-content:space-between;margin-bottom:2px;">';
+    h+='<span style="font-size:12px;font-weight:600;">'+esc(r)+'</span>';
+    h+='<span style="font-size:11px;color:var(--dgray);">'+d.wos+' mobilizations &middot; '+d.jobs+' jobs &middot; '+fmtMoney(d.value)+'</span>';
+    h+='</div>';
+    h+='<div style="background:#eee;border-radius:3px;height:16px;overflow:hidden;"><div class="rpt-bar" style="height:100%;width:'+pct+'%;background:var(--red);"></div></div>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+  out.innerHTML=h;
+}
+
+function renderRptMaterialUsage(){
+  var data=getFilteredData();var items=data.filtered.filter(function(p){return p.is_project;});
+  var out=document.getElementById('rpt-output');
+  var materials={};
+  items.forEach(function(p){
+    // From proposal sections
+    (p.snap.sections||[]).forEach(function(sec){
+      (sec.layers||[]).forEach(function(lay){
+        var mat=lay.type||'Unknown';
+        if(!materials[mat])materials[mat]={tons:0,cost:0,jobs:0};
+        var area=parseFloat(sec.area)||0;var depth=parseFloat(lay.depth)||0;
+        var density=LBS[mat]||115;
+        var tons=area*depth/12*density/2000;
+        materials[mat].tons+=tons;
+        materials[mat].cost+=tons*(MAT[mat]||0);
+      });
+    });
+    // From material tracking
+    (p.material_tracking||[]).forEach(function(mt){
+      var mat=mt.material||mt.name||'Unknown';
+      if(!materials[mat])materials[mat]={tons:0,cost:0,jobs:0};
+      materials[mat].tons+=parseFloat(mt.qty)||0;
+      materials[mat].cost+=parseFloat(mt.cost)||0;
+    });
+  });
+  // Count jobs per material
+  items.forEach(function(p){
+    var seen={};
+    (p.snap.sections||[]).forEach(function(sec){(sec.layers||[]).forEach(function(lay){if(!seen[lay.type]){seen[lay.type]=true;if(materials[lay.type])materials[lay.type].jobs++;}});});
+  });
+  var sorted=Object.keys(materials).sort(function(a,b){return materials[b].tons-materials[a].tons;});
+  var totalTons=sorted.reduce(function(s,k){return s+materials[k].tons;},0);
+  var totalCost=sorted.reduce(function(s,k){return s+materials[k].cost;},0);
+  var h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+Math.round(totalTons).toLocaleString()+'</div><div class="rpt-stat-lbl">Total Tons</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+fmtMoney(totalCost)+'</div><div class="rpt-stat-lbl">Total Material Cost</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+sorted.length+'</div><div class="rpt-stat-lbl">Material Types</div></div>';
+  h+='</div>';
+  h+='<div class="card"><div class="card-hdr"><span class="card-title">Material Usage Summary</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Material</th><th style="text-align:right;">Tons</th><th style="text-align:right;">Cost</th><th style="text-align:right;">$/Ton</th><th style="text-align:right;">Jobs</th><th style="text-align:right;">% of Total</th></tr></thead><tbody>';
+  sorted.forEach(function(k){
+    var d=materials[k];var perTon=d.tons>0?d.cost/d.tons:0;var pct=totalTons>0?(d.tons/totalTons*100):0;
+    h+='<tr><td style="font-weight:600;">'+esc(k)+'</td><td style="text-align:right;">'+Math.round(d.tons).toLocaleString()+'</td><td style="text-align:right;">'+fmtMoney(d.cost)+'</td><td style="text-align:right;">'+fmtMoney(perTon)+'</td><td style="text-align:right;">'+d.jobs+'</td><td style="text-align:right;">'+fmtPct(pct)+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  out.innerHTML=h;
+}
+
+function renderRptEstVsActual(){
+  var data=getFilteredData();var items=data.filtered.filter(function(p){return p.is_project&&p.jc_total_cost>0;});
+  var out=document.getElementById('rpt-output');
+  var rows=[];var totalEst=0;var totalAct=0;
+  items.forEach(function(p){
+    var estCost=p.jc_total_cost;
+    var actCost=0;
+    if(p.eva_actuals){
+      Object.keys(p.eva_actuals).forEach(function(k){
+        var a=p.eva_actuals[k];
+        actCost+=(parseFloat(a.actual_material)||0)+(parseFloat(a.actual_labor)||0)+(parseFloat(a.actual_trucking)||0);
+      });
+    }
+    if(actCost>0){
+      var variance=actCost-estCost;var variancePct=estCost>0?(variance/estCost*100):0;
+      rows.push({name:p.name||p.project_number,client:p.client,bidPrice:p.total,estCost:estCost,actCost:actCost,variance:variance,variancePct:variancePct});
+      totalEst+=estCost;totalAct+=actCost;
+    }
+  });
+  var overCount=rows.filter(function(r){return r.variance>0;}).length;
+  var underCount=rows.filter(function(r){return r.variance<0;}).length;
+  var totalVariance=totalAct-totalEst;
+  var h='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+rows.length+'</div><div class="rpt-stat-lbl">Jobs with Actuals</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:'+(totalVariance>0?'#A32D2D':'#27500A')+';">'+fmtMoney(totalVariance)+'</div><div class="rpt-stat-lbl">Total Variance</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:#A32D2D;">'+overCount+'</div><div class="rpt-stat-lbl">Over Budget</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:#27500A;">'+underCount+'</div><div class="rpt-stat-lbl">Under Budget</div></div>';
+  h+='</div>';
+  if(rows.length){
+    rows.sort(function(a,b){return b.variance-a.variance;});
+    h+='<div class="card"><div class="card-hdr"><span class="card-title">Estimated vs Actual Cost</span></div><div class="card-body" style="padding:0;overflow-x:auto;"><table class="rpt-tbl"><thead><tr><th>Project</th><th>Client</th><th style="text-align:right;">Bid Price</th><th style="text-align:right;">Est. Cost</th><th style="text-align:right;">Actual Cost</th><th style="text-align:right;">Variance $</th><th style="text-align:right;">Variance %</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      var color=r.variance>0?'#A32D2D':'#27500A';
+      h+='<tr><td style="font-weight:600;">'+esc(r.name)+'</td><td>'+esc(r.client)+'</td><td style="text-align:right;">'+fmtMoney(r.bidPrice)+'</td><td style="text-align:right;">'+fmtMoney(r.estCost)+'</td><td style="text-align:right;">'+fmtMoney(r.actCost)+'</td><td style="text-align:right;font-weight:600;color:'+color+';">'+(r.variance>0?'+':'')+fmtMoney(r.variance)+'</td><td style="text-align:right;color:'+color+';">'+(r.variancePct>0?'+':'')+fmtPct(r.variancePct)+'</td></tr>';
+    });
+    h+='</tbody></table></div></div>';
+  } else {
+    h+='<div class="card"><div class="card-body" style="padding:24px;text-align:center;color:var(--dgray);">No projects with actual cost data yet. Enter actuals in the Job Cost panel to see variance tracking here.</div></div>';
+  }
+  out.innerHTML=h;
+}
+
+function renderRptTrucking(){
+  var data=getFilteredData();var items=data.filtered.filter(function(p){return p.is_project;});
+  var out=document.getElementById('rpt-output');
+  var rows=[];var totalTrucking=0;
+  items.forEach(function(p){
+    var truckEst=0;var truckAct=0;
+    if(p.eva_actuals){
+      Object.keys(p.eva_actuals).forEach(function(k){
+        var a=p.eva_actuals[k];
+        truckAct+=parseFloat(a.actual_trucking)||0;
+      });
+    }
+    // Estimated trucking from snap
+    (p.snap.sections||[]).forEach(function(sec){
+      (sec.layers||[]).forEach(function(lay){
+        truckEst+=parseFloat(lay.trucking)||0;
+      });
+    });
+    if(truckEst>0||truckAct>0){
+      rows.push({name:p.name||p.project_number,client:p.client,total:p.total,truckEst:truckEst,truckAct:truckAct,pctOfJob:p.total>0?((truckAct||truckEst)/p.total*100):0});
+      totalTrucking+=truckAct||truckEst;
+    }
+  });
+  rows.sort(function(a,b){return(b.truckAct||b.truckEst)-(a.truckAct||a.truckEst);});
+  var h='<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;">';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+fmtMoney(totalTrucking)+'</div><div class="rpt-stat-lbl">Total Trucking Costs</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+rows.length+'</div><div class="rpt-stat-lbl">Jobs with Trucking</div></div>';
+  h+='</div>';
+  if(rows.length){
+    h+='<div class="card"><div class="card-hdr"><span class="card-title">Trucking Costs by Job</span></div><div class="card-body" style="padding:0;overflow-x:auto;"><table class="rpt-tbl"><thead><tr><th>Project</th><th>Client</th><th style="text-align:right;">Job Value</th><th style="text-align:right;">Est. Trucking</th><th style="text-align:right;">Actual Trucking</th><th style="text-align:right;">% of Job</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      h+='<tr><td style="font-weight:600;">'+esc(r.name)+'</td><td>'+esc(r.client)+'</td><td style="text-align:right;">'+fmtMoney(r.total)+'</td><td style="text-align:right;">'+fmtMoney(r.truckEst)+'</td><td style="text-align:right;font-weight:600;">'+fmtMoney(r.truckAct)+'</td><td style="text-align:right;">'+fmtPct(r.pctOfJob)+'</td></tr>';
+    });
+    h+='</tbody></table></div></div>';
+  } else {
+    h+='<div class="card"><div class="card-body" style="padding:24px;text-align:center;color:var(--dgray);">No trucking cost data available yet.</div></div>';
+  }
+  out.innerHTML=h;
+}
+
+// ==================== EXECUTIVE SUMMARY ====================
+
+function renderRptExecutive(){
+  var data=getFilteredData();var items=data.filtered;
+  var out=document.getElementById('rpt-output');
+  var projects=items.filter(function(p){return p.is_project;});
+  var won=projects.filter(function(p){return p.stage==='Completed'||p.stage==='Approved'||p.stage==='Scheduled'||p.stage==='In Progress';});
+  var lost=projects.filter(function(p){return p.stage==='Lost';});
+  var totalVal=items.reduce(function(s,p){return s+p.total;},0);
+  var wonVal=won.reduce(function(s,p){return s+p.total;},0);
+  var lostVal=lost.reduce(function(s,p){return s+p.total;},0);
+  var winRate=won.length+lost.length>0?(won.length/(won.length+lost.length)*100):0;
+  var pending=items.filter(function(p){return p.stage==='Estimate Sent'||p.stage==='Follow Up'||p.stage==='Under Review';});
+  var backlog=projects.filter(function(p){return p.stage==='Approved'||p.stage==='Scheduled';});
+  var backlogVal=backlog.reduce(function(s,p){return s+p.total;},0);
+  // Top clients
+  var clientMap={};
+  items.forEach(function(p){var k=p.client||'';if(k){if(!clientMap[k])clientMap[k]=0;clientMap[k]+=p.total;}});
+  var topClients=Object.keys(clientMap).sort(function(a,b){return clientMap[b]-clientMap[a];}).slice(0,5);
+  // Top regions
+  var regionMap={};
+  items.forEach(function(p){var k=p.city_state||'';if(k){if(!regionMap[k])regionMap[k]=0;regionMap[k]+=p.total;}});
+  var topRegions=Object.keys(regionMap).sort(function(a,b){return regionMap[b]-regionMap[a];}).slice(0,5);
+  // Range label
+  var rng=document.getElementById('rpt-range');
+  var rangeLabel=rng?rng.options[rng.selectedIndex].text:'';
+
+  var h='<div style="border:2px solid var(--red);border-radius:8px;padding:20px;margin-bottom:16px;background:#fff;">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">';
+  h+='<div><div style="font-size:18px;font-weight:700;color:var(--red);">HD HAULING &amp; GRADING</div><div style="font-size:12px;color:var(--dgray);">Executive Summary &mdash; '+rangeLabel+'</div></div>';
+  h+='<div style="font-size:11px;color:var(--dgray);">Generated '+new Date().toLocaleDateString()+'</div>';
+  h+='</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+items.length+'</div><div class="rpt-stat-lbl">Estimates</div><div class="rpt-stat-sub">'+fmtMoney(totalVal)+'</div></div>';
+  h+='<div class="rpt-stat" style="border-color:#27500A;"><div class="rpt-stat-val" style="color:#27500A;">'+won.length+'</div><div class="rpt-stat-lbl">Won</div><div class="rpt-stat-sub">'+fmtMoney(wonVal)+'</div></div>';
+  h+='<div class="rpt-stat" style="border-color:#A32D2D;"><div class="rpt-stat-val" style="color:#A32D2D;">'+lost.length+'</div><div class="rpt-stat-lbl">Lost</div><div class="rpt-stat-sub">'+fmtMoney(lostVal)+'</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+fmtPct(winRate)+'</div><div class="rpt-stat-lbl">Win Rate</div></div>';
+  h+='</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
+  h+='<div class="rpt-stat" style="border-color:var(--red);"><div class="rpt-stat-val" style="color:var(--red);">'+fmtMoney(backlogVal)+'</div><div class="rpt-stat-lbl">Backlog</div><div class="rpt-stat-sub">'+backlog.length+' jobs</div></div>';
+  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+pending.length+'</div><div class="rpt-stat-lbl">Pending Decisions</div></div>';
+  h+='</div>';
+  // Top clients & regions side by side
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">';
+  h+='<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);margin-bottom:6px;">Top Clients</div>';
+  topClients.forEach(function(c,i){h+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;border-bottom:1px solid #eee;"><span>'+(i+1)+'. '+esc(c)+'</span><span style="font-weight:600;">'+fmtMoney(clientMap[c])+'</span></div>';});
+  h+='</div>';
+  h+='<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);margin-bottom:6px;">Top Regions</div>';
+  topRegions.forEach(function(r,i){h+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;border-bottom:1px solid #eee;"><span>'+(i+1)+'. '+esc(r)+'</span><span style="font-weight:600;">'+fmtMoney(regionMap[r])+'</span></div>';});
+  h+='</div>';
+  h+='</div></div>';
+  out.innerHTML=h;
+}
+
+// ==================== REPORT PDF EXPORT ====================
+
+async function exportReportPDF(){
+  var output=document.getElementById('rpt-output');
+  if(!output||!output.innerHTML){toast('No report to export','err');return;}
+  var rng=document.getElementById('rpt-range');
+  var rangeLabel=rng?rng.options[rng.selectedIndex].text:'';
+  var reportNames={
+    'monthly-summary':'Monthly Estimate Summary','geographic':'Geographic Analysis',
+    'client-perf':'Client Performance','salesperson':'Salesperson Performance',
+    'backlog':'Backlog Report','completion':'Completion & Schedule',
+    'volume':'Jobs Per Month','concurrent':'Concurrent Jobs',
+    'mobilization':'Mobilization by Region','material-usage':'Material Usage',
+    'est-vs-actual':'Estimated vs Actual','trucking':'Trucking Costs',
+    'executive':'Executive Summary'
+  };
+  var reportName=reportNames[_currentReport]||'Report';
+  try{
+    var r=await fetch('/generate-report-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      report_name:reportName,date_range:rangeLabel,html:output.innerHTML,
+      generated_date:new Date().toLocaleDateString()
+    })});
+    if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
+    var blob=await r.blob();var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download='HD_'+reportName.replace(/\s+/g,'_')+'_'+rangeLabel.replace(/\s+/g,'_')+'.pdf';
+    a.click();URL.revokeObjectURL(url);toast('Report PDF downloaded','ok');
+  }catch(e){toast('PDF error: '+e.message,'err');}
+}
 
 /* --- Keyboard Shortcuts --- */
 document.addEventListener('keydown',function(e){

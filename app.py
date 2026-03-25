@@ -8,6 +8,7 @@ try:
 except ImportError:
     GMAIL_AVAILABLE = False
 import generate_docx
+import generate_report
 import requests as http
 
 app = Flask(__name__, static_folder='.', static_url_path='')
@@ -534,6 +535,19 @@ def generate_daily_report():
     try:
         dr_build(data, out)
         return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_Daily_Report.pdf')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/generate-report-pdf', methods=['POST'])
+@require_auth
+def generate_report_pdf():
+    data = request.get_json()
+    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+        out = f.name
+    try:
+        generate_report.build(data, out)
+        name = data.get('report_name', 'Report').replace(' ', '_')
+        return send_file(out, mimetype='application/pdf', as_attachment=True, download_name=f'HD_{name}.pdf')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
