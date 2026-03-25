@@ -5013,55 +5013,90 @@ function renderWorkOrderDetail(){
     +(wo.scheduled_date?(addr?' &middot; ':'')+'Scheduled '+wo.scheduled_date+(wo.scheduled_end_date?' to '+wo.scheduled_end_date:'')+(wo.scheduled_time?' at '+fmt12(wo.scheduled_time):'')+(wo.scheduled_days&&wo.scheduled_days>1?' ('+wo.scheduled_days+'d)':''):'')
     +'</div>';
 
-  // Scope of Work
+  // Scope of Work — all line items like the proposal but without pricing
   var scopeEl=document.getElementById('wo-scope');
   var linkedQ=wo.linked_proposal?savedQuotes.find(function(q){return q.id===wo.linked_proposal;}):null;
+  // Also try project linked proposals as fallback
+  if(!linkedQ&&snap.linked_proposals&&snap.linked_proposals.length){
+    linkedQ=savedQuotes.find(function(q){return q.id===snap.linked_proposals[0];});
+  }
   var scopeHtml='';
   if(wo.description){
     scopeHtml+='<div style="font-size:13px;line-height:1.6;margin-bottom:10px;">'+esc(wo.description).replace(/\n/g,'<br>')+'</div>';
   }
   if(linkedQ){
     var qs=typeof linkedQ.snap==='string'?JSON.parse(linkedQ.snap||'{}'):linkedQ.snap||{};
-    var cItems=qs.concItems||[];var eItems=qs.extraItems||[];
+    var secs=qs.sections||[];var cItems=qs.concItems||[];var eItems=qs.extraItems||[];
     var scopeItems=[];
-    cItems.forEach(function(ci){
-      scopeItems.push({name:ci.name||ci.type,desc:ci.desc||'',qty:ci.qty||0,unit:ci.unit||'LF'});
+    // Asphalt sections — show section name, layer, depth, measurement qty (SY)
+    secs.forEach(function(sec){
+      var sf=sec.sf||0;var sy=Math.ceil(sf/9);
+      (sec.layers||[]).forEach(function(lyr){
+        var desc='Install '+lyr.depth+'" '+(lyr.name||lyr.type);
+        if(lyr.description)desc=lyr.description;
+        scopeItems.push({name:sec.name+' \u2014 '+(lyr.name||lyr.type),desc:desc,qty:sy,unit:'SY'});
+      });
     });
+    // Concrete items — show name, description, qty in LF/unit
+    cItems.forEach(function(ci){
+      if(!ci.qty)return;
+      var ct=CTYPES.find(function(x){return x.id===ci.type;})||CTYPES[0]||{};
+      scopeItems.push({name:ct.name||ci.name||ci.type,desc:ci.description||ct.desc||'',qty:ci.qty||0,unit:ct.unit||ci.unit||'LF'});
+    });
+    // Extra items
     eItems.forEach(function(ei){
+      if(!ei.name)return;
       scopeItems.push({name:ei.name,desc:ei.desc||'',qty:ei.qty||0,unit:ei.unit||'EA'});
     });
     if(scopeItems.length){
       scopeHtml+='<table style="width:100%;font-size:12px;border-collapse:collapse;">';
       scopeHtml+='<tr style="background:var(--lgray);"><th style="text-align:left;padding:6px 8px;font-size:11px;">Item</th><th style="text-align:left;padding:6px 8px;font-size:11px;">Description</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Qty</th><th style="text-align:center;padding:6px 8px;font-size:11px;">Unit</th></tr>';
       scopeItems.forEach(function(it,i){
-        scopeHtml+='<tr style="border-bottom:1px solid var(--bdr);'+(i%2?'background:#FAFAFA;':'')+'"><td style="padding:6px 8px;font-weight:600;">'+esc(it.name)+'</td><td style="padding:6px 8px;color:#555;">'+esc(it.desc)+'</td><td style="padding:6px 8px;text-align:right;">'+it.qty.toLocaleString()+'</td><td style="padding:6px 8px;text-align:center;">'+esc(it.unit)+'</td></tr>';
+        scopeHtml+='<tr style="border-bottom:1px solid var(--bdr);'+(i%2?'background:#FAFAFA;':'')+'"><td style="padding:6px 8px;font-weight:600;">'+esc(it.name)+'</td><td style="padding:6px 8px;color:#555;">'+esc(it.desc)+'</td><td style="padding:6px 8px;text-align:right;">'+(it.qty?it.qty.toLocaleString():'—')+'</td><td style="padding:6px 8px;text-align:center;">'+esc(it.unit)+'</td></tr>';
       });
       scopeHtml+='</table>';
     }
   }
   scopeEl.innerHTML=scopeHtml||'<p style="color:var(--dgray);font-size:12px;">No scope items.</p>';
 
-  // Materials
+  // Materials — tonnage for asphalt, CY for concrete
   var matEl=document.getElementById('wo-materials');
   var matHtml='';
   if(linkedQ){
     var qs2=typeof linkedQ.snap==='string'?JSON.parse(linkedQ.snap||'{}'):linkedQ.snap||{};
-    var secs2=qs2.sections||[];
-    var matRows=[];
+    var secs2=qs2.sections||[];var cItems2=qs2.concItems||[];
+    var matRows=[];var totalTons=0;var totalCY=0;
     secs2.forEach(function(sec){
+      var sf=sec.sf||0;
       (sec.layers||[]).forEach(function(lyr){
-        if(lyr.mat)matRows.push({section:sec.name,material:lyr.mat,depth:lyr.depth||'',tons:Math.round(lyr.tons||0)});
+        var rawT=(sf>0&&lyr.depth)?Math.ceil((sf*(lyr.depth/12)*(LBS[lyr.type]||LBS[lyr.name]||115))/2000):0;
+        var t=Math.round(rawT);
+        if(lyr.tons)t=Math.round(lyr.tons);
+        matRows.push({name:sec.name+' \u2014 '+(lyr.name||lyr.type),depth:lyr.depth||'',qty:t,unit:'TON',type:'asphalt'});
+        totalTons+=t;
       });
+    });
+    cItems2.forEach(function(ci){
+      if(!ci.qty)return;
+      var ct=CTYPES.find(function(x){return x.id===ci.type;})||{};
+      var cyPerLf=ct.cy_per_lf||0;
+      var cy=Math.round(ci.qty*cyPerLf*100)/100;
+      matRows.push({name:ct.name||ci.name||ci.type,depth:'',qty:cy||ci.qty,unit:cy?'CY':(ct.unit||'LF'),type:'concrete'});
+      if(cy)totalCY+=cy;
     });
     if(matRows.length){
       matHtml+='<table style="width:100%;font-size:12px;border-collapse:collapse;">';
-      matHtml+='<tr style="background:var(--lgray);"><th style="text-align:left;padding:6px 8px;font-size:11px;">Section</th><th style="text-align:left;padding:6px 8px;font-size:11px;">Material</th><th style="text-align:center;padding:6px 8px;font-size:11px;">Depth</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Est. Tons</th></tr>';
-      var totalTons=0;
+      matHtml+='<tr style="background:var(--lgray);"><th style="text-align:left;padding:6px 8px;font-size:11px;">Item</th><th style="text-align:center;padding:6px 8px;font-size:11px;">Depth</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Qty</th><th style="text-align:center;padding:6px 8px;font-size:11px;">Unit</th></tr>';
       matRows.forEach(function(r,i){
-        totalTons+=r.tons;
-        matHtml+='<tr style="border-bottom:1px solid var(--bdr);'+(i%2?'background:#FAFAFA;':'')+'"><td style="padding:6px 8px;">'+esc(r.section)+'</td><td style="padding:6px 8px;font-weight:600;">'+esc(r.material)+'</td><td style="padding:6px 8px;text-align:center;">'+(r.depth?r.depth+'"':'')+'</td><td style="padding:6px 8px;text-align:right;">'+r.tons.toLocaleString()+'</td></tr>';
+        matHtml+='<tr style="border-bottom:1px solid var(--bdr);'+(i%2?'background:#FAFAFA;':'')+'"><td style="padding:6px 8px;font-weight:600;">'+esc(r.name)+'</td><td style="padding:6px 8px;text-align:center;">'+(r.depth?r.depth+'"':'')+'</td><td style="padding:6px 8px;text-align:right;">'+r.qty.toLocaleString()+'</td><td style="padding:6px 8px;text-align:center;">'+esc(r.unit)+'</td></tr>';
       });
-      matHtml+='<tr style="font-weight:700;border-top:2px solid #333;"><td colspan="3" style="padding:6px 8px;">Total</td><td style="padding:6px 8px;text-align:right;">'+totalTons.toLocaleString()+' tons</td></tr>';
+      // Totals
+      var totals=[];
+      if(totalTons>0)totals.push(totalTons.toLocaleString()+' tons');
+      if(totalCY>0)totals.push(totalCY.toLocaleString()+' CY');
+      if(totals.length){
+        matHtml+='<tr style="font-weight:700;border-top:2px solid #333;"><td colspan="2" style="padding:6px 8px;">Total</td><td colspan="2" style="padding:6px 8px;text-align:right;">'+totals.join(' &nbsp;|&nbsp; ')+'</td></tr>';
+      }
       matHtml+='</table>';
     }
   }
