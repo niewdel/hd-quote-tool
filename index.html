@@ -497,11 +497,11 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 </div>
               </div>
             </div>
-            <div class="fg fg3">
-              <div><label>Street Address</label><input id="proj-addr" type="text" placeholder="123 Main St"/></div>
-              <div><label>City, State</label><input id="proj-cs" type="text" placeholder="Greensboro, NC"/></div>
+            <div class="fg fg2">
+              <div><label>Address</label><input id="proj-addr" type="text" placeholder="123 Main St, Greensboro, NC"/></div>
               <div><label>Date</label><input id="proj-date" type="date"/></div>
             </div>
+            <input id="proj-cs" type="hidden" value=""/>
             <div id="client-bar" style="display:none;margin-top:9px;padding:6px 11px;background:var(--lgray);border-radius:6px;font-size:12px;color:var(--dgray);"></div>
           </div>
         </div>
@@ -2417,8 +2417,8 @@ function createProposalFromProject(projectId){
   // Pre-fill the proposal builder
   document.getElementById('proj-name').value=proj.name||'';
   document.getElementById('proj-client').value=proj.client||'';
-  document.getElementById('proj-addr').value=snap.address||'';
-  document.getElementById('proj-cs').value=snap.city_state||'';
+  var fullA=snap.address||'';if(snap.city_state)fullA=fullA?(fullA+', '+snap.city_state):snap.city_state;
+  document.getElementById('proj-addr').value=fullA;
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   lastSavedQuoteId=null;
   window._pendingProjectLink=projectId;
@@ -3707,7 +3707,7 @@ function buildPayload(){
   var name=document.getElementById('proj-name').value||'Unnamed Project';
   var client=document.getElementById('proj-client').value||'';
   var addr=document.getElementById('proj-addr').value||'';
-  var cs=document.getElementById('proj-cs').value||'';
+  var cs='';
   var date=document.getElementById('proj-date').value||'';
   var notes=document.getElementById('proj-notes').value||'';
   var fmtDate=date?new Date(date+'T12:00:00').toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}):'';
@@ -4101,8 +4101,7 @@ function selectClientById(id){
   document.getElementById('client-sug').style.display='none';
   selectedClient={name:c.name,company:c.company||'',phone:c.phone||'',email:c.email||''};
   // Auto-fill address fields
-  if(c.address){var addrEl=document.getElementById('proj-addr');if(addrEl)addrEl.value=c.address;}
-  if(c.city_state){var csEl=document.getElementById('proj-cs');if(csEl)csEl.value=c.city_state;}
+  if(c.address||c.city_state){var addrEl=document.getElementById('proj-addr');if(addrEl){var fa=c.address||'';if(c.city_state)fa=fa?(fa+', '+c.city_state):c.city_state;addrEl.value=fa;}}
   // Show info bar
   var bar=document.getElementById('client-bar');
   var parts=[c.company,c.phone,c.email].filter(Boolean);
@@ -4167,8 +4166,8 @@ function loadQuote(id){
   document.getElementById('proj-name').value=d.name||'';
   document.getElementById('proj-client').value=d.client||'';
   document.getElementById('proj-date').value=d.date||'';
-  document.getElementById('proj-addr').value=d.addr||'';
-  document.getElementById('proj-cs').value=d.cs||'';
+  var fullAddr=d.addr||'';if(d.cs)fullAddr=fullAddr?(fullAddr+', '+d.cs):d.cs;
+  document.getElementById('proj-addr').value=fullAddr;
   document.getElementById('proj-notes').value=d.notes||'';
   document.getElementById('waste').value=d.waste||5;
   document.getElementById('mob').value=d.mob||0;
