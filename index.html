@@ -120,20 +120,31 @@ tr:nth-child(even) td{background:#FAFAFA;}
 .gn{color:#A32D2D;font-weight:600;}
 
 /* Sections */
-.sec{border:1px solid var(--bdr);border-radius:var(--rad);background:#fff;margin-bottom:10px;overflow:hidden;}
-.sec-hdr{display:flex;align-items:center;gap:9px;padding:8px 13px;background:#FAFAFA;border-bottom:1px solid var(--bdr);flex-wrap:wrap;}
-.sec-hdr .sec-name{flex:1;min-width:180px;max-width:280px;font-weight:600;padding:5px 8px;}
-.sec-foot{display:flex;gap:12px;flex-wrap:wrap;padding:6px 13px;background:#FAFAFA;border-top:1px solid var(--bdr);font-size:12px;}
-.sec-foot span{color:var(--dgray);}
-.sec-foot b{color:var(--blk);}
-.lyr-row{display:flex;align-items:center;gap:7px;padding:7px 13px;border-bottom:1px solid var(--mgray);flex-wrap:wrap;}
+.sec{border:1px solid var(--bdr);border-radius:var(--rad);background:#fff;margin-bottom:12px;overflow:hidden;}
+.sec-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;background:linear-gradient(135deg,#FAFAFA,#F5F5F5);border-bottom:1px solid var(--bdr);flex-wrap:wrap;}
+.sec-hdr .sec-name{flex:1;min-width:180px;max-width:280px;font-weight:700;padding:5px 8px;font-size:14px;border:1px solid transparent;border-radius:6px;transition:border-color .15s;}
+.sec-hdr .sec-name:focus{border-color:var(--red);outline:none;}
+.sec-foot{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:4px;padding:10px 16px;background:#FAFAFA;border-top:1px solid var(--bdr);}
+.sec-foot-item{text-align:center;padding:4px 0;}
+.sec-foot-item .sf-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--dgray);font-weight:600;margin-bottom:1px;}
+.sec-foot-item .sf-val{font-size:14px;font-weight:700;color:var(--blk);}
+.lyr-row{padding:10px 16px;border-bottom:1px solid #f0f0f0;transition:background .1s;}
 .lyr-row:last-child{border-bottom:none;}
-.lyr-row label{font-size:11px;color:var(--dgray);white-space:nowrap;text-transform:none;letter-spacing:0;font-weight:normal;margin:0;}
-.lyr-row input{width:62px;}
-.lyr-row select{width:auto;min-width:108px;}
-.lres{font-size:11px;color:var(--dgray);}
-.lres b{color:var(--blk);}
-.mubadge{font-size:10px;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+.lyr-row:hover{background:#FCFCFC;}
+.lyr-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.lyr-top input[type="text"]{flex:1;font-size:13px;font-weight:600;padding:4px 8px;border:1px solid transparent;border-radius:5px;transition:border-color .15s;}
+.lyr-top input[type="text"]:focus{border-color:var(--red);outline:none;}
+.lyr-fields{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.lyr-field{display:flex;flex-direction:column;gap:1px;}
+.lyr-field label{font-size:9px;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin:0;line-height:1;}
+.lyr-field input{width:58px;padding:4px 6px;font-size:12px;border:1px solid var(--bdr);border-radius:5px;text-align:center;transition:border-color .15s;}
+.lyr-field input:focus{border-color:var(--red);outline:none;}
+.lyr-field select{min-width:100px;padding:4px 6px;font-size:12px;border:1px solid var(--bdr);border-radius:5px;}
+.lyr-result{display:flex;align-items:center;gap:10px;margin-top:6px;padding:6px 10px;background:#F8F8F8;border-radius:6px;font-size:11px;color:var(--dgray);}
+.lyr-result b{color:var(--blk);font-size:12px;}
+.lyr-desc{width:100%;font-size:11px;padding:3px 8px;border:1px solid transparent;border-radius:5px;color:var(--dgray);transition:border-color .15s;}
+.lyr-desc:focus{border-color:var(--bdr);outline:none;}
+.mubadge{font-size:10px;padding:3px 9px;border-radius:20px;white-space:nowrap;font-weight:600;}
 .mubadge.p{background:#EAF3DE;color:#27500A;}
 .mubadge.n{background:#FCEBEB;color:#A32D2D;}
 
@@ -541,12 +552,30 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">-</div></div>
         </div>
 
-      <div class="card">
-        <div class="card-hdr"><span class="card-title">Full Breakdown</span></div>
+      <div class="card" id="bk-asphalt-card">
+        <div class="card-hdr"><span class="card-title">Pavement Breakdown</span></div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Section</th><th>Layer</th><th>SF</th><th>SY</th><th>Depth/Qty</th><th>Unit</th><th>Tons</th><th>Days</th><th>Mat Cost</th><th>Crew Cost</th><th>Trucking</th><th>Bid Total</th><th>MU%</th></tr></thead>
+              <thead><tr><th>Section</th><th>Layer</th><th>SY</th><th>Depth</th><th>Tons</th><th>Days</th><th>Mat Cost</th><th>Crew</th><th>Trucking</th><th>Total</th><th>MU%</th></tr></thead>
               <tbody id="breakdown"></tbody>
+            </table>
+          </div>
+        </div>
+      <div class="card" id="bk-concrete-card" style="display:none;">
+        <div class="card-hdr"><span class="card-title">Concrete Breakdown</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Type</th><th>Qty</th><th>Unit</th><th>CY</th><th>Mat Cost</th><th>Labor</th><th>Total</th><th>MU%</th></tr></thead>
+              <tbody id="breakdown-conc"></tbody>
+            </table>
+          </div>
+        </div>
+      <div class="card" id="bk-extra-card" style="display:none;">
+        <div class="card-hdr"><span class="card-title">Additional Items</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Price</th><th>Total</th></tr></thead>
+              <tbody id="breakdown-extra"></tbody>
             </table>
           </div>
         </div>
@@ -2999,7 +3028,7 @@ function remLyr(sid2,lid2){var s=sections.find(function(x){return x.id===sid2;})
 
 // These update state WITHOUT rebuilding the DOM
 function updSecName(id,v){var s=sections.find(function(x){return x.id===id;});if(s)s.name=v;}
-function updSecSF(id,v){var s=sections.find(function(x){return x.id===id;});if(s){s.sf=parseFloat(v)||0;recalc();updateSecFooter(id);}}
+function updSecSF(id,v){var s=sections.find(function(x){return x.id===id;});if(s){s.sf=parseFloat(v)||0;renderAll();}}
 function updLyrType(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
@@ -3080,13 +3109,16 @@ function updateSecFooter(sid2){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var foot=document.querySelector('.sec-foot[data-sid="'+sid2+'"]');if(!foot)return;
   var sf=s.sf||0,sy=calcSY(sf),st=secTot(s),mp=mu(st.mat,st.bid);
-  foot.innerHTML='<span>SF: <b>'+sf.toLocaleString()+'</b></span>'
-    +'<span>SY: <b>'+(sf>0?sy.toLocaleString():'-')+'</b></span>'
-    +'<span>Tons: <b>'+(sf>0?st.tons.toLocaleString():'-')+'</b></span>'
-    +'<span>Mat: <b>'+(sf>0?'$'+fi(st.mat):'-')+'</b></span>'
-    +'<span>Bid: <b>'+(sf>0?'$'+fi(st.bid):'-')+'</b></span>'
-    +'<span>MU: <b class="'+(mp>=0?'gp':'gn')+'">'+(sf>0?mp.toFixed(1)+'%':'-')+'</b></span>';
+  foot.innerHTML=buildFooterHTML(sf,sy,st,mp);
   s.layers.forEach(function(l){updateLyrResult(sid2,l.id);});
+}
+
+function buildFooterHTML(sf,sy,st,mp){
+  return '<div class="sec-foot-item"><div class="sf-lbl">SY</div><div class="sf-val">'+(sf>0?sy.toLocaleString():'-')+'</div></div>'
+    +'<div class="sec-foot-item"><div class="sf-lbl">Tons</div><div class="sf-val">'+(sf>0?st.tons.toLocaleString():'-')+'</div></div>'
+    +'<div class="sec-foot-item"><div class="sf-lbl">Materials</div><div class="sf-val">'+(sf>0?'$'+fi(st.mat):'-')+'</div></div>'
+    +'<div class="sec-foot-item"><div class="sf-lbl">Total</div><div class="sf-val" style="color:var(--red);">'+(sf>0?'$'+fi(st.bid):'-')+'</div></div>'
+    +'<div class="sec-foot-item"><div class="sf-lbl">Markup</div><div class="sf-val '+(mp>=0?'gp':'gn')+'">'+(sf>0?mp.toFixed(1)+'%':'-')+'</div></div>';
 }
 
 function updateLyrResult(sid2,lid2){
@@ -3094,7 +3126,7 @@ function updateLyrResult(sid2,lid2){
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   var sf=s.sf||0,wfv=wf();
   var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
-  var t=rawT*wfv;
+  var t=rawT*wfv;var sy=calcSY(sf);
   var bidC=calcLayerBid(t,l);
   var matC=t*(MAT[l.type]||0);
   var mp=mu(matC,bidC);
@@ -3104,11 +3136,20 @@ function updateLyrResult(sid2,lid2){
   var resEl=document.querySelector('.lres[data-lyr="'+sid2+'-'+lid2+'"]');
   var muEl=document.querySelector('.mubadge[data-lyr="'+sid2+'-'+lid2+'"]');
   if(resEl){
-    var ppt2=t>0?'<b>$'+(bidC/t).toFixed(2)+'/t</b> ':'';
-    resEl.innerHTML=sf>0?('<b>'+t.toLocaleString()+'t</b> '+ppt2+'<b>'+lDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter SF above</span>';
+    resEl.innerHTML=sf>0?buildLyrResHTML(t,sy,matC,bidC):'<span style="opacity:.4">Enter SF above</span>';
   }
-  if(muEl){muEl.textContent=bidC>0?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
+  if(muEl){muEl.textContent=bidC>0?mp.toFixed(1)+'%':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
   updateSecFooter(sid2);
+}
+
+function buildLyrResHTML(t,sy,matC,bidC){
+  return '<span><b>'+sy.toLocaleString()+'</b> SY</span>'
+    +'<span style="margin:0 3px;color:#ddd;">&middot;</span>'
+    +'<span><b>'+t.toLocaleString()+'</b> tons</span>'
+    +'<span style="margin:0 3px;color:#ddd;">&middot;</span>'
+    +'<span>Mat <b>$'+fi(matC)+'</b></span>'
+    +'<span style="margin:0 3px;color:#ddd;">&middot;</span>'
+    +'<span>Total <b style="color:var(--blk);">$'+fi(bidC)+'</b></span>';
 }
 
 function renderAll(){
@@ -3125,47 +3166,44 @@ function renderAll(){
       var matC=t*(MAT[l.type]||0);
       var lmp=mu(matC,bidC);
       var layerDays=calcLayerDays(t,l);
-      var truckCost=calcTrucking(t,l,layerDays);
-      var crewCost=layerDays*getCrewParam(l.type,'crew_rate');
-      var ppt=t>0?'<b>$'+(bidC/t).toFixed(2)+'/t</b> ':'';
-      var resHTML=sf>0?'<b>'+t.toLocaleString()+'t</b> '+ppt+'<b>'+layerDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter SF above</span>';
-      var muBadge='<span class="mubadge '+(lmp>=0?'p':'n')+'" data-lyr="'+s.id+'-'+l.id+'">'+(bidC>0?lmp.toFixed(1)+'% MU':'')+'</span>';
-      var typeOpts=LTYPES.map(function(t2){return '<option'+(t2===l.type?' selected':'')+'>'+t2+'</option>';}).join('');
-      var layerRate=calcLayerRate(t,l);
       var autoTrucks=calcTruckCount(t,l);
-      var tptVal=getCrewParam(l.type,'tons_per_truck');
-      var stdFields='<label>Depth (in)</label><input type="number" value="'+l.depth+'" min=".5" step=".5" style="width:55px" onchange="updLyrDepth('+s.id+','+l.id+',this.value)"/>'+'<label>Days</label><input type="number" value="'+(l.days_override!==null&&l.days_override!==undefined?l.days_override:layerDays.toFixed(1))+'" min="0" step="0.5" style="width:60px" title="Auto: '+layerDays.toFixed(2)+'d" onchange="updLyrDays('+s.id+','+l.id+',this.value,true)"/>'+'<label>Trucks</label><input type="number" value="'+(l.trucks_override!==null&&l.trucks_override!==undefined?l.trucks_override:autoTrucks)+'" min="0" step="1" style="width:44px" title="Auto: '+autoTrucks+' ('+tptVal+'t/truck/day)" onchange="updTrucks('+s.id+','+l.id+',this.value)">'+'<label>MU%</label><input type="number" value="'+l.markup+'" min="0" step="1" style="width:52px" class="lyr-markup" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrMarkup('+s.id+','+l.id+',this.value)"/>';
-      // Name + description fields (top of layer row)
-      var nameField='<div style="width:100%;display:flex;flex-direction:column;gap:2px;margin-bottom:4px;">'
-        +'<input type="text" value="'+esc(l.name||l.type)+'" placeholder="Item name" style="width:100%;font-size:13px;font-weight:600;padding:3px 6px;" onchange="updLyrName('+s.id+','+l.id+',this.value)">'
-        +'<input type="text" value="'+esc(l.description||'')+'" placeholder="Description for PDF..." style="width:100%;font-size:11px;padding:3px 6px;color:var(--dgray);" onchange="updLyrDesc('+s.id+','+l.id+',this.value)">'
-        +'</div>';
-      lrows+='<div class="lyr-row" style="flex-wrap:wrap;">'
-        +nameField
-        +'<select onchange="updLyrType('+s.id+','+l.id+',this.value)">'+typeOpts+'</select>'
-        +stdFields
-        +muBadge+'<span class="lres" data-lyr="'+s.id+'-'+l.id+'">'+resHTML+'</span>'
-        +'<button class="btn-ico" onclick="remLyr('+s.id+','+l.id+')">x</button>'
+      var typeOpts=LTYPES.map(function(t2){return '<option'+(t2===l.type?' selected':'')+'>'+t2+'</option>';}).join('');
+      var badgeCls=LBADGE[l.type]||'b-misc';
+      var resHTML=sf>0?buildLyrResHTML(t,sy,matC,bidC):'<span style="opacity:.4">Enter SF above</span>';
+      lrows+='<div class="lyr-row">'
+        // Top row: badge + name + delete
+        +'<div class="lyr-top">'
+        +'<span class="badge '+badgeCls+'" style="font-size:10px;flex-shrink:0;">'+esc(BADGE_DEFS[badgeCls]?BADGE_DEFS[badgeCls].label:l.type)+'</span>'
+        +'<input type="text" value="'+esc(l.name||l.type)+'" placeholder="Layer name" onchange="updLyrName('+s.id+','+l.id+',this.value)">'
+        +'<button class="btn-ico" onclick="remLyr('+s.id+','+l.id+')" title="Remove layer" style="flex-shrink:0;opacity:.4;">×</button>'
+        +'</div>'
+        // Description
+        +'<input type="text" class="lyr-desc" value="'+esc(l.description||'')+'" placeholder="Description for PDF..." onchange="updLyrDesc('+s.id+','+l.id+',this.value)">'
+        // Fields row
+        +'<div class="lyr-fields">'
+        +'<div class="lyr-field"><label>Material</label><select class="lyr-field" onchange="updLyrType('+s.id+','+l.id+',this.value)">'+typeOpts+'</select></div>'
+        +'<div class="lyr-field"><label>Depth (in)</label><input type="number" value="'+l.depth+'" min=".5" step=".5" onchange="updLyrDepth('+s.id+','+l.id+',this.value)"></div>'
+        +'<div class="lyr-field"><label>Days</label><input type="number" value="'+(l.days_override!==null&&l.days_override!==undefined?l.days_override:layerDays.toFixed(1))+'" min="0" step="0.5" title="Auto: '+layerDays.toFixed(2)+'d" onchange="updLyrDays('+s.id+','+l.id+',this.value,true)"></div>'
+        +'<div class="lyr-field"><label>Trucks</label><input type="number" value="'+(l.trucks_override!==null&&l.trucks_override!==undefined?l.trucks_override:autoTrucks)+'" min="0" step="1" onchange="updTrucks('+s.id+','+l.id+',this.value)"></div>'
+        +'<div class="lyr-field"><label>Markup %</label><input type="number" value="'+l.markup+'" min="0" step="1" class="lyr-markup" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrMarkup('+s.id+','+l.id+',this.value)"></div>'
+        +'<span class="mubadge '+(lmp>=0?'p':'n')+'" data-lyr="'+s.id+'-'+l.id+'">'+(bidC>0?lmp.toFixed(1)+'%':'')+'</span>'
+        +'</div>'
+        // Result strip
+        +'<div class="lyr-result"><span class="lres" data-lyr="'+s.id+'-'+l.id+'">'+resHTML+'</span></div>'
         +'</div>';
     });
     div.innerHTML='<div class="sec-hdr">'
       +'<input class="sec-name" data-sid="'+s.id+'" type="text" value="'+esc(s.name)+'" placeholder="Section name" onchange="updSecName('+s.id+',this.value)"/>'
       +'<div style="display:flex;align-items:center;gap:6px;">'
-      +'<label style="margin:0;font-size:11px;color:var(--dgray);text-transform:none;letter-spacing:0;font-weight:normal;">SF</label>'
-      +'<input type="number" value="'+(sf||'')+'" placeholder="0" min="0" step="1" style="width:95px" onchange="updSecSF('+s.id+',this.value)">'
-      +'<span style="font-size:12px;color:var(--dgray);">= <b>'+(sf>0?sy.toLocaleString():'-')+'</b> SY</span>'
+      +'<label style="margin:0;font-size:10px;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;font-weight:600;">SF</label>'
+      +'<input type="number" value="'+(sf||'')+'" placeholder="0" min="0" step="1" style="width:100px;text-align:center;font-weight:600;font-size:14px;padding:4px 8px;border:1px solid var(--bdr);border-radius:5px;" onchange="updSecSF('+s.id+',this.value)">'
       +'</div>'
-      +'<button class="btn btn-sec btn-sm" onclick="addLyr('+s.id+')">+ Layer</button>'
-      +'<button class="btn-ico" onclick="remSec('+s.id+')" style="margin-left:auto;">x Remove</button>'
+      +'<button class="btn btn-sec btn-sm" onclick="addLyr('+s.id+')" style="font-size:11px;">+ Layer</button>'
+      +'<button class="btn-ico" onclick="remSec('+s.id+')" style="margin-left:auto;opacity:.4;" title="Remove section">×</button>'
       +'</div>'
       +'<div>'+lrows+'</div>'
       +'<div class="sec-foot" data-sid="'+s.id+'">'
-      +'<span>SF: <b>'+sf.toLocaleString()+'</b></span>'
-      +'<span>SY: <b>'+(sf>0?sy.toLocaleString():'-')+'</b></span>'
-      +'<span>Tons: <b>'+(sf>0?st.tons.toLocaleString():'-')+'</b></span>'
-      +'<span>Mat: <b>'+(sf>0?'$'+fi(st.mat):'-')+'</b></span>'
-      +'<span>Bid: <b>'+(sf>0?'$'+fi(st.bid):'-')+'</b></span>'
-      +'<span>MU: <b class="'+(mp>=0?'gp':'gn')+'">'+(sf>0?mp.toFixed(1)+'%':'-')+'</b></span>'
+      +buildFooterHTML(sf,sy,st,mp)
       +'</div>';
     c.appendChild(div);
   });
@@ -3272,9 +3310,12 @@ function calcLayerRate(tons, layer){
 // -- Recalc --------------------------------------------------------------------
 function recalc(){
   var bk=document.getElementById('breakdown');bk.innerHTML='';
+  var bkConc=document.getElementById('breakdown-conc');bkConc.innerHTML='';
+  var bkExtra=document.getElementById('breakdown-extra');bkExtra.innerHTML='';
   var wfv=wf(),mobv=mob();
   var gSF=0,gSY=0,gT=0,gB=0; gM=0;
   var gCrew=0,gTruck=0;
+  var hasConc=false,hasExtra=false;
   sections.forEach(function(s){
     var sf=s.sf||0,sy=calcSY(sf);gSF+=sf;gSY+=sy;
     s.layers.forEach(function(l){
@@ -3290,43 +3331,50 @@ function recalc(){
       var tr=document.createElement('tr');
       tr.innerHTML='<td><small>'+esc(s.name)+'</small></td>'
         +'<td><span class="badge '+(LBADGE[l.type]||'')+'">'+esc(l.type)+'</span></td>'
-        +'<td>'+(sf>0?sf.toLocaleString():'-')+'</td>'
         +'<td>'+(sf>0?sy.toLocaleString():'-')+'</td>'
         +'<td>'+l.depth+'"</td>'
-        +'<td>ton</td>'
         +'<td>'+(t>0?t.toLocaleString():'-')+'</td>'
         +'<td>'+(lDays>0?lDays.toFixed(1):'-')+'</td>'
         +'<td>'+(mC>0?'$'+fi(mC):'-')+'</td>'
         +'<td>'+(crewC>0?'$'+fi(crewC):'-')+'</td>'
         +'<td>'+(truckC>0?'$'+fi(truckC):'-')+'</td>'
-        +'<td>'+(bC>0?'$'+fi(bC):'-')+'</td>'
+        +'<td style="font-weight:600;">'+(bC>0?'$'+fi(bC):'-')+'</td>'
         +'<td class="'+(mp>=0?'gp':'gn')+'">'+(bC>0?mp.toFixed(1)+'%':'-')+'</td>';
       bk.appendChild(tr);
     });
   });
   concItems.forEach(function(i){
     if(!i.qty||!i.sub)return;
+    hasConc=true;
     var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];
     var matC=concMatCost(i);var labC=concLaborCost(i);var bidC=concBidTotal(i);var cy=calcConcCY(i);var mp=mu(matC+labC,bidC);
     gM+=matC+labC;gB+=bidC;
     var tr=document.createElement('tr');
-    tr.innerHTML='<td><small>Concrete</small></td><td><span class="badge b-conc">'+esc(ct.name)+'</span></td>'
-      +'<td>-</td><td>-</td><td>'+i.qty.toLocaleString()+' '+ct.unit+'</td><td>'+ct.unit+'</td>'
-      +'<td>$'+fi(matC)+' ('+cy.toFixed(1)+' CY)</td><td>-</td><td>$'+fi(labC)+'</td><td>-</td><td>-</td>'
-      +'<td>$'+fi(bidC)+'</td>'
+    tr.innerHTML='<td><span class="badge b-conc">'+esc(ct.name)+'</span></td>'
+      +'<td>'+i.qty.toLocaleString()+'</td>'
+      +'<td>'+ct.unit+'</td>'
+      +'<td>'+cy.toFixed(1)+'</td>'
+      +'<td>$'+fi(matC)+'</td>'
+      +'<td>$'+fi(labC)+'</td>'
+      +'<td style="font-weight:600;">$'+fi(bidC)+'</td>'
       +'<td class="'+(mp>=0?'gp':'gn')+'">'+mp.toFixed(1)+'%</td>';
-    bk.appendChild(tr);
+    bkConc.appendChild(tr);
   });
   extraItems.forEach(function(i){
     if(!i.name||!i.subtotal)return;
+    hasExtra=true;
     gB+=i.subtotal;
     var tr=document.createElement('tr');
-    tr.innerHTML='<td><small>Additional</small></td><td>'+esc(i.name)+'</td>'
-      +'<td>-</td><td>-</td><td>'+i.qty+' '+i.unit+'</td><td>'+i.unit+'</td>'
-      +'<td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>'
-      +'<td>$'+fi(i.subtotal)+'</td><td>-</td>';
-    bk.appendChild(tr);
+    tr.innerHTML='<td>'+esc(i.name)+'</td>'
+      +'<td>'+i.qty+'</td>'
+      +'<td>'+esc(i.unit)+'</td>'
+      +'<td>$'+f2(i.price)+'</td>'
+      +'<td style="font-weight:600;">$'+fi(i.subtotal)+'</td>';
+    bkExtra.appendChild(tr);
   });
+  // Show/hide breakdown cards
+  var concCard=document.getElementById('bk-concrete-card');if(concCard)concCard.style.display=hasConc?'':'none';
+  var extraCard=document.getElementById('bk-extra-card');if(extraCard)extraCard.style.display=hasExtra?'':'none';
   var total=gB+mobv,gp=gB-gM-gCrew-gTruck;
   document.getElementById('m-sf').textContent=gSF>0?gSF.toLocaleString():'-';
   updatePhaseMetric();
@@ -4109,9 +4157,15 @@ async function renderPipeline() {
     pipelineStages = ds.stages;
     pipelineProposals = dp.proposals;
 
-    var won   = pipelineProposals.filter(function(p){ return p.pipeline_stages && p.pipeline_stages.counts_in_ratio && p.pipeline_stages.name==='Won'; });
-    var lost  = pipelineProposals.filter(function(p){ return p.pipeline_stages && p.pipeline_stages.counts_in_ratio && p.pipeline_stages.name==='Lost'; });
-    var active = pipelineProposals.filter(function(p){ return !p.pipeline_stages || !p.pipeline_stages.is_closed; });
+    // Only show projects in pipeline (proposals stay attached to their projects)
+    var pipelineItems=pipelineProposals.filter(function(p){
+      var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+      return snap.is_project===true;
+    });
+
+    var won   = pipelineItems.filter(function(p){ return p.pipeline_stages && p.pipeline_stages.counts_in_ratio && p.pipeline_stages.name==='Won'; });
+    var lost  = pipelineItems.filter(function(p){ return p.pipeline_stages && p.pipeline_stages.counts_in_ratio && p.pipeline_stages.name==='Lost'; });
+    var active = pipelineItems.filter(function(p){ return !p.pipeline_stages || !p.pipeline_stages.is_closed; });
     var wonTotal = won.reduce(function(s,p){return s+(parseFloat(p.total)||0);},0);
     var winRate = (won.length+lost.length)>0 ? Math.round(won.length/(won.length+lost.length)*100) : 0;
 
@@ -4119,10 +4173,10 @@ async function renderPipeline() {
 
     var statRow = document.createElement('div');
     statRow.className = 'kb-stat-row';
-    [{lbl:'Active Leads',val:active.length,col:'var(--blk)'},
+    [{lbl:'Active Projects',val:active.length,col:'var(--blk)'},
      {lbl:'Win Rate',val:winRate+'%',col:winRate>=50?'#27500A':winRate>=30?'#B25000':'#A32D2D'},
      {lbl:'Won Revenue',val:'$'+Math.round(wonTotal).toLocaleString(),col:'#27500A'},
-     {lbl:'Total Proposals',val:pipelineProposals.length,col:'var(--blk)'},
+     {lbl:'Total Projects',val:pipelineItems.length,col:'var(--blk)'},
     ].forEach(function(s){
       var d=document.createElement('div');d.className='kb-stat';
       d.innerHTML='<div class="kb-stat-lbl">'+s.lbl+'</div>'
@@ -4134,13 +4188,13 @@ async function renderPipeline() {
     var cols = document.createElement('div');
     cols.style.cssText = 'display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;align-items:flex-start;';
 
-    var unassigned=pipelineProposals.filter(function(p){return !p.stage_id;});
+    var unassigned=pipelineItems.filter(function(p){return !p.stage_id;});
     var allStages=pipelineStages.slice();
     if(unassigned.length){allStages.unshift({id:null,name:'Unassigned',color:'#999999',counts_in_ratio:false,is_closed:false});}
     allStages.forEach(function(stage){
       var cards=stage.id===null
-        ?pipelineProposals.filter(function(p){return !p.stage_id;})
-        :pipelineProposals.filter(function(p){return p.stage_id===stage.id;});
+        ?pipelineItems.filter(function(p){return !p.stage_id;})
+        :pipelineItems.filter(function(p){return p.stage_id===stage.id;});
       var col = document.createElement('div');
       col.className = 'kb-col';
 
@@ -4168,34 +4222,27 @@ async function renderPipeline() {
         var card = document.createElement('div');
         var sn = p.pipeline_stages ? p.pipeline_stages.name : '';
         var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
-        var isProject=snap.is_project===true;
         card.className = 'kb-card'+(sn==='Won'?' kb-won':sn==='Lost'?' kb-lost':sn==='Disqualified'?' kb-disq':'');
         card.draggable=true;
         card.addEventListener('dragstart',function(e){e.dataTransfer.setData('text/plain',p.id);e.dataTransfer.effectAllowed='move';this.classList.add('dragging');});
         card.addEventListener('dragend',function(){this.classList.remove('dragging');document.querySelectorAll('.kb-cards.drag-over').forEach(function(el){el.classList.remove('drag-over');});});
         var moveOpts = pipelineStages.filter(function(s){return s.id!==stage.id;})
           .map(function(s){return '<option value="'+s.id+'">'+esc(s.name)+'</option>';}).join('');
-        var typeBadge=isProject?'<span style="font-size:9px;font-weight:700;color:#fff;background:var(--red);padding:1px 6px;border-radius:3px;text-transform:uppercase;margin-left:6px;">Project</span>':'';
         var dueStr='';
-        if(isProject&&snap.bid_due_date){
+        if(snap.bid_due_date){
           var dueParts=snap.bid_due_date.split('-');
           dueStr='<div style="font-size:10px;color:var(--red);font-weight:600;margin-top:3px;">Bid Due: '+dueParts[1]+'/'+dueParts[2]+'/'+dueParts[0]+(snap.bid_due_time?' @ '+fmt12(snap.bid_due_time):'')+'</div>';
         }
-        var actions='';
-        if(isProject){
-          actions='<button class="btn btn-sec btn-sm kb-open-btn" onclick="openProjectSummary('+p.id+')">View</button>'
-            +'<button class="btn btn-sec btn-sm kb-open-btn" onclick="editProject('+p.id+')">Edit</button>'
-            +'<button class="btn btn-sec btn-sm kb-open-btn" onclick="attachProposalToProject('+p.id+')">Attach</button>';
-          if(snap.linked_proposals&&snap.linked_proposals.length){
-            actions+='<button class="btn btn-sec btn-sm kb-open-btn" onclick="loadProposalFromPipeline('+snap.linked_proposals[0]+')">Open Proposal</button>';
-          }
-        } else {
-          actions='<button class="btn btn-sec btn-sm kb-open-btn" onclick="loadProposalFromPipeline('+p.id+')">Open</button>';
-        }
-        var addrLine=isProject&&snap.address?'<div style="font-size:10px;color:var(--dgray);margin-top:1px;">'+esc(snap.address)+'</div>':'';
-        card.innerHTML = '<div class="kb-card-name"'+(isProject?' style="cursor:pointer;" onclick="openProjectSummary('+p.id+')"':'')+'>'+esc(p.name||'Untitled')+typeBadge+'</div>'
+        var linkedCount=snap.linked_proposals?snap.linked_proposals.length:0;
+        var coCount=snap.change_orders?snap.change_orders.length:0;
+        var countsBadge=(linkedCount||coCount)?'<div style="font-size:9px;color:var(--dgray);margin-top:3px;">'+linkedCount+' proposal'+(linkedCount!==1?'s':'')+' &middot; '+coCount+' CO'+(coCount!==1?'s':'')+'</div>':'';
+        var actions='<button class="btn btn-sec btn-sm kb-open-btn" onclick="openProjectSummary('+p.id+')">View</button>'
+          +'<button class="btn btn-sec btn-sm kb-open-btn" onclick="editProject('+p.id+')">Edit</button>';
+        var addrLine=snap.address?'<div style="font-size:10px;color:var(--dgray);margin-top:1px;">'+esc(snap.address)+'</div>':'';
+        card.innerHTML = '<div class="kb-card-name" style="cursor:pointer;" onclick="openProjectSummary('+p.id+')">'+esc(p.name||'Untitled')+'</div>'
           +'<div class="kb-card-client">'+esc(p.client||'')+addrLine+'</div>'
           +'<div class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'-')+'</div>'
+          +countsBadge
           +'<div class="kb-card-date">'+(p.date||((p.created_at||'').split('T')[0])||'')+dueStr+'</div>'
           +'<div class="kb-card-moves">'
         +actions
