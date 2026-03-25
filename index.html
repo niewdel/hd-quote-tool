@@ -10,6 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -793,6 +795,16 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div id="pipeline-board">
               <div style="color:var(--dgray);font-size:13px;padding:20px;">Loading pipeline...</div>
             </div>
+          </div>
+        </div>
+        <!-- Project Map -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-hdr" style="cursor:pointer;" onclick="toggleProjectMap()">
+            <span class="card-title">Project Map</span>
+            <span id="proj-map-arrow" style="font-size:14px;color:var(--dgray);">&#9654;</span>
+          </div>
+          <div id="proj-map-body" class="card-body" style="display:none;padding:0;">
+            <div id="proj-map" style="width:100%;height:400px;border-radius:0 0 var(--rad) var(--rad);"></div>
           </div>
         </div>
         <div style="margin-bottom:14px;"><input id="projects-search" type="text" placeholder="Search projects..." oninput="filterProjects(this.value)" style="width:100%;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/></div>
@@ -4341,7 +4353,42 @@ function calcLayerRate(tons, layer){
 }
 
 // -- Recalc --------------------------------------------------------------------
+// Undo/Redo
+var _undoStack=[];var _redoStack=[];var _undoTimer=null;
+function pushUndo(){
+  clearTimeout(_undoTimer);
+  _undoTimer=setTimeout(function(){
+    var state=JSON.stringify({sections:sections,concItems:concItems,extraItems:extraItems});
+    if(_undoStack.length&&_undoStack[_undoStack.length-1]===state)return;
+    _undoStack.push(state);if(_undoStack.length>30)_undoStack.shift();
+    _redoStack=[];
+  },500);
+}
+function undo(){
+  if(_undoStack.length<2){toast('Nothing to undo','err');return;}
+  _redoStack.push(_undoStack.pop());
+  var state=JSON.parse(_undoStack[_undoStack.length-1]);
+  sections=state.sections;concItems=state.concItems;extraItems=state.extraItems;
+  sid=sections.reduce(function(m,s){return Math.max(m,s.id+1);},0);
+  lid=sections.reduce(function(m,s){return Math.max(m,s.layers.reduce(function(m2,l){return Math.max(m2,l.id+1);},0));},0);
+  cid=concItems.reduce(function(m,c){return Math.max(m,c.id+1);},0);
+  eid=extraItems.reduce(function(m,e){return Math.max(m,e.id+1);},0);
+  renderAll();renderConc();renderExtra();recalc();toast('Undo','ok');
+}
+function redo(){
+  if(!_redoStack.length){toast('Nothing to redo','err');return;}
+  var state=JSON.parse(_redoStack.pop());
+  _undoStack.push(JSON.stringify(state));
+  sections=state.sections;concItems=state.concItems;extraItems=state.extraItems;
+  sid=sections.reduce(function(m,s){return Math.max(m,s.id+1);},0);
+  lid=sections.reduce(function(m,s){return Math.max(m,s.layers.reduce(function(m2,l){return Math.max(m2,l.id+1);},0));},0);
+  cid=concItems.reduce(function(m,c){return Math.max(m,c.id+1);},0);
+  eid=extraItems.reduce(function(m,e){return Math.max(m,e.id+1);},0);
+  renderAll();renderConc();renderExtra();recalc();toast('Redo','ok');
+}
+
 function recalc(){
+  pushUndo();
   var bk=document.getElementById('breakdown');bk.innerHTML='';
   var bkConc=document.getElementById('breakdown-conc');bkConc.innerHTML='';
   var bkExtra=document.getElementById('breakdown-extra');bkExtra.innerHTML='';
@@ -5659,6 +5706,41 @@ async function renderClients() {
 }
 
 // Search filters
+// Project Map
+var _projMap=null;var _projMapOpen=false;
+function toggleProjectMap(){
+  _projMapOpen=!_projMapOpen;
+  var body=document.getElementById('proj-map-body');
+  var arrow=document.getElementById('proj-map-arrow');
+  if(body)body.style.display=_projMapOpen?'':'none';
+  if(arrow)arrow.innerHTML=_projMapOpen?'&#9660;':'&#9654;';
+  if(_projMapOpen)setTimeout(renderProjectMap,100);
+}
+function renderProjectMap(){
+  var el=document.getElementById('proj-map');if(!el)return;
+  if(!window.L)return;
+  if(!_projMap){
+    _projMap=L.map('proj-map').setView([35.41,-80.58],10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap',maxZoom:18}).addTo(_projMap);
+  } else {_projMap.invalidateSize();}
+  // Clear existing markers
+  _projMap.eachLayer(function(l){if(l instanceof L.Marker)_projMap.removeLayer(l);});
+  // Geocode and plot projects
+  var projects=(pipelineProposals||[]).filter(function(p){var s=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};return s.is_project&&s.address;});
+  projects.forEach(function(p){
+    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    var addr=snap.address||'';if(!addr)return;
+    fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(addr),{headers:{'Accept':'application/json'}})
+      .then(function(r){return r.json();}).then(function(results){
+        if(!results.length)return;
+        var lat=parseFloat(results[0].lat),lon=parseFloat(results[0].lon);
+        var marker=L.marker([lat,lon]).addTo(_projMap);
+        var stage=p.pipeline_stages?p.pipeline_stages.name:'';
+        marker.bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.client||'')+'<br><span style="font-size:11px;color:#555;">'+esc(addr)+'</span>'+(stage?'<br><span style="font-size:10px;font-weight:700;">'+esc(stage)+'</span>':''));
+      }).catch(function(){});
+  });
+}
+
 function filterProjects(q){
   q=q.toLowerCase();
   document.querySelectorAll('#projects-list > div').forEach(function(card){
@@ -6854,6 +6936,14 @@ document.addEventListener('keydown',function(e){
     e.preventDefault();
     if(typeof openProjectModal==='function') openProjectModal();
     return;
+  }
+  // Ctrl/Cmd+Z — Undo
+  if(mod&&!e.shiftKey&&e.key==='z'){
+    e.preventDefault();undo();return;
+  }
+  // Ctrl/Cmd+Shift+Z — Redo
+  if(mod&&e.shiftKey&&(e.key==='z'||e.key==='Z')){
+    e.preventDefault();redo();return;
   }
   // Escape — Close any open modal
   if(e.key==='Escape'){
