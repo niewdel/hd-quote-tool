@@ -13,9 +13,10 @@ import requests as http
 app = Flask(__name__, static_folder='.', static_url_path='')
 app.secret_key = os.environ.get('SECRET_KEY', 'hd-hauling-dev-key')
 
-APP_PIN        = os.environ.get('APP_PIN', '2025')
-SUPABASE_URL   = os.environ.get('SUPABASE_URL', '')
-SUPABASE_KEY   = os.environ.get('SUPABASE_KEY', '')
+APP_PIN             = os.environ.get('APP_PIN', '2025')
+SUPABASE_URL        = os.environ.get('SUPABASE_URL', '')
+SUPABASE_KEY        = os.environ.get('SUPABASE_KEY', '')
+SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
 
 def sb_headers():
     return {
@@ -536,6 +537,91 @@ def send_email():
         raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
         service.users().messages().send(userId='me', body={'raw': raw}).execute()
         return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ── Setup: create hd_settings table if needed ───────────────────────────────
+
+@app.route('/setup/settings-table', methods=['POST'])
+@require_admin
+def setup_settings_table():
+    """Create hd_settings table via Supabase SQL. Run once."""
+    sql = """
+    CREATE TABLE IF NOT EXISTS hd_settings (
+        key TEXT PRIMARY KEY,
+        value JSONB,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    ALTER TABLE hd_settings DISABLE ROW LEVEL SECURITY;
+    """
+    try:
+        svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+        r = http.post(
+            f'{SUPABASE_URL}/rest/v1/rpc/exec_sql',
+            headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
+            json={'query': sql}, timeout=10
+        )
+        # If rpc doesn't exist, try the SQL endpoint
+        if r.status_code != 200:
+            r2 = http.post(
+                f'{SUPABASE_URL}/pg/query',
+                headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
+                json={'query': sql}, timeout=10
+            )
+            if r2.status_code == 200:
+                return jsonify({'ok': True, 'method': 'pg/query'})
+            return jsonify({'ok': False, 'error': 'Could not create table automatically. Please run the SQL manually in Supabase dashboard.', 'sql': sql.strip()})
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)})
+
+# ── Settings (shared key/value store in hd_settings table) ──────────────────
+
+@app.route('/settings/get/<key>')
+@require_auth
+def settings_get(key):
+    try:
+        r = http.get(sb_url('hd_settings', f'?key=eq.{key}&select=value'), headers=sb_headers(), timeout=5)
+        rows = r.json()
+        if rows and len(rows) > 0:
+            return jsonify({'ok': True, 'value': rows[0]['value']})
+        return jsonify({'ok': True, 'value': None})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/settings/bulk', methods=['POST'])
+@require_auth
+def settings_bulk_get():
+    """Get multiple settings keys at once."""
+    data = request.get_json() or {}
+    keys = data.get('keys', [])
+    if not keys:
+        return jsonify({'ok': True, 'values': {}})
+    try:
+        key_filter = ','.join(keys)
+        r = http.get(sb_url('hd_settings', f'?key=in.({key_filter})&select=key,value'), headers=sb_headers(), timeout=5)
+        rows = r.json()
+        values = {row['key']: row['value'] for row in rows}
+        return jsonify({'ok': True, 'values': values})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/settings/save', methods=['POST'])
+@require_auth
+def settings_save():
+    data = request.get_json() or {}
+    key = data.get('key')
+    value = data.get('value')
+    if not key:
+        return jsonify({'ok': False, 'error': 'Missing key'}), 400
+    try:
+        # Upsert: try to update, if not found insert
+        h = sb_headers()
+        h['Prefer'] = 'return=representation,resolution=merge-duplicates'
+        r = http.post(sb_url('hd_settings'), headers=h, json={'key': key, 'value': value}, timeout=5)
+        if r.status_code in (200, 201):
+            return jsonify({'ok': True})
+        return jsonify({'ok': False, 'error': f'Supabase returned {r.status_code}: {r.text}'}), 500
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 

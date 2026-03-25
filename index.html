@@ -427,10 +427,13 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div class="card" style="margin-bottom:14px;">
                 <div class="card-hdr"><span class="card-title">Company Handbook</span></div>
                 <div class="card-body">
-                  <div id="dash-handbook-content"></div>
-                  <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
-                    <label class="btn btn-sec btn-sm" style="cursor:pointer;margin:0;"><input type="file" accept=".pdf" style="display:none;" onchange="uploadDashPDF('handbook',this)"/>Upload Handbook PDF</label>
-                    <span id="dash-handbook-filename" style="font-size:11px;color:var(--dgray);"></span>
+                  <div id="dash-handbook-content" style="margin-bottom:8px;">
+                    <p style="font-size:12px;color:var(--dgray);">Paste a Google Drive link to your company handbook below.</p>
+                  </div>
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <input id="dash-handbook-url" type="url" placeholder="https://drive.google.com/file/d/..." style="flex:1;font-size:12px;"/>
+                    <button class="btn btn-red btn-sm" onclick="saveHandbookUrl()">Save</button>
+                    <button class="btn btn-sec btn-sm" onclick="openHandbook()">Open</button>
                   </div>
                 </div>
               </div>
@@ -1112,7 +1115,7 @@ function showAdminElements(){
 }
 function renderBadgeList(){var c=document.getElementById("badge-list");if(!c)return;c.innerHTML="";var keys=Object.keys(BADGE_DEFS);if(!keys.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>No badges yet.</p>";return;}keys.forEach(function(cls){var b=BADGE_DEFS[cls];var row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr);";var prev=document.createElement("span");prev.className="badge "+cls;prev.style.minWidth="60px";prev.textContent=b.label;row.appendChild(prev);var li=document.createElement("input");li.type="text";li.value=b.label;li.placeholder="Label";li.style.width="120px";li.addEventListener("change",(function(cc){return function(){BADGE_DEFS[cc].label=this.value;renderBadgeList();};})(cls));row.appendChild(li);var ci=document.createElement("input");ci.type="color";ci.value=b.color;ci.style.cssText="width:40px;height:28px;cursor:pointer;border:1px solid var(--bdr);border-radius:4px;";ci.addEventListener("change",(function(cc){return function(){BADGE_DEFS[cc].color=this.value;};})(cls));row.appendChild(ci);var lbl=document.createElement("span");lbl.style.cssText="font-size:11px;color:var(--dgray);flex:1;";lbl.textContent="CSS: "+cls;row.appendChild(lbl);var del=document.createElement("button");del.className="btn-ico";del.style.color="var(--red)";del.textContent="×";del.addEventListener("click",(function(cc){return function(){delete BADGE_DEFS[cc];renderBadgeList();renderMatTable();};})(cls));row.appendChild(del);c.appendChild(row);});}
 function addBadge(){var label=prompt("Badge label:");if(!label)return;var cls="b-"+label.toLowerCase().replace(/[^a-z0-9]/g,"-");if(BADGE_DEFS[cls]){alert("Badge already exists.");return;}BADGE_DEFS[cls]={label:label,color:"#444"};renderBadgeList();renderMatTable();}
-function saveBadges(){localStorage.setItem("hd_badge_defs",JSON.stringify(BADGE_DEFS));applyBadgeStyles();renderMatTable();renderAll();renderConc();toast("Badges saved","ok");}
+function saveBadges(){_saveSetting('hd_badge_defs',BADGE_DEFS);applyBadgeStyles();renderMatTable();renderAll();renderConc();toast("Badges saved","ok");}
 function renderLibraryList(){
   var c=document.getElementById("library-list");if(!c)return;c.innerHTML="";
   if(!BID_LIBRARY.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>No items yet. Click + Add Item to create standard line items.</p>";return;}
@@ -1179,7 +1182,7 @@ function renderLibraryList(){
   });
 }
 function addLibraryItem(){BID_LIBRARY.push({id:_libId++,name:"",desc:"",unit:"LS",rate:0,badge:"",material:""});renderLibraryList();}
-function saveLibrary(){localStorage.setItem("hd_bid_library",JSON.stringify(BID_LIBRARY));toast("Library saved","ok");}
+function saveLibrary(){_saveSetting('hd_bid_library',BID_LIBRARY);toast("Library saved","ok");}
 function openLibraryPicker(){
   if(!BID_LIBRARY.length){toast("Library empty — add items in Settings > Bid Library","err");return;}
   var ex=document.getElementById("lib-picker-modal");if(ex)ex.remove();
@@ -1264,24 +1267,67 @@ function boot(){
   showAdminElements();
 }
 
-// -- Storage -------------------------------------------------------------------
+// -- Storage (Supabase-backed, localStorage fallback) --------------------------
+function _saveSetting(key,value){
+  // Save to both localStorage (instant) and Supabase (persistent)
+  try{localStorage.setItem(key,JSON.stringify(value));}catch(e){}
+  fetch('/settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:key,value:value})}).catch(function(){});
+}
+
 function loadStorage(){
+  // Load from localStorage first (instant), then overlay with Supabase data
   try{
     var s=localStorage.getItem('hd_sender');if(s)sender=JSON.parse(s);
     var p=localStorage.getItem('hd_presets');if(p)PRESETS=JSON.parse(p);
     var bd=localStorage.getItem('hd_badge_defs');if(bd){try{Object.assign(BADGE_DEFS,JSON.parse(bd));}catch(e){}}
     var mp=localStorage.getItem('hd_mat_prices');
-    if(mp){try{var mpd=JSON.parse(mp);
-      if(mpd.mat){Object.assign(MAT,mpd.mat);}else if(mpd.prices){Object.assign(MAT,mpd.prices);}
-      if(mpd.drate)Object.assign(DRATE,mpd.drate);
-      if(mpd.lbs)Object.assign(LBS,mpd.lbs);
-      if(mpd.ddepth)Object.assign(DDEPTH,mpd.ddepth);
-      if(mpd.lbadge)Object.assign(LBADGE,mpd.lbadge);
-      if(mpd.mat_unit)Object.assign(MAT_UNIT,mpd.mat_unit);
-      if(mpd.mat_category)Object.assign(MAT_CATEGORY,mpd.mat_category);
-      if(mpd.ltypes&&mpd.ltypes.length){LTYPES.length=0;mpd.ltypes.forEach(function(t){LTYPES.push(t);});}
-    }catch(e){}}
+    if(mp){try{_applyMatPrices(JSON.parse(mp));}catch(e){}}
+    var jc=localStorage.getItem('hd_jc_defaults');
+    if(jc){try{_applyJCDefaults(JSON.parse(jc));}catch(e){}}
+    var cr=localStorage.getItem('hd_crews');
+    if(cr){try{CREWS=JSON.parse(cr);}catch(e){}}
+    var bl=localStorage.getItem('hd_bid_library');
+    if(bl){try{BID_LIBRARY=JSON.parse(bl);}catch(e){}}
   }catch(e){}
+  // Async: fetch from Supabase and overlay
+  _loadFromSupabase();
+}
+
+function _applyMatPrices(mpd){
+  if(mpd.mat){Object.assign(MAT,mpd.mat);}else if(mpd.prices){Object.assign(MAT,mpd.prices);}
+  if(mpd.drate)Object.assign(DRATE,mpd.drate);
+  if(mpd.lbs)Object.assign(LBS,mpd.lbs);
+  if(mpd.ddepth)Object.assign(DDEPTH,mpd.ddepth);
+  if(mpd.lbadge)Object.assign(LBADGE,mpd.lbadge);
+  if(mpd.mat_unit)Object.assign(MAT_UNIT,mpd.mat_unit);
+  if(mpd.mat_category)Object.assign(MAT_CATEGORY,mpd.mat_category);
+  if(mpd.ltypes&&mpd.ltypes.length){LTYPES.length=0;mpd.ltypes.forEach(function(t){LTYPES.push(t);});}
+}
+
+function _applyJCDefaults(d){
+  if(d.crew_rate)jcCrewRate=d.crew_rate;
+  if(d.overhead_pct)jcOverheadPct=d.overhead_pct;
+  if(d.productivity)jcProductivity=d.productivity;
+  if(d.mill_fee)jcMillFee=d.mill_fee;
+  if(d.tons_per_truck)jcTonsPerTruck=d.tons_per_truck;
+  if(d.truck_rate)jcTruckRate=d.truck_rate;
+  if(d.truck_hours)jcTruckHours=d.truck_hours;
+}
+
+function _loadFromSupabase(){
+  fetch('/settings/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:['hd_sender','hd_presets','hd_badge_defs','hd_mat_prices','hd_jc_defaults','hd_crews','hd_bid_library','hd_handbook_url']})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(!d.ok||!d.values)return;
+      var v=d.values;
+      if(v.hd_sender){sender=v.hd_sender;try{localStorage.setItem('hd_sender',JSON.stringify(v.hd_sender));}catch(e){}}
+      if(v.hd_presets){PRESETS=v.hd_presets;try{localStorage.setItem('hd_presets',JSON.stringify(v.hd_presets));}catch(e){}}
+      if(v.hd_badge_defs){Object.assign(BADGE_DEFS,v.hd_badge_defs);try{localStorage.setItem('hd_badge_defs',JSON.stringify(BADGE_DEFS));}catch(e){}applyBadgeStyles();}
+      if(v.hd_mat_prices){_applyMatPrices(v.hd_mat_prices);try{localStorage.setItem('hd_mat_prices',JSON.stringify(v.hd_mat_prices));}catch(e){}}
+      if(v.hd_jc_defaults){_applyJCDefaults(v.hd_jc_defaults);try{localStorage.setItem('hd_jc_defaults',JSON.stringify(v.hd_jc_defaults));}catch(e){}}
+      if(v.hd_crews){CREWS=v.hd_crews;_crewNextId=CREWS.reduce(function(mx,c){return Math.max(mx,c.id);},0)+1;try{localStorage.setItem('hd_crews',JSON.stringify(v.hd_crews));}catch(e){}}
+      if(v.hd_bid_library){BID_LIBRARY=v.hd_bid_library;try{localStorage.setItem('hd_bid_library',JSON.stringify(v.hd_bid_library));}catch(e){}}
+      if(v.hd_handbook_url){var el=document.getElementById('dash-handbook-url');if(el)el.value=v.hd_handbook_url;}
+    }).catch(function(){});
 }
 
 // -- Helpers -------------------------------------------------------------------
@@ -1322,10 +1368,7 @@ function safeId(s){return s.split('').filter(function(c){return (c>='a'&&c<='z')
 
 // ---- Job Costing (#10 extension) ----
 function loadJCDefaults(){
-  try{
-    var s=localStorage.getItem('hd_jc_defaults');
-    if(s){var d=JSON.parse(s);jcCrewRate=d.crew_rate||JC_CREW_RATE_DEFAULT;jcOverheadPct=d.overhead_pct||JC_OVERHEAD_PCT_DEFAULT;if(d.productivity)jcProductivity=d.productivity;if(d.mill_fee)jcMillFee=d.mill_fee;if(d.tons_per_truck)jcTonsPerTruck=d.tons_per_truck;if(d.truck_rate)jcTruckRate=d.truck_rate;if(d.truck_hours)jcTruckHours=d.truck_hours;}
-  }catch(e){}
+  // Already loaded by loadStorage/Supabase — this is called for re-render
 }
 
 function saveJCDefaults(){
@@ -1337,7 +1380,7 @@ function saveJCDefaults(){
   var tpt=parseFloat(document.getElementById('jc-default-tons-per-truck')?document.getElementById('jc-default-tons-per-truck').value:jcTonsPerTruck)||jcTonsPerTruck;jcTonsPerTruck=tpt;
   var tr2=parseFloat(document.getElementById('jc-default-truck-rate')?document.getElementById('jc-default-truck-rate').value:jcTruckRate)||jcTruckRate;jcTruckRate=tr2;
   var th=parseFloat(document.getElementById('jc-default-truck-hours')?document.getElementById('jc-default-truck-hours').value:jcTruckHours)||jcTruckHours;jcTruckHours=th;
-  try{localStorage.setItem('hd_jc_defaults',JSON.stringify({crew_rate:cr,overhead_pct:op,productivity:jcProductivity,mill_fee:jcMillFee,tons_per_truck:jcTonsPerTruck,truck_rate:jcTruckRate,truck_hours:jcTruckHours}));}catch(e){}
+  _saveSetting('hd_jc_defaults',{crew_rate:cr,overhead_pct:op,productivity:jcProductivity,mill_fee:jcMillFee,tons_per_truck:jcTonsPerTruck,truck_rate:jcTruckRate,truck_hours:jcTruckHours});
   renderJCDefaults();
   var ind=document.getElementById('jc-settings-indicator');
   if(ind){ind.textContent='Saved.';setTimeout(function(){ind.textContent='';},2000);}
@@ -1346,7 +1389,7 @@ function saveJCDefaults(){
 function resetJCDefaults(){
   jcCrewRate=JC_CREW_RATE_DEFAULT; jcOverheadPct=JC_OVERHEAD_PCT_DEFAULT; jcProductivity=JC_PRODUCTIVITY_DEFAULT;
   jcMillFee=MILL_FEE_DEFAULT; jcTonsPerTruck=TONS_PER_TRUCK_DEFAULT; jcTruckRate=TRUCK_RATE_DEFAULT; jcTruckHours=TRUCK_HOURS_DEFAULT;
-  try{localStorage.removeItem('hd_jc_defaults');}catch(e){}
+  _saveSetting('hd_jc_defaults',null);
   renderJCDefaults();
 }
 
@@ -2148,14 +2191,24 @@ function uploadDashPDF(type,input){
 }
 
 function renderDashHandbook(){
-  var el=document.getElementById('dash-handbook-content');
+  // Load handbook URL from Supabase (already loaded by _loadFromSupabase into the input)
+  var el=document.getElementById('dash-handbook-url');
   if(!el)return;
-  var data=localStorage.getItem('hd_dash_handbook');
-  var fnameEl=document.getElementById('dash-handbook-filename');
-  if(data){
-    el.innerHTML='<iframe src="'+data+'" style="width:100%;height:350px;border:1px solid var(--bdr);border-radius:6px;" frameborder="0"></iframe>';
-    if(fnameEl)fnameEl.textContent='Uploaded';
-  }
+  // Also try localStorage as immediate fallback
+  var cached=localStorage.getItem('hd_handbook_url');
+  if(cached&&!el.value)el.value=cached;
+}
+
+function saveHandbookUrl(){
+  var url=(document.getElementById('dash-handbook-url')||{}).value||'';
+  _saveSetting('hd_handbook_url',url);
+  toast('Handbook link saved','ok');
+}
+
+function openHandbook(){
+  var url=(document.getElementById('dash-handbook-url')||{}).value||'';
+  if(!url){toast('No handbook link set','err');return;}
+  window.open(url,'_blank');
 }
 
 // ---- Change Orders ----
@@ -2553,7 +2606,7 @@ function saveMatPrices(){
     saved.mat_unit[k]=MAT_UNIT[k]||'TON'; saved.mat_category[k]=MAT_CATEGORY[k]||'Other';
   });
   saved.updated = Date.now();
-  localStorage.setItem('hd_mat_prices', JSON.stringify(saved));
+  _saveSetting('hd_mat_prices', saved);
   var el=document.getElementById('mat-prices-updated');
   if(el) el.textContent='Last updated: '+new Date().toLocaleDateString();
   updateMatIndicator();
@@ -2572,7 +2625,7 @@ function resetMatPrices(){
   Object.assign(MAT_UNIT,JSON.parse(JSON.stringify(MAT_UNIT_DEFAULT)));
   Object.assign(MAT_CATEGORY,JSON.parse(JSON.stringify(MAT_CATEGORY_DEFAULT)));
   LTYPES.length=0; LTYPES_DEFAULT.forEach(function(t){LTYPES.push(t);});
-  localStorage.removeItem('hd_mat_prices');
+  _saveSetting('hd_mat_prices', null);
   renderMatTable(); updateMatIndicator();
   toast('Materials reset to defaults');
   renderAll();renderConc();renderExtra();
@@ -3018,13 +3071,10 @@ function buildPayload(){
 
 // -- Crew Costs tab ------------------------------------------------------------
 function loadCrewCosts(){
-  try{
-    var s=localStorage.getItem('hd_crew_costs');
-    if(s) CREW_COSTS=JSON.parse(s);
-  }catch(e){}
+  // Legacy — crews now loaded via loadStorage/Supabase
 }
 function saveCrews(){
-  try{localStorage.setItem('hd_crews',JSON.stringify(CREWS));}catch(e){}
+  _saveSetting('hd_crews',CREWS);
 }
 function addCrew(){
   CREWS.push({id:_crewNextId++, name:'', daily_rate:0});
@@ -3578,7 +3628,7 @@ function resetAll(){
 // -- Settings ------------------------------------------------------------------
 function saveSender(){
   sender={name:document.getElementById('s-name').value,email:document.getElementById('s-email').value,phone:document.getElementById('s-phone').value};
-  localStorage.setItem('hd_sender',JSON.stringify(sender));
+  _saveSetting('hd_sender',sender);
   toast('Sender settings saved','ok');
 }
 function loadSenderUI(){
@@ -3671,7 +3721,7 @@ function savePresetModal(){
   } else {
     PRESETS.push(preset);
   }
-  localStorage.setItem('hd_presets',JSON.stringify(PRESETS));
+  _saveSetting('hd_presets',PRESETS);
   renderPresets();renderPresetMgr();
   document.getElementById('preset-modal').remove();
   toast('Preset saved','ok');
@@ -3695,7 +3745,7 @@ function renderPresetMgr(){
     delBtn.onclick=(function(idx){return function(){
       if(!confirm('Delete preset "'+PRESETS[idx].name+'"?'))return;
       PRESETS.splice(idx,1);
-      localStorage.setItem('hd_presets',JSON.stringify(PRESETS));
+      _saveSetting('hd_presets',PRESETS);
       renderPresets();renderPresetMgr();
     };})(i);
     row.appendChild(info);row.appendChild(editBtn);row.appendChild(delBtn);
