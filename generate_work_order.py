@@ -59,6 +59,7 @@ class WOCanvas(pdfcanvas.Canvas):
     """Custom canvas that draws the header/footer on every page."""
     def __init__(self, *args, **kwargs):
         self._date = kwargs.pop('date_str', '')
+        self._doc_number = kwargs.pop('doc_number', '')
         super().__init__(*args, **kwargs)
         self._pages = []
 
@@ -87,7 +88,15 @@ class WOCanvas(pdfcanvas.Canvas):
         self.drawRightString(W - RM, H - 0.52*inch, 'WORK ORDER')
         self.setFont('Helvetica', 9)
         self.setFillColor(DGRAY)
-        self.drawRightString(W - RM, H - 0.70*inch, self._date)
+        right_y = H - 0.70*inch
+        if self._doc_number:
+            self.setFont('Helvetica-Bold', 9)
+            self.setFillColor(RED)
+            self.drawRightString(W - RM, right_y, self._doc_number)
+            right_y -= 0.14*inch
+            self.setFont('Helvetica', 9)
+            self.setFillColor(DGRAY)
+        self.drawRightString(W - RM, right_y, self._date)
         self.setStrokeColor(BLACK)
         self.setLineWidth(1.0)
         self.line(LM, H - 0.88*inch, W - RM, H - 0.88*inch)
@@ -106,10 +115,11 @@ class WOCanvas(pdfcanvas.Canvas):
         self.restoreState()
 
 
-def canvas_maker(date_str):
+def canvas_maker(date_str, doc_number=''):
     class _C(WOCanvas):
         def __init__(self, *a, **kw):
             kw['date_str'] = date_str
+            kw['doc_number'] = doc_number
             super().__init__(*a, **kw)
     return _C
 
@@ -193,10 +203,34 @@ def build(data, out_path):
         mid_col.append(Spacer(1, 4))
         mid_col.append(Paragraph('<b>ON-SITE CONTACT</b>', st['info_lbl']))
         mid_col.append(Paragraph(onsite_contact + ('  ' + onsite_phone if onsite_phone else ''), st['info_val']))
+    assigned_to = data.get('assigned_to', '')
+    status = data.get('status', '')
+    sched_date = data.get('scheduled_date', '')
+    sched_end = data.get('scheduled_end_date', '')
+    sched_time = data.get('scheduled_time', '')
+    sched_end_time = data.get('scheduled_end_time', '')
+    sched_days = data.get('scheduled_days', 1)
+
     right_col = [
         Paragraph('<b>DATE</b>', st['info_lbl']),
         Paragraph(date_str, st['info_val']),
     ]
+    if sched_date:
+        right_col.append(Spacer(1, 4))
+        sched_str = sched_date
+        if sched_end: sched_str += ' to ' + sched_end
+        right_col.append(Paragraph('<b>SCHEDULED</b>', st['info_lbl']))
+        right_col.append(Paragraph(sched_str, st['info_val']))
+        if sched_time:
+            time_str = sched_time
+            if sched_end_time: time_str += ' - ' + sched_end_time
+            right_col.append(Paragraph(time_str, st['info_val']))
+        if sched_days and sched_days > 1:
+            right_col.append(Paragraph(f'{sched_days} days', st['info_val']))
+    if assigned_to:
+        right_col.append(Spacer(1, 4))
+        right_col.append(Paragraph('<b>ASSIGNED TO</b>', st['info_lbl']))
+        right_col.append(Paragraph(assigned_to, st['info_val']))
     if client:
         right_col.append(Spacer(1, 4))
         right_col.append(Paragraph('<b>CLIENT</b>', st['info_lbl']))
@@ -432,7 +466,7 @@ def build(data, out_path):
     # ------------------------------------------------------------------
     # Build PDF
     # ------------------------------------------------------------------
-    doc.build(story, canvasmaker=canvas_maker(date_str))
+    doc.build(story, canvasmaker=canvas_maker(date_str, data.get('document_number', '')))
 
 
 if __name__ == '__main__':

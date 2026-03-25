@@ -769,6 +769,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
       <!-- CLIENT SUMMARY PANEL -->
       <div class="panel" id="panel-client-summary"><div class="content" style="padding:20px;">
+        <div style="font-size:11px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Client Summary</div>
         <div id="client-summary-header" style="margin-bottom:20px;"></div>
         <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;">
           <div>
@@ -1025,6 +1026,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       </div>
       <!-- WORK ORDER DETAIL PANEL -->
       <div class="panel" id="panel-workorder"><div class="content" style="padding:20px;">
+        <div style="font-size:11px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Work Order Summary</div>
         <div id="wo-detail-header" style="margin-bottom:16px;"></div>
         <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;">
           <div>
@@ -1036,10 +1038,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div class="card-hdr"><span class="card-title">Materials</span></div>
               <div class="card-body" id="wo-materials"><p style="color:var(--dgray);font-size:12px;">No materials data.</p></div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
-              <div class="card-hdr"><span class="card-title">Crew Notes</span></div>
-              <div class="card-body" id="wo-notes"><p style="color:var(--dgray);font-size:12px;">No notes.</p></div>
-            </div>
           </div>
           <div>
             <div class="card" style="margin-bottom:14px;">
@@ -1049,6 +1047,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div class="card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Details</span></div>
               <div class="card-body" id="wo-details"><p style="color:var(--dgray);font-size:12px;">Loading...</p></div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Crew Notes</span></div>
+              <div class="card-body" id="wo-notes"><p style="color:var(--dgray);font-size:12px;">No notes.</p></div>
             </div>
           </div>
         </div>
@@ -5476,57 +5478,78 @@ function exportWorkOrderPDF(){
   var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
   var wo=(snap.work_orders||[]).find(function(w){return w.id===_currentWorkOrderId;});
   if(!wo){toast('Work order not found','err');return;}
-  // Build payload for PDF — NO pricing
+  var projNum=snap.project_number||'';
+  var woIdx=(snap.work_orders||[]).findIndex(function(w){return w.id===wo.id;})+1;
+  var woDocNum=projNum?projNum+'-WO'+woIdx:'';
+  // Build payload with ALL work order info
   var payload={
     project_name:proj.name||'',
+    work_order_name:wo.name||'Work Order',
+    document_number:woDocNum,
     address:snap.address||'',
     city_state:snap.city_state||'',
-    client_name:'', // exclude client personal info
+    client_name:proj.client||'',
     date:wo.date||new Date().toISOString().split('T')[0],
+    scheduled_date:wo.scheduled_date||'',
+    scheduled_end_date:wo.scheduled_end_date||'',
+    scheduled_time:wo.scheduled_time||'',
+    scheduled_end_time:wo.scheduled_end_time||'',
+    scheduled_days:wo.scheduled_days||1,
+    status:wo.status||'pending',
+    assigned_to:wo.assigned_to||'',
     notes:wo.crew_notes||'',
+    description:wo.description||'',
     line_items:[],
     sections:[],
+    concItems:[],
+    extraItems:[],
     total_tons:0,total_sf:0,total_sy:0,
     onsite_contact:wo.onsite_contact||'',
     onsite_phone:wo.onsite_phone||'',
-    sender_name:'',sender_phone:''
+    sender_name:sender.name||'HD Hauling & Grading',
+    sender_phone:sender.phone||''
   };
-  // Pull scope from linked proposal
+  // Pull scope from linked proposal or project's linked proposals
   var linkedQ=wo.linked_proposal?savedQuotes.find(function(q){return q.id===wo.linked_proposal;}):null;
+  if(!linkedQ&&snap.linked_proposals&&snap.linked_proposals.length){
+    linkedQ=savedQuotes.find(function(q){return q.id===snap.linked_proposals[0];});
+  }
   if(linkedQ){
     var qs=typeof linkedQ.snap==='string'?JSON.parse(linkedQ.snap||'{}'):linkedQ.snap||{};
-    var secs=qs.sections||[];
-    payload.sections=secs.map(function(sec){
-      return {name:sec.name,layers:(sec.layers||[]).map(function(l){return {material:l.mat,depth:l.depth,tons:Math.round(l.tons||0)};})};
-    });
-    secs.forEach(function(sec){
+    payload.sections=qs.sections||[];
+    payload.concItems=qs.concItems||[];
+    payload.extraItems=qs.extraItems||[];
+    (qs.sections||[]).forEach(function(sec){
+      var sf=sec.sf||0;var sy=Math.ceil(sf/9);
       (sec.layers||[]).forEach(function(lyr){
-        payload.line_items.push({name:sec.name+' — '+(lyr.mat||''),description:lyr.desc||'',qty:Math.round(lyr.tons||0),unit:'TON'});
-        payload.total_tons+=(lyr.tons||0);
+        var desc=lyr.description||('Install '+lyr.depth+'" '+(lyr.name||lyr.type));
+        payload.line_items.push({name:sec.name+' \u2014 '+(lyr.name||lyr.type),description:desc,qty:sy,unit:'SY'});
+        var rawT=sf>0&&lyr.depth?Math.ceil((sf*(lyr.depth/12)*(LBS[lyr.type]||LBS[lyr.name]||115))/2000):0;
+        payload.total_tons+=lyr.tons?Math.round(lyr.tons):rawT;
       });
-      payload.total_sf+=(sec.sf||0);
-      payload.total_sy+=Math.round((sec.sf||0)/9);
+      payload.total_sf+=sf;
+      payload.total_sy+=Math.ceil(sf/9);
     });
     (qs.concItems||[]).forEach(function(ci){
-      payload.line_items.push({name:ci.name||ci.type,description:ci.desc||'',qty:ci.qty||0,unit:ci.unit||'LF'});
+      if(!ci.qty)return;
+      var ct=CTYPES.find(function(x){return x.id===ci.type;})||{};
+      payload.line_items.push({name:ct.name||ci.name||ci.type,description:ci.description||ct.desc||'',qty:ci.qty||0,unit:ct.unit||ci.unit||'LF'});
     });
     (qs.extraItems||[]).forEach(function(ei){
+      if(!ei.name)return;
       payload.line_items.push({name:ei.name,description:ei.desc||'',qty:ei.qty||0,unit:ei.unit||'EA'});
     });
   } else if(wo.description){
     payload.line_items.push({name:wo.name,description:wo.description,qty:1,unit:'LS'});
   }
-  // Sender info from localStorage
-  var si=JSON.parse(localStorage.getItem('hd_sender_info')||'{}');
-  payload.sender_name=si.name||'';payload.sender_phone=si.phone||'';
-
+  var fname=(woDocNum||'HD_WO')+'_'+(proj.name||'').replace(/\s+/g,'_')+'.pdf';
   fetch('/generate-wo-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(function(r){
       if(!r.ok)throw new Error('PDF generation failed');
       return r.blob();
     }).then(function(blob){
       var url=URL.createObjectURL(blob);
-      var a=document.createElement('a');a.href=url;a.download='HD_WorkOrder_'+esc(wo.name).replace(/\s+/g,'_')+'.pdf';
+      var a=document.createElement('a');a.href=url;a.download=fname;
       document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
       toast('Work order PDF downloaded','ok');
     }).catch(function(e){toast('Error: '+e.message,'err');});
