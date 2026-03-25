@@ -280,8 +280,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
 .kb-col-hdr{padding:10px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;color:#fff;}
 .kb-col-hdr .kb-count{background:rgba(255,255,255,.3);border-radius:10px;padding:1px 7px;font-size:11px;}
 .kb-cards{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:100px;flex:1;}
-.kb-card{background:#fff;border:1px solid var(--bdr);border-radius:6px;padding:10px 12px;cursor:default;transition:box-shadow .12s;}
+.kb-card{background:#fff;border:1px solid var(--bdr);border-radius:6px;padding:10px 12px;cursor:grab;transition:box-shadow .12s,opacity .15s,transform .15s;}
 .kb-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.kb-card.dragging{opacity:.4;transform:scale(.96);}
+.kb-cards.drag-over{background:rgba(204,0,0,.06);border:2px dashed var(--red);border-radius:6px;}
 .kb-card-name{font-weight:600;font-size:13px;margin-bottom:3px;}
 .kb-card-client{font-size:11px;color:var(--dgray);margin-bottom:4px;}
 .kb-card-total{font-size:12px;font-weight:700;}
@@ -4151,12 +4153,26 @@ async function renderPipeline() {
       var cardsDiv = document.createElement('div');
       cardsDiv.className = 'kb-cards';
 
+      // Drag-and-drop on the cards container
+      cardsDiv.addEventListener('dragover',function(e){e.preventDefault();e.dataTransfer.dropEffect='move';this.classList.add('drag-over');});
+      cardsDiv.addEventListener('dragleave',function(e){if(!this.contains(e.relatedTarget))this.classList.remove('drag-over');});
+      cardsDiv.addEventListener('drop',function(e){
+        e.preventDefault();this.classList.remove('drag-over');
+        var pid=parseInt(e.dataTransfer.getData('text/plain'),10);
+        var sid=this.dataset.stageId;
+        if(pid&&sid!==undefined)moveCard(pid,sid==='null'?null:parseInt(sid,10));
+      });
+      cardsDiv.dataset.stageId=stage.id;
+
       cards.forEach(function(p){
         var card = document.createElement('div');
         var sn = p.pipeline_stages ? p.pipeline_stages.name : '';
         var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
         var isProject=snap.is_project===true;
         card.className = 'kb-card'+(sn==='Won'?' kb-won':sn==='Lost'?' kb-lost':sn==='Disqualified'?' kb-disq':'');
+        card.draggable=true;
+        card.addEventListener('dragstart',function(e){e.dataTransfer.setData('text/plain',p.id);e.dataTransfer.effectAllowed='move';this.classList.add('dragging');});
+        card.addEventListener('dragend',function(){this.classList.remove('dragging');document.querySelectorAll('.kb-cards.drag-over').forEach(function(el){el.classList.remove('drag-over');});});
         var moveOpts = pipelineStages.filter(function(s){return s.id!==stage.id;})
           .map(function(s){return '<option value="'+s.id+'">'+esc(s.name)+'</option>';}).join('');
         var typeBadge=isProject?'<span style="font-size:9px;font-weight:700;color:#fff;background:var(--red);padding:1px 6px;border-radius:3px;text-transform:uppercase;margin-left:6px;">Project</span>':'';
