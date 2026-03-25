@@ -3569,8 +3569,9 @@ function updateConcResult(id){
   var d='<span style="margin:0 3px;color:#ddd;">&middot;</span>';
   var resEl=document.querySelector('.lres[data-conc="'+id+'"]');
   var muEl=document.querySelector('.mubadge[data-conc="'+id+'"]');
+  var bidPerCY=cy>0?bidC/cy:0;
   if(resEl)resEl.innerHTML=item.qty>0&&item.sub>0
-    ?('<b>'+item.qty.toLocaleString()+'</b> '+ct.unit+d+'<b>'+cy.toFixed(2)+'</b> CY'+d+'Mat <b>$'+fi(matC)+'</b>'+d+'Labor <b>$'+fi(labC)+'</b>'+d+'Cost <b>$'+fi(costC)+'</b>'+d+'Total <b style="color:var(--red);">$'+fi(bidC)+'</b>')
+    ?('<b>'+item.qty.toLocaleString()+'</b> '+ct.unit+d+'<b>'+cy.toFixed(2)+'</b> CY'+d+'Mat <b>$'+fi(matC)+'</b>'+d+'Labor <b>$'+fi(labC)+'</b>'+d+'Cost <b>$'+fi(costC)+'</b>'+d+'Total <b style="color:var(--red);">$'+fi(bidC)+'</b>'+(bidPerCY>0?d+'<b style="color:var(--red);">$'+Math.round(bidPerCY).toLocaleString()+'/CY</b>':''))
     :(item.qty>0&&cy>0?'<span style="color:#27500A;font-weight:600;">'+cy.toFixed(2)+' CY</span>':'<span style="opacity:.5">enter qty &amp; rates</span>');
   if(muEl){muEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'%':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
 }
@@ -3582,8 +3583,9 @@ function renderConc(){
     var cy=calcConcCY(item);var matC=concMatCost(item);var labC=concLaborCost(item);var bidC=concBidTotal(item);var bR=concBidPerUnit(item);
     var costC=matC+labC;var mp=costC>0?((bidC-costC)/costC*100):0;
     var d='<span style="margin:0 3px;color:#ddd;">&middot;</span>';
+    var bidPerCY=cy>0?bidC/cy:0;
     var resHTML=item.qty>0&&item.sub>0
-      ?('<b>'+item.qty.toLocaleString()+'</b> '+ct.unit+d+'<b>'+cy.toFixed(2)+'</b> CY'+d+'Mat <b>$'+fi(matC)+'</b>'+d+'Labor <b>$'+fi(labC)+'</b>'+d+'Cost <b>$'+fi(costC)+'</b>'+d+'Total <b style="color:var(--red);">$'+fi(bidC)+'</b>')
+      ?('<b>'+item.qty.toLocaleString()+'</b> '+ct.unit+d+'<b>'+cy.toFixed(2)+'</b> CY'+d+'Mat <b>$'+fi(matC)+'</b>'+d+'Labor <b>$'+fi(labC)+'</b>'+d+'Cost <b>$'+fi(costC)+'</b>'+d+'Total <b style="color:var(--red);">$'+fi(bidC)+'</b>'+(bidPerCY>0?d+'<b style="color:var(--red);">$'+Math.round(bidPerCY).toLocaleString()+'/CY</b>':''))
       :(item.qty>0&&cy>0?'<span style="color:#27500A;font-weight:600;">'+cy.toFixed(2)+' CY</span>':'<span style="opacity:.5">enter qty &amp; sub rate</span>');
     var ctOpts=CTYPES.map(function(ct2){return '<option value="'+ct2.id+'"'+(ct2.id===item.type?' selected':'')+'>'+ct2.name+'</option>';}).join('');
     var row=document.createElement('div');row.className='lyr-row';
