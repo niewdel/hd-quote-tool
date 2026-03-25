@@ -415,8 +415,9 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <!-- Stats row -->
           <div id="dash-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;"></div>
           <!-- Calendar + Documents row -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div class="card">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
+            <div>
+            <div class="card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Bid Calendar</span></div>
               <div class="card-body" style="padding:0;">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bdr);">
@@ -432,6 +433,15 @@ tr:nth-child(even) td{background:#FAFAFA;}
                   </div>
                 </div>
               </div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Upcoming Work Orders</span></div>
+              <div class="card-body" id="dash-upcoming-wo"><p style="font-size:12px;color:var(--dgray);">No upcoming work orders.</p></div>
+            </div>
+            <div class="card">
+              <div class="card-hdr"><span class="card-title">Recent Projects</span></div>
+              <div class="card-body" id="dash-recent-projects"><p style="font-size:12px;color:var(--dgray);">No recent projects.</p></div>
+            </div>
             </div>
             <div>
               <div class="card" style="margin-bottom:14px;">
@@ -1985,7 +1995,70 @@ function renderDashboard(){
   loadDashBidDates();
   renderDashStats();
   renderDashCal();
+  renderDashUpcomingWO();
+  renderDashRecentProjects();
   renderDashSignature();
+}
+
+function renderDashUpcomingWO(){
+  var c=document.getElementById('dash-upcoming-wo');if(!c)return;
+  c.innerHTML='';
+  var wos=[];
+  (pipelineProposals||[]).forEach(function(p){
+    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    if(!snap.is_project)return;
+    (snap.work_orders||[]).forEach(function(wo){
+      if(wo.status==='complete')return;
+      wos.push({name:wo.name||'Work Order',project:p.name||'',date:wo.scheduled_date||wo.date||'',status:wo.status||'pending',assigned:wo.assigned_to||'',projId:p.id,woId:wo.id});
+    });
+  });
+  wos.sort(function(a,b){return (a.date||'9999')>(b.date||'9999')?1:-1;});
+  wos=wos.slice(0,5);
+  if(!wos.length){c.innerHTML='<p style="font-size:12px;color:var(--dgray);">No upcoming work orders.</p>';return;}
+  wos.forEach(function(wo){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);cursor:pointer;';
+    var statusColors={pending:'#999',active:'#2B5FA6'};
+    row.innerHTML='<span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(statusColors[wo.status]||'#999')+';"></span>'
+      +'<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">'+esc(wo.name)+'</div>'
+      +'<div style="font-size:11px;color:var(--dgray);">'+esc(wo.project)+(wo.date?' &middot; '+wo.date:'')+(wo.assigned?' &middot; '+esc(wo.assigned):'')+'</div></div>'
+      +'<span style="font-size:10px;font-weight:600;text-transform:uppercase;color:'+(statusColors[wo.status]||'#999')+';">'+esc(wo.status)+'</span>';
+    (function(pid,wid){row.addEventListener('click',function(){_currentProjectId=pid;openWorkOrderView(wid);});})(wo.projId,wo.woId);
+    c.appendChild(row);
+  });
+}
+
+function renderDashRecentProjects(){
+  var c=document.getElementById('dash-recent-projects');if(!c)return;
+  c.innerHTML='';
+  var projects=[];
+  (pipelineProposals||[]).forEach(function(p){
+    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    if(!snap.is_project)return;
+    var lastActivity='';
+    var activities=snap.activity||[];
+    if(activities.length)lastActivity=activities[activities.length-1].date||activities[activities.length-1].ts||'';
+    projects.push({id:p.id,name:p.name||'',client:p.client||'',stage:p.stage||'',updated:p.updated_at||lastActivity||p.created_at||'',total:p.total||0});
+  });
+  projects.sort(function(a,b){return (b.updated||'')>(a.updated||'')?1:-1;});
+  projects=projects.slice(0,6);
+  if(!projects.length){c.innerHTML='<p style="font-size:12px;color:var(--dgray);">No recent projects.</p>';return;}
+  projects.forEach(function(p){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);cursor:pointer;';
+    var ago='';
+    if(p.updated){
+      var diff=Date.now()-new Date(p.updated).getTime();
+      var mins=Math.floor(diff/60000),hrs=Math.floor(diff/3600000),days=Math.floor(diff/86400000);
+      ago=days>0?days+'d ago':hrs>0?hrs+'h ago':mins>0?mins+'m ago':'just now';
+    }
+    row.innerHTML='<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">'+esc(p.name)+'</div>'
+      +'<div style="font-size:11px;color:var(--dgray);">'+esc(p.client)+(p.stage?' &middot; '+esc(p.stage):'')+'</div></div>'
+      +'<div style="text-align:right;flex-shrink:0;"><div style="font-size:12px;font-weight:600;">$'+Math.round(p.total).toLocaleString()+'</div>'
+      +(ago?'<div style="font-size:10px;color:var(--dgray);">'+ago+'</div>':'')+'</div>';
+    (function(id){row.addEventListener('click',function(){openProjectSummary(id);});})(p.id);
+    c.appendChild(row);
+  });
 }
 
 function renderDashStats(){
@@ -2084,7 +2157,7 @@ function renderDayEntries(dateKey){
       var row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr);cursor:pointer;';
       row.innerHTML='<div style="flex:1;"><div style="font-weight:600;font-size:13px;color:#B27D00;">'+esc(b.name)+'</div>'
-        +'<div style="font-size:11px;color:var(--dgray);">'+esc(b.client)+(b.time?' — Due by '+b.time:'')+'</div></div>'
+        +'<div style="font-size:11px;color:var(--dgray);">'+esc(b.client)+(b.time?' — Due by '+fmt12(b.time):'')+'</div></div>'
         +'<span style="font-size:14px;color:#E6A800;">&#9654;</span>';
       (function(bid){row.addEventListener('click',function(){openProjectSummary(bid.id);});})(b);
       c.appendChild(row);
@@ -2397,19 +2470,41 @@ function _renderProjectSummaryInner(proj){
     psWOList.innerHTML='';
     if(woList.length){
       woList.forEach(function(wo,idx){
-        var row=document.createElement('div');
-        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);';
+        var card=document.createElement('div');
+        card.style.cssText='border:1px solid var(--bdr);border-radius:8px;padding:12px 14px;margin-bottom:10px;background:#FAFAFA;';
         var statusColors={pending:'#999',active:'#2B5FA6',complete:'#27500A'};
-        var dot=document.createElement('span');
-        dot.style.cssText='width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(statusColors[wo.status]||'#999')+';';
-        row.appendChild(dot);
-        var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;cursor:pointer;';
-        info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(wo.name||'Work Order')+'</div>'
-          +'<div style="font-size:11px;color:var(--dgray);">'+(wo.assigned_to?esc(wo.assigned_to)+' &middot; ':'')+(wo.date?esc(wo.date):'')+'</div>'
-          +(wo.description?'<div style="font-size:11px;color:#555;margin-top:2px;">'+esc(wo.description)+'</div>':'');
-        (function(woId){info.addEventListener('click',function(){openWorkOrderView(woId);});})(wo.id);
-        row.appendChild(info);
-        var statusBtn=document.createElement('select');statusBtn.style.cssText='font-size:11px;padding:2px 6px;border:1px solid var(--bdr);border-radius:4px;background:#fff;cursor:pointer;';
+        var statusLabels={pending:'Pending',active:'Active',complete:'Complete'};
+        // Top row: name + status badge
+        var topRow=document.createElement('div');
+        topRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;';
+        var nameEl=document.createElement('div');nameEl.style.cssText='font-weight:700;font-size:14px;cursor:pointer;flex:1;min-width:0;';
+        nameEl.textContent=wo.name||'Work Order';
+        (function(woId){nameEl.addEventListener('click',function(){openWorkOrderView(woId);});})(wo.id);
+        topRow.appendChild(nameEl);
+        var badge=document.createElement('span');
+        badge.style.cssText='font-size:10px;font-weight:700;color:#fff;background:'+(statusColors[wo.status]||'#999')+';padding:3px 10px;border-radius:4px;text-transform:uppercase;flex-shrink:0;';
+        badge.textContent=statusLabels[wo.status]||wo.status||'Pending';
+        topRow.appendChild(badge);
+        card.appendChild(topRow);
+        // Detail row
+        var details=[];
+        if(wo.assigned_to)details.push(esc(wo.assigned_to));
+        if(wo.scheduled_date)details.push('Scheduled: '+esc(wo.scheduled_date));
+        else if(wo.date)details.push('Created: '+esc(wo.date));
+        if(details.length){
+          var detEl=document.createElement('div');detEl.style.cssText='font-size:12px;color:var(--dgray);margin-bottom:4px;';
+          detEl.innerHTML=details.join(' &middot; ');
+          card.appendChild(detEl);
+        }
+        if(wo.description){
+          var descEl=document.createElement('div');descEl.style.cssText='font-size:12px;color:#555;line-height:1.5;margin-bottom:6px;';
+          descEl.textContent=wo.description;
+          card.appendChild(descEl);
+        }
+        // Action row
+        var actRow=document.createElement('div');
+        actRow.style.cssText='display:flex;align-items:center;gap:8px;margin-top:6px;';
+        var statusBtn=document.createElement('select');statusBtn.style.cssText='font-size:11px;padding:3px 8px;border:1px solid var(--bdr);border-radius:4px;background:#fff;cursor:pointer;';
         ['pending','active','complete'].forEach(function(s){
           var opt=document.createElement('option');opt.value=s;opt.textContent=s.charAt(0).toUpperCase()+s.slice(1);
           if(wo.status===s)opt.selected=true;
@@ -2421,16 +2516,20 @@ function _renderProjectSummaryInner(proj){
           fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
             .then(function(){renderProjectSummary();});
         });})(idx);
-        row.appendChild(statusBtn);
-        var del=document.createElement('button');del.className='btn-ico';del.style.cssText='color:var(--dgray);font-size:14px;';del.textContent='×';del.title='Remove';
+        actRow.appendChild(statusBtn);
+        var viewBtn=document.createElement('button');viewBtn.className='btn btn-sec btn-sm';viewBtn.textContent='View';
+        (function(woId){viewBtn.addEventListener('click',function(){openWorkOrderView(woId);});})(wo.id);
+        actRow.appendChild(viewBtn);
+        var del=document.createElement('button');del.className='btn btn-sec btn-sm';del.style.cssText='color:var(--dgray);';del.textContent='Remove';
         (function(i){del.addEventListener('click',function(){
           if(!confirm('Remove this work order?'))return;
           snap.work_orders.splice(i,1);
           fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
             .then(function(){renderProjectSummary();});
         });})(idx);
-        row.appendChild(del);
-        psWOList.appendChild(row);
+        actRow.appendChild(del);
+        card.appendChild(actRow);
+        psWOList.appendChild(card);
       });
     }
     var woBtn=document.createElement('button');woBtn.className='btn btn-red btn-sm';woBtn.style.marginTop='10px';
