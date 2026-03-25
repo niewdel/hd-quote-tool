@@ -753,15 +753,48 @@ tr:nth-child(even) td{background:#FAFAFA;}
             </div>
           </div>
         </div>
+        <div style="margin-bottom:14px;"><input id="projects-search" type="text" placeholder="Search projects..." oninput="filterProjects(this.value)" style="width:100%;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/></div>
         <div id="projects-list"><p style="color:var(--dgray);font-size:13px;">Loading projects...</p></div>
       </div></div>
 
       <!-- CLIENTS PANEL -->
-      <div class="panel" id="panel-clients"><div class="content">
-          <div id="clients-count" style="font-size:13px;color:var(--dgray);margin-bottom:12px;padding:0 16px;"></div>
+      <div class="panel" id="panel-clients"><div class="content" style="padding:16px;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+            <div id="clients-count" style="font-size:13px;color:var(--dgray);"></div>
+            <input id="clients-search" type="text" placeholder="Search clients..." oninput="filterClients(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
+          </div>
           <div id="clients-list"></div>
         </div>
       </div>
+
+      <!-- CLIENT SUMMARY PANEL -->
+      <div class="panel" id="panel-client-summary"><div class="content" style="padding:20px;">
+        <div id="client-summary-header" style="margin-bottom:20px;"></div>
+        <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;">
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Client Details</span><button class="btn btn-sec btn-sm" onclick="editClientFromSummary()">Edit</button></div>
+              <div class="card-body" id="cs-details"><p style="color:var(--dgray);font-size:12px;">Loading...</p></div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Linked Projects</span></div>
+              <div class="card-body" id="cs-projects"><p style="color:var(--dgray);font-size:12px;">No projects found.</p></div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-hdr"><span class="card-title">Notes</span></div>
+              <div class="card-body" id="cs-notes">
+                <div id="cs-notes-list"></div>
+                <div style="margin-top:10px;display:flex;gap:8px;">
+                  <input id="cs-note-input" type="text" placeholder="Add a note..." style="flex:1;padding:6px 10px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;"/>
+                  <button class="btn btn-red btn-sm" onclick="addClientNote()">Add</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div></div>
 
       <!-- CHANGE ORDERS PANEL -->
       <div class="panel" id="panel-co"><div class="content">
@@ -3273,6 +3306,7 @@ var TOPBAR_CFG = {
   analytics:[{html:'&lsaquo; Back to Project',cls:'btn btn-sec btn-sm',fn:"showPanel('project',null)"},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderAnalytics()'}],
   pipeline:[{html:'+ Create Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderPipeline()'}],
   clients:[{html:'+ Add Client',cls:'btn btn-red btn-sm',fn:'openClientModal()'}],
+  'client-summary':[{html:'&lsaquo; Back to Clients',cls:'btn btn-sec btn-sm',fn:"showPanel('clients',document.querySelector('[onclick*=clients]'))"}],
   jobcost:[{html:'&lsaquo; Back to Project',cls:'btn btn-sec btn-sm',fn:"showPanel('project',null)"},{html:'Export Job Cost PDF',cls:'btn btn-red btn-sm',fn:'exportJobCostPDF()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderEVA()'}],
   workorder:[
     {html:'Export PDF',cls:'btn btn-red btn-sm',fn:'exportWorkOrderPDF()'},
@@ -3311,7 +3345,7 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule'}[id]||id;
+  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients','client-summary':'Client Summary',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved'){renderSaved();loadCOList();}
@@ -3326,6 +3360,7 @@ function showPanel(id,el){
   if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
   if(id==='pipeline')setTimeout(renderPipeline,50);
   if(id==='clients')setTimeout(renderClients,50);
+  if(id==='client-summary')renderClientSummary();
   if(id==='workorder')renderWorkOrderDetail();
   if(id==='schedule')renderSchedule();
   if(typeof isMobile!=='undefined'&&isMobile)closeMobileNav();
@@ -4948,19 +4983,116 @@ async function renderClients() {
     clientsList.forEach(function(c){
       var card = document.createElement('div');
       card.className = 'client-card';
+      card.style.cursor='pointer';
+      card.dataset.name=(c.name||'').toLowerCase();
+      card.dataset.company=(c.company||'').toLowerCase();
+      card.dataset.email=(c.email||'').toLowerCase();
       var initials = (c.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
-      card.innerHTML = '<div class="client-avatar">'+initials+'</div>'
-        +'<div class="client-info">'
+      card.innerHTML = '<div class="client-avatar" onclick="openClientSummary('+c.id+')">'+initials+'</div>'
+        +'<div class="client-info" onclick="openClientSummary('+c.id+')">'
         +'<div class="client-name">'+esc(c.name)+(c.company?' <span style="font-weight:400;color:var(--dgray);">- '+esc(c.company)+'</span>':'')+'</div>'
         +'<div class="client-sub">'+[c.phone,c.email,c.city_state].filter(Boolean).map(esc).join(' | ')+'</div>'
         +'</div>'
-        +'<button class="btn btn-sec btn-sm" onclick="editClient('+c.id+')">Edit</button>'
-        +'<button class="btn-ico" onclick="deleteClient('+c.id+')">x</button>';
+        +'<button class="btn btn-sec btn-sm" onclick="event.stopPropagation();editClient('+c.id+')">Edit</button>'
+        +'<button class="btn-ico" onclick="event.stopPropagation();deleteClient('+c.id+')">x</button>';
       container.appendChild(card);
     });
     clients = clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||'',address:c.address||'',city_state:c.city_state||''};});
   } catch(e){container.innerHTML='<p style="color:var(--red);font-size:13px;">Error: '+e.message+'</p>';}
 }
+
+// Search filters
+function filterProjects(q){
+  q=q.toLowerCase();
+  document.querySelectorAll('#projects-list > div').forEach(function(card){
+    var text=(card.textContent||'').toLowerCase();
+    card.style.display=(!q||text.indexOf(q)>-1)?'':'none';
+  });
+}
+function filterClients(q){
+  q=q.toLowerCase();
+  document.querySelectorAll('#clients-list .client-card').forEach(function(card){
+    var text=(card.dataset.name||'')+(card.dataset.company||'')+(card.dataset.email||'')+(card.textContent||'').toLowerCase();
+    card.style.display=(!q||text.indexOf(q)>-1)?'':'none';
+  });
+}
+
+// Client Summary
+var _currentClientId=null;
+function openClientSummary(id){
+  _currentClientId=id;
+  showPanel('client-summary',null);
+}
+function renderClientSummary(){
+  if(!_currentClientId)return;
+  var c=clientsList.find(function(x){return x.id===_currentClientId;});
+  if(!c){document.getElementById('client-summary-header').innerHTML='<p style="color:var(--red);">Client not found.</p>';return;}
+  // Header
+  var hdr=document.getElementById('client-summary-header');
+  var initials=(c.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+  hdr.innerHTML='<div style="display:flex;align-items:center;gap:14px;">'
+    +'<div style="width:48px;height:48px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;">'+initials+'</div>'
+    +'<div><h2 style="margin:0;font-size:22px;font-weight:800;">'+esc(c.name)+'</h2>'
+    +(c.company?'<div style="font-size:13px;color:var(--dgray);">'+esc(c.company)+'</div>':'')
+    +'</div></div>';
+  // Details
+  var det=document.getElementById('cs-details');
+  var detHtml='<div style="font-size:13px;line-height:2;">';
+  if(c.phone)detHtml+='<div><b>Phone:</b> '+esc(c.phone)+'</div>';
+  if(c.email)detHtml+='<div><b>Email:</b> '+esc(c.email)+'</div>';
+  if(c.address)detHtml+='<div><b>Address:</b> '+esc(c.address)+'</div>';
+  if(c.city_state)detHtml+='<div><b>City/State:</b> '+esc(c.city_state)+'</div>';
+  detHtml+='</div>';
+  det.innerHTML=detHtml||'<p style="color:var(--dgray);font-size:12px;">No details.</p>';
+  // Linked projects
+  var projEl=document.getElementById('cs-projects');projEl.innerHTML='';
+  var linked=(pipelineProposals||[]).filter(function(p){return (p.client||'').toLowerCase()===(c.name||'').toLowerCase();});
+  if(linked.length){
+    linked.forEach(function(p){
+      var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+      if(!snap.is_project)return;
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);cursor:pointer;';
+      row.innerHTML='<div style="flex:1;"><div style="font-weight:600;font-size:13px;">'+esc(p.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--dgray);">'+(p.total?'$'+Math.round(p.total).toLocaleString():'')+'</div></div>';
+      (function(pid){row.addEventListener('click',function(){openProjectSummary(pid);});})(p.id);
+      projEl.appendChild(row);
+    });
+  } else {projEl.innerHTML='<p style="color:var(--dgray);font-size:12px;">No projects found for this client.</p>';}
+  // Notes
+  renderClientNotes();
+}
+function renderClientNotes(){
+  var c=clientsList.find(function(x){return x.id===_currentClientId;});
+  if(!c)return;
+  var notes=[];try{notes=JSON.parse(localStorage.getItem('hd_client_notes_'+_currentClientId)||'[]');}catch(e){}
+  var list=document.getElementById('cs-notes-list');list.innerHTML='';
+  if(!notes.length){list.innerHTML='<p style="color:var(--dgray);font-size:12px;margin-bottom:8px;">No notes yet.</p>';return;}
+  notes.forEach(function(n,i){
+    var row=document.createElement('div');
+    row.style.cssText='padding:8px 0;border-bottom:1px solid var(--bdr);';
+    var ts=n.date?new Date(n.date).toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}):'';
+    row.innerHTML='<div style="font-size:12px;">'+esc(n.text)+'</div>'
+      +'<div style="font-size:10px;color:var(--dgray);margin-top:2px;">'+esc(n.user||'')+' &middot; '+ts
+      +' <button class="btn-ico" style="font-size:11px;color:var(--dgray);" onclick="removeClientNote('+i+')">x</button></div>';
+    list.appendChild(row);
+  });
+}
+function addClientNote(){
+  var inp=document.getElementById('cs-note-input');if(!inp||!inp.value.trim())return;
+  var notes=[];try{notes=JSON.parse(localStorage.getItem('hd_client_notes_'+_currentClientId)||'[]');}catch(e){}
+  notes.unshift({text:inp.value.trim(),user:window._userUsername||'',date:new Date().toISOString()});
+  localStorage.setItem('hd_client_notes_'+_currentClientId,JSON.stringify(notes));
+  inp.value='';
+  renderClientNotes();
+}
+function removeClientNote(idx){
+  var notes=[];try{notes=JSON.parse(localStorage.getItem('hd_client_notes_'+_currentClientId)||'[]');}catch(e){}
+  notes.splice(idx,1);
+  localStorage.setItem('hd_client_notes_'+_currentClientId,JSON.stringify(notes));
+  renderClientNotes();
+}
+function editClientFromSummary(){if(_currentClientId)editClient(_currentClientId);}
 
 function openClientModal(prefill) {
   editingClientId = null;
