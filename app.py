@@ -540,6 +540,67 @@ def send_email():
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
+# ── File Upload (Supabase Storage) ───────────────────────────────────────────
+
+STORAGE_BUCKET = 'site-plans'
+
+@app.route('/upload/site-plan/<int:project_id>', methods=['POST'])
+@require_auth
+def upload_site_plan(project_id):
+    """Upload a site plan image to Supabase Storage, save URL in project snap."""
+    if 'file' not in request.files:
+        return jsonify({'ok': False, 'error': 'No file provided'}), 400
+    file = request.files['file']
+    if not file.filename:
+        return jsonify({'ok': False, 'error': 'Empty filename'}), 400
+
+    # Determine content type
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else 'png'
+    content_types = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'gif': 'image/gif', 'pdf': 'application/pdf', 'webp': 'image/webp'}
+    ct = content_types.get(ext, 'application/octet-stream')
+
+    # Upload to Supabase Storage
+    svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+    file_path = f'project-{project_id}/site-plan.{ext}'
+    try:
+        file_data = file.read()
+        # Upload (upsert)
+        r = http.post(
+            f'{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{file_path}',
+            headers={
+                'apikey': svc_key,
+                'Authorization': f'Bearer {svc_key}',
+                'Content-Type': ct,
+                'x-upsert': 'true'
+            },
+            data=file_data,
+            timeout=30
+        )
+        if r.status_code not in (200, 201):
+            return jsonify({'ok': False, 'error': f'Storage upload failed: {r.status_code} {r.text}'}), 500
+
+        # Build public URL
+        public_url = f'{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{file_path}'
+
+        # Update project snap with site_plan_url
+        proj_r = http.get(sb_url('proposals', f'?id=eq.{project_id}&select=snap'), headers=sb_headers(), timeout=5)
+        rows = proj_r.json()
+        if rows:
+            snap = rows[0].get('snap') or {}
+            if isinstance(snap, str):
+                snap = json.loads(snap)
+            snap['site_plan_url'] = public_url
+            http.patch(
+                sb_url('proposals', f'?id=eq.{project_id}'),
+                headers=sb_headers(),
+                json={'snap': snap},
+                timeout=5
+            )
+
+        return jsonify({'ok': True, 'url': public_url})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 # ── Setup: create hd_settings table if needed ───────────────────────────────
 
 @app.route('/setup/settings-table', methods=['POST'])
