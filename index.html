@@ -367,9 +367,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-grp">Manage</div>
       <div class="nav-item" onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents</div>
       <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
-      <div class="nav-grp">Analyze</div>
-      <div class="nav-item" onclick="showPanel('analytics',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v3H1zm4-4h3v7H5zm4-4h3v11H9zm4-6h2v17h-2z"/></svg>Analytics</div>
-      <div class="nav-item" onclick="showPanel('jobcost',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3v1.5H10v1H8.5V9H10v1H8.5V11.5h-1V10H6V9h1.5V6.5H6v-1h1.5V4h1z"/></svg>Job Costing</div>
       <div class="nav-grp">Config</div>
       <div class="nav-item" onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
       <div class="nav-item admin-only" id="nav-admin" data-admin-hidden onclick="showPanel('admin',this);loadUsers();loadLogs();">
@@ -2703,6 +2700,8 @@ var TOPBAR_CFG = {
   build:[
     {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
     {html:"Reset",cls:"btn btn-sec btn-sm",fn:"resetAll()"},
+    {html:"Analytics",cls:"btn btn-sec btn-sm",fn:"showPanel('analytics',null)"},
+    {html:"Job Cost",cls:"btn btn-sec btn-sm",fn:"showPanel('jobcost',null)"},
     {id:"site-plan-btn",html:"<svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path d=\"M8 1v10M4 7l4-5 4 5\"/><path d=\"M2 13h12\"/></svg> Upload Site Plan",cls:"btn btn-sec btn-sm",fn:"document.getElementById('site-plan-input').click()"},
     {id:"email-btn",html:"Email",cls:"btn btn-sec btn-sm",fn:"openEmailModal()"},
     {id:"docx-btn",html:"<svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path d=\"M4 7h8v1H4zm0 2h8v1H4zm0 2h5v1H4z\"/></svg> Export Word",cls:"btn btn-blue btn-sm",fn:"exportDOCX()"},
@@ -2716,10 +2715,10 @@ var TOPBAR_CFG = {
     {html:'Export All',cls:'btn btn-sec btn-sm',fn:'exportAllQuotes()'},
     {html:'Import',cls:'btn btn-sec btn-sm',fn:'importQuotes()'}
   ],
-  analytics:[{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderAnalytics()'}],
+  analytics:[{html:'&lsaquo; Back to Proposal',cls:'btn btn-sec btn-sm',fn:"showPanel('build',document.querySelector('[onclick*=build]'))"},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderAnalytics()'}],
   pipeline:[{html:'+ Create Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderPipeline()'}],
   clients:[{html:'+ Add Client',cls:'btn btn-red btn-sm',fn:'openClientModal()'}],
-  jobcost:[{html:'Export Job Cost PDF',cls:'btn btn-red btn-sm',fn:'exportJobCostPDF()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderEVA()'}],
+  jobcost:[{html:'&lsaquo; Back to Proposal',cls:'btn btn-sec btn-sm',fn:"showPanel('build',document.querySelector('[onclick*=build]'))"},{html:'Export Job Cost PDF',cls:'btn btn-red btn-sm',fn:'exportJobCostPDF()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderEVA()'}],
   admin:[],
   settings:[]
 };
