@@ -322,8 +322,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
 .client-name{font-weight:600;font-size:13px;}
 .client-sub{font-size:11px;color:var(--dgray);margin-top:2px;}
 .kb-stage-select{font-size:11px;padding:2px 5px;border:1px solid var(--bdr);border-radius:4px;background:#fff;cursor:pointer;max-width:130px;}
-.admin-table{width:100%;border-collapse:collapse;font-size:13px;}.admin-table th{background:var(--lgray);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--dgray);border-bottom:2px solid var(--bdr);letter-spacing:.5px;text-transform:uppercase;}.admin-table td{padding:9px 12px;border-bottom:1px solid var(--bdr);vertical-align:middle;}.admin-table tr:hover td{background:var(--lgray);}.role-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}.role-admin{background:#2d1a1a;color:var(--red);}.role-user{background:#f0f0f0;color:#555;}.status-active{color:#27500A;font-weight:600;font-size:11px;}.status-inactive{color:#999;font-size:11px;}.log-row-fail td{color:#cc4444;}.log-ip{font-family:monospace;font-size:11px;color:var(--dgray);}
+.admin-table{width:100%;border-collapse:collapse;font-size:13px;}.admin-table th{background:var(--lgray);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--dgray);border-bottom:2px solid var(--bdr);letter-spacing:.5px;text-transform:uppercase;}.admin-table td{padding:9px 12px;border-bottom:1px solid var(--bdr);vertical-align:middle;}.admin-table tr:hover td{background:var(--lgray);}.role-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}.role-admin{background:#2d1a1a;color:var(--red);}.role-user{background:#f0f0f0;color:#555;}.role-field{background:#E8F0E8;color:#27500A;}.status-active{color:#27500A;font-weight:600;font-size:11px;}.status-inactive{color:#999;font-size:11px;}.log-row-fail td{color:#cc4444;}.log-ip{font-family:monospace;font-size:11px;color:var(--dgray);}
 [data-admin-hidden]{display:none}
+[data-field-hidden]{display:none}
+.role-price-hidden .role-price{display:none !important;}
 .settings-tab-bar{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--bdr);padding-bottom:0;}
 .stab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--dgray);cursor:pointer;transition:all .12s;}
 .stab:hover{color:var(--dark);}
@@ -375,11 +377,11 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item on" onclick="showPanel('dashboard',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg>Dashboard</div>
       <div class="nav-item" onclick="showPanel('projects',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg>Projects</div>
       <div class="nav-grp">Manage</div>
-      <div class="nav-item" onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents</div>
+      <div class="nav-item" data-field-hidden onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents</div>
       <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
       <div class="nav-item" onclick="showPanel('schedule',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg>Schedule</div>
-      <div class="nav-grp">Config</div>
-      <div class="nav-item" onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
+      <div class="nav-grp" data-field-hidden>Config</div>
+      <div class="nav-item" data-field-hidden onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
       <div class="nav-item admin-only" id="nav-admin" data-admin-hidden onclick="showPanel('admin',this);loadUsers();showAdminTab('users');">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg>
         Admin
@@ -482,7 +484,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       </div>
 
       <!-- BUILD PANEL -->
-      <div class="panel" id="panel-build">
+      <div class="panel" id="panel-build" data-field-hidden>
 
         <div class="card">
           <div class="card-hdr"><span class="card-title">Project Information</span></div>
@@ -607,7 +609,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="panel" id="panel-crewcosts"></div>
 
       <!-- JOB COST / ESTIMATES VS ACTUALS PANEL -->
-      <div class="panel" id="panel-jobcost">
+      <div class="panel" id="panel-jobcost" data-field-hidden>
         <div class="card">
           <div class="card-hdr">
             <span class="card-title">Estimate Summary <span style="font-size:10px;font-weight:400;color:var(--dgray);margin-left:6px;">Auto-calculated from proposal</span></span>
@@ -694,16 +696,16 @@ tr:nth-child(even) td{background:#FAFAFA;}
         <!-- Header -->
         <div id="project-summary-header" style="margin-bottom:20px;"></div>
         <!-- Financial summary strip -->
-        <div id="ps-financials" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;"></div>
+        <div id="ps-financials" data-field-hidden style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;"></div>
         <!-- Main content: 2 columns -->
         <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;">
           <!-- Left column -->
           <div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="card" data-field-hidden style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Proposals</span></div>
               <div class="card-body" id="ps-proposals"><p style="color:var(--dgray);font-size:12px;">No proposals linked.</p></div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="card" data-field-hidden style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Change Orders</span></div>
               <div class="card-body" id="ps-change-orders"><p style="color:var(--dgray);font-size:12px;">No change orders.</p></div>
             </div>
@@ -711,7 +713,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div class="card-hdr"><span class="card-title">Work Orders</span></div>
               <div class="card-body" id="ps-work-orders-list"><p style="color:var(--dgray);font-size:12px;">No work orders yet.</p></div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="card" data-field-hidden style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Job Costing</span></div>
               <div class="card-body" id="ps-job-costing"><p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p></div>
             </div>
@@ -798,7 +800,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       </div></div>
 
       <!-- CHANGE ORDERS PANEL -->
-      <div class="panel" id="panel-co"><div class="content">
+      <div class="panel" id="panel-co" data-field-hidden><div class="content">
                 <div class="card">
                   <div class="card-hdr"><span class="card-title">Change Order Info</span></div>
                   <div class="card-body">
@@ -873,7 +875,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
 
       <!-- ANALYTICS PANEL -->
-      <div class="panel" id="panel-analytics"><div class="content">
+      <div class="panel" id="panel-analytics" data-field-hidden><div class="content">
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px;" id="analytics-summary"></div>
                 <div class="card">
 <div class="card-body" style="padding:0;">
@@ -1139,7 +1141,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <label>Phone</label><input type="tel" id="edit-phone" placeholder="e.g. 704-555-0000"/>
       <label>Username <span style="font-size:11px;color:var(--dgray);">(lowercase, no spaces)</span></label><input type="text" id="edit-username" placeholder="e.g. jsmith" style="text-transform:lowercase;"/>
       <label>PIN <span id="pin-hint" style="font-size:11px;color:var(--dgray);">(4-8 digits)</span></label><input type="password" id="edit-pin" placeholder="Enter PIN" maxlength="8"/>
-      <label>Role</label><select id="edit-role"><option value="user">Standard User</option><option value="admin">Admin</option></select>
+      <label>Role</label><select id="edit-role"><option value="user">Standard User</option><option value="field">Field User</option><option value="admin">Admin</option></select>
       <div id="user-modal-err" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
     </div>
     <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeUserModal()">Cancel</button><button class="btn btn-red btn-sm" onclick="saveUser()">Save User</button></div>
@@ -1295,8 +1297,20 @@ async function doLogin(){
 
 
 function showAdminElements(){
-  if(window._userRole==='admin'){document.querySelectorAll('[data-admin-hidden]').forEach(function(el){el.removeAttribute('data-admin-hidden');});}
+  if(window._userRole==='admin'){
+    document.querySelectorAll('[data-admin-hidden]').forEach(function(el){el.removeAttribute('data-admin-hidden');});
+    document.querySelectorAll('[data-field-hidden]').forEach(function(el){el.removeAttribute('data-field-hidden');});
+  }
+  if(window._userRole==='user'){
+    document.querySelectorAll('[data-field-hidden]').forEach(function(el){el.removeAttribute('data-field-hidden');});
+  }
+  // Field role: hide pricing, restrict nav
+  if(window._userRole==='field'){
+    document.getElementById('app').classList.add('role-price-hidden');
+  }
 }
+function isFieldUser(){return window._userRole==='field';}
+function canSeePricing(){return window._userRole==='admin'||window._userRole==='user';}
 function renderBadgeList(){var c=document.getElementById("badge-list");if(!c)return;c.innerHTML="";var keys=Object.keys(BADGE_DEFS);if(!keys.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>No badges yet.</p>";return;}keys.forEach(function(cls){var b=BADGE_DEFS[cls];var row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr);";var prev=document.createElement("span");prev.className="badge "+cls;prev.style.minWidth="60px";prev.textContent=b.label;row.appendChild(prev);var li=document.createElement("input");li.type="text";li.value=b.label;li.placeholder="Label";li.style.width="120px";li.addEventListener("change",(function(cc){return function(){BADGE_DEFS[cc].label=this.value;renderBadgeList();};})(cls));row.appendChild(li);var ci=document.createElement("input");ci.type="color";ci.value=b.color;ci.style.cssText="width:40px;height:28px;cursor:pointer;border:1px solid var(--bdr);border-radius:4px;";ci.addEventListener("change",(function(cc){return function(){BADGE_DEFS[cc].color=this.value;};})(cls));row.appendChild(ci);var lbl=document.createElement("span");lbl.style.cssText="font-size:11px;color:var(--dgray);flex:1;";lbl.textContent="CSS: "+cls;row.appendChild(lbl);var del=document.createElement("button");del.className="btn-ico";del.style.color="var(--red)";del.textContent="×";del.addEventListener("click",(function(cc){return function(){delete BADGE_DEFS[cc];renderBadgeList();renderMatTable();};})(cls));row.appendChild(del);c.appendChild(row);});}
 function addBadge(){var label=prompt("Badge label:");if(!label)return;var cls="b-"+label.toLowerCase().replace(/[^a-z0-9]/g,"-");if(BADGE_DEFS[cls]){alert("Badge already exists.");return;}BADGE_DEFS[cls]={label:label,color:"#444"};renderBadgeList();renderMatTable();}
 function saveBadges(){_saveSetting('hd_badge_defs',BADGE_DEFS);applyBadgeStyles();renderMatTable();renderAll();renderConc();toast("Badges saved","ok");}
@@ -2139,7 +2153,7 @@ function renderDashRecentProjects(){
     }
     row.innerHTML='<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">'+esc(p.name)+'</div>'
       +'<div style="font-size:11px;color:var(--dgray);">'+esc(p.client)+(p.stage?' &middot; '+esc(p.stage):'')+'</div></div>'
-      +'<div style="text-align:right;flex-shrink:0;"><div style="font-size:12px;font-weight:600;">$'+Math.round(p.total).toLocaleString()+'</div>'
+      +'<div style="text-align:right;flex-shrink:0;">'+(canSeePricing()?'<div style="font-size:12px;font-weight:600;">$'+Math.round(p.total).toLocaleString()+'</div>':'')+'<div>'
       +(ago?'<div style="font-size:10px;color:var(--dgray);">'+ago+'</div>':'')+'</div>';
     (function(id){row.addEventListener('click',function(){openProjectSummary(id);});})(p.id);
     c.appendChild(row);
@@ -2201,12 +2215,17 @@ function renderProjectStats(){
   });
   var decided=wonProjects+lostProjects;
   var winRate=decided>0?Math.round(wonProjects/decided*100):0;
-  [{lbl:'Pipeline Value',val:'$'+Math.round(calcPipelineValue()).toLocaleString()},
-   {lbl:'Active Projects',val:activeProjects},
-   {lbl:'Total Projects',val:totalProjects},
-   {lbl:'Win Rate',val:winRate+'%'},
-   {lbl:'Revenue',val:'$'+Math.round(revenue).toLocaleString()}
-  ].forEach(function(s){
+  var stats=[
+    {lbl:'Active Projects',val:activeProjects},
+    {lbl:'Total Projects',val:totalProjects},
+    {lbl:'Win Rate',val:winRate+'%'}
+  ];
+  if(canSeePricing()){
+    stats.unshift({lbl:'Pipeline Value',val:'$'+Math.round(calcPipelineValue()).toLocaleString()});
+    stats.push({lbl:'Revenue',val:'$'+Math.round(revenue).toLocaleString()});
+  }
+  c.style.gridTemplateColumns='repeat('+stats.length+',1fr)';
+  stats.forEach(function(s){
     var div=document.createElement('div');div.className='a-card';
     div.innerHTML='<div class="a-card-lbl">'+s.lbl+'</div><div class="a-card-val">'+s.val+'</div>';
     c.appendChild(div);
@@ -2384,7 +2403,7 @@ async function renderProjectsList(){
         dueEl.textContent='Due '+dp[1]+'/'+dp[2]+'/'+dp[0];
         right.appendChild(dueEl);
       }
-      if(p.total>0){
+      if(p.total>0&&canSeePricing()){
         var totEl=document.createElement('div');totEl.style.cssText='font-size:13px;font-weight:600;margin-top:2px;';
         totEl.textContent='$'+Math.round(p.total).toLocaleString();
         right.appendChild(totEl);
@@ -3326,10 +3345,10 @@ var TOPBAR_CFG = {
   dashboard:[{html:'+ New Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'}],
   projects:[{html:'+ New Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'}],
   project:[
-    {html:'+ Proposal',cls:'btn btn-red btn-sm',fn:'createProposalFromProject(_currentProjectId)'},
-    {html:'+ Change Order',cls:'btn btn-sec btn-sm',fn:'createCOFromProject(_currentProjectId)'},
-    {html:'Analytics',cls:'btn btn-sec btn-sm',fn:"showPanel('analytics',null)"},
-    {html:'Job Cost',cls:'btn btn-sec btn-sm',fn:"showPanel('jobcost',null)"},
+    {html:'+ Proposal',cls:'btn btn-red btn-sm',fn:'createProposalFromProject(_currentProjectId)',minRole:'user'},
+    {html:'+ Change Order',cls:'btn btn-sec btn-sm',fn:'createCOFromProject(_currentProjectId)',minRole:'user'},
+    {html:'Analytics',cls:'btn btn-sec btn-sm',fn:"showPanel('analytics',null)",minRole:'user'},
+    {html:'Job Cost',cls:'btn btn-sec btn-sm',fn:"showPanel('jobcost',null)",minRole:'user'},
     {html:'Edit',cls:'btn btn-sec btn-sm',fn:'editCurrentProject()'},
     {html:'&lsaquo; Projects',cls:'btn btn-sec btn-sm',fn:"showPanel('projects',document.querySelector('[onclick*=projects]'))"}
   ],
@@ -3367,6 +3386,9 @@ function renderTopbar(panelId){
   var c=document.getElementById('topbar-actions');if(!c)return;
   c.innerHTML='';
   (TOPBAR_CFG[panelId]||[]).forEach(function(b){
+    // Role gating: minRole='user' means hidden from field users
+    if(b.minRole==='user'&&isFieldUser())return;
+    if(b.minRole==='admin'&&window._userRole!=='admin')return;
     var el=document.createElement('button');
     el.className=b.cls;if(b.id)el.id=b.id;
     el.innerHTML=b.html;el.setAttribute('onclick',b.fn);
@@ -4779,7 +4801,7 @@ async function renderPipeline() {
         card.innerHTML=projNumStr
           +'<div class="kb-card-name" style="cursor:pointer;" onclick="openProjectSummary('+p.id+')">'+esc(p.name||'Untitled')+'</div>'
           +'<div class="kb-card-client">'+esc(p.client||'')+'</div>'
-          +'<div class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'')+'</div>';
+          +(canSeePricing()?'<div class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'')+'</div>':'');
         cardsDiv.appendChild(card);
       });
       if(!cards.length){
@@ -5100,7 +5122,7 @@ function renderClientSummary(){
       var row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);cursor:pointer;';
       row.innerHTML='<div style="flex:1;"><div style="font-weight:600;font-size:13px;">'+esc(p.name)+'</div>'
-        +'<div style="font-size:11px;color:var(--dgray);">'+(p.total?'$'+Math.round(p.total).toLocaleString():'')+'</div></div>';
+        +(canSeePricing()&&p.total?'<div style="font-size:11px;color:var(--dgray);">$'+Math.round(p.total).toLocaleString()+'</div>':'')+'</div>';
       (function(pid){row.addEventListener('click',function(){openProjectSummary(pid);});})(p.id);
       projEl.appendChild(row);
     });

@@ -395,7 +395,7 @@ def create_user():
     phone = str(data.get('phone','')).strip()
     role = data.get('role','user')
     if not username or not pin: return jsonify({'ok':False,'error':'Username and PIN required'}), 400
-    if role not in ('admin','user'): role = 'user'
+    if role not in ('admin','user','field'): role = 'user'
     try:
         r = http.post(sb_url('hd_users'), headers=sb_headers(), json={'username':username,'full_name':full_name,'email':email,'phone':phone,'pin_hash':hash_pin(pin),'role':role,'active':True,'created_by':session.get('username','admin')}, timeout=5)
         if r.status_code in (200,201):
@@ -417,7 +417,7 @@ def update_user(uid):
     if 'username' in data and data['username']:
         new_un = str(data['username']).strip().lower()
         if new_un: update['username'] = new_un
-    if 'role' in data and data['role'] in ('admin','user'): update['role'] = data['role']
+    if 'role' in data and data['role'] in ('admin','user','field'): update['role'] = data['role']
     if 'active' in data: update['active'] = bool(data['active'])
     if 'pin' in data and data['pin']: update['pin_hash'] = hash_pin(data['pin'])
     if not update: return jsonify({'ok':False,'error':'Nothing to update'}), 400
