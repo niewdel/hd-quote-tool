@@ -498,6 +498,19 @@ def generate_jc_pdf():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/generate-pricing-breakdown', methods=['POST'])
+@require_auth
+def generate_pricing_breakdown():
+    from generate_pricing_breakdown import build as pb_build
+    data = request.get_json()
+    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+        out = f.name
+    try:
+        pb_build(data, out)
+        return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_Pricing_Breakdown.pdf')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/generate-wo-pdf', methods=['POST'])
 @require_auth
 def generate_wo_pdf():
