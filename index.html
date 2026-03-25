@@ -3102,7 +3102,7 @@ var TOPBAR_CFG = {
     {html:'Edit',cls:'btn btn-sec btn-sm',fn:'editWorkOrder()'},
     {html:'&lsaquo; Back to Project',cls:'btn btn-sec btn-sm',fn:"showPanel('project',null)"}
   ],
-  schedule:[{html:'Export to Google Calendar',cls:'btn btn-sec btn-sm',fn:'exportScheduleToGCal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderSchedule()'}],
+  schedule:[{html:'Sync to Google Calendar',cls:'btn btn-sec btn-sm',fn:'openCalSyncModal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderSchedule()'}],
   admin:[],
   settings:[]
 };
@@ -5259,45 +5259,65 @@ function scheduleWorkOrder(projectId,woId,dateStr){
     });
 }
 
-function exportScheduleToGCal(){
-  // Build ICS file for all scheduled work orders in current month view
-  var allWOs=[];
-  pipelineProposals.forEach(function(p){
-    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
-    if(!snap.is_project)return;
-    (snap.work_orders||[]).forEach(function(wo){
-      if(wo.scheduled_date)allWOs.push({wo:wo,project:p,snap:snap});
+function getCalFeedUrl(){
+  var base=window.location.origin;
+  // Token is first 16 chars of SHA256 of the secret key (matches server)
+  // We fetch it from the server to avoid hardcoding
+  return base+'/schedule/feed.ics?token='+_calFeedToken;
+}
+var _calFeedToken='';
+(function(){
+  // Compute token client-side: sha256 of secret key first 16 hex chars
+  // We'll fetch it from server instead
+  fetch('/schedule/feed-token').then(function(r){return r.json();}).then(function(d){
+    if(d.token)_calFeedToken=d.token;
+  }).catch(function(){});
+})();
+
+function openCalSyncModal(){
+  var ex=document.getElementById('cal-sync-modal');if(ex)ex.remove();
+  var feedUrl=getCalFeedUrl();
+  var modal=document.createElement('div');modal.id='cal-sync-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:10px;padding:28px;width:560px;max-width:94vw;max-height:90vh;overflow-y:auto;';
+  box.innerHTML='<h3 style="margin:0 0 6px;font-size:16px;font-weight:800;">Sync to Google Calendar</h3>'
+    +'<p style="font-size:12px;color:var(--dgray);margin-bottom:16px;">Subscribe to the live HD Work Orders calendar feed. Google Calendar will auto-refresh this every few hours so your schedule stays up to date.</p>'
+    +'<div style="margin-bottom:16px;">'
+    +'<label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--dgray);display:block;margin-bottom:4px;">Calendar Feed URL</label>'
+    +'<div style="display:flex;gap:8px;align-items:center;">'
+    +'<input id="cal-feed-url" type="text" value="'+esc(feedUrl)+'" readonly style="flex:1;font-size:12px;padding:8px 10px;border:1px solid var(--bdr);border-radius:6px;background:#F8F8F8;font-family:monospace;"/>'
+    +'<button class="btn btn-red btn-sm" onclick="copyCalFeedUrl()">Copy</button>'
+    +'</div></div>'
+    +'<div style="background:#F8F8F8;border:1px solid var(--bdr);border-radius:8px;padding:16px;margin-bottom:16px;">'
+    +'<div style="font-size:13px;font-weight:700;margin-bottom:10px;">How to Subscribe in Google Calendar</div>'
+    +'<ol style="font-size:12px;line-height:1.8;margin:0;padding-left:20px;color:#333;">'
+    +'<li>Copy the calendar feed URL above</li>'
+    +'<li>Open <a href="https://calendar.google.com" target="_blank" style="color:#2B5FA6;font-weight:600;">Google Calendar</a></li>'
+    +'<li>On the left sidebar, click the <b>+</b> next to "Other calendars"</li>'
+    +'<li>Select <b>"From URL"</b></li>'
+    +'<li>Paste the feed URL and click <b>"Add calendar"</b></li>'
+    +'<li>The calendar "HD Work Orders" will appear under Other calendars</li>'
+    +'</ol>'
+    +'</div>'
+    +'<div style="background:#FFF8E6;border:1px solid #E6A800;border-radius:8px;padding:12px 16px;margin-bottom:16px;">'
+    +'<div style="font-size:12px;color:#8B6914;"><b>Note:</b> Google Calendar refreshes subscribed calendars every 12–24 hours. Changes you make in the app will show up in Google Calendar automatically — no need to re-export. This is a one-way sync (app → Google).</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'cal-sync-modal\').remove()">Close</button>'
+    +'</div>';
+  modal.appendChild(box);
+  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+}
+
+function copyCalFeedUrl(){
+  var inp=document.getElementById('cal-feed-url');
+  if(inp){
+    navigator.clipboard.writeText(inp.value).then(function(){toast('Feed URL copied','ok');}).catch(function(){
+      inp.select();document.execCommand('copy');toast('Feed URL copied','ok');
     });
-  });
-  if(!allWOs.length){toast('No scheduled work orders to export','err');return;}
-  var lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//HD Hauling//Work Orders//EN','CALSCALE:GREGORIAN'];
-  allWOs.forEach(function(item){
-    var d=item.wo.scheduled_date.replace(/-/g,'');
-    lines.push('BEGIN:VEVENT');
-    if(item.wo.scheduled_time){
-      var t=item.wo.scheduled_time.replace(/:/g,'')+'00';
-      lines.push('DTSTART;TZID=America/New_York:'+d+'T'+t);
-      lines.push('DTEND;TZID=America/New_York:'+d+'T'+t);
-    } else {
-      lines.push('DTSTART;VALUE=DATE:'+d);
-      lines.push('DTEND;VALUE=DATE:'+d);
-    }
-    lines.push('SUMMARY:'+item.wo.name+' — '+item.project.name);
-    var desc=[];
-    if(item.wo.assigned_to)desc.push('Crew: '+item.wo.assigned_to);
-    if(item.wo.onsite_contact)desc.push('Contact: '+item.wo.onsite_contact+(item.wo.onsite_phone?' ('+item.wo.onsite_phone+')':''));
-    if(item.wo.description)desc.push(item.wo.description);
-    if(desc.length)lines.push('DESCRIPTION:'+desc.join('\\n').replace(/\n/g,'\\n'));
-    var addr=item.snap.address||'';if(item.snap.city_state)addr+=(addr?', ':'')+item.snap.city_state;
-    if(addr)lines.push('LOCATION:'+addr);
-    lines.push('END:VEVENT');
-  });
-  lines.push('END:VCALENDAR');
-  var blob=new Blob([lines.join('\r\n')],{type:'text/calendar'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');a.href=url;a.download='hd_schedule.ics';
-  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
-  toast('Calendar file downloaded — import into Google Calendar','ok');
+  }
 }
 
 // Startup: check auth on every page load so _userRole is set from server

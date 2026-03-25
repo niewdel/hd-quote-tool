@@ -714,5 +714,91 @@ def settings_save():
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
+@app.route('/schedule/feed-token')
+@require_auth
+def schedule_feed_token():
+    token = hashlib.sha256(app.secret_key.encode()).hexdigest()[:16]
+    return jsonify({'token': token})
+
+@app.route('/schedule/feed.ics')
+def schedule_ics_feed():
+    """Live ICS feed of all scheduled work orders. Google Calendar can subscribe to this URL."""
+    token = request.args.get('token', '')
+    expected = hashlib.sha256(app.secret_key.encode()).hexdigest()[:16]
+    if token != expected:
+        return 'Unauthorized', 401
+    try:
+        r = http.get(
+            sb_url('proposals', '?select=id,name,client,snap&order=created_at.desc'),
+            headers=sb_headers(), timeout=15
+        )
+        r.raise_for_status()
+        proposals = r.json()
+    except Exception:
+        proposals = []
+
+    lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//HD Hauling & Grading//Work Orders//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'X-WR-CALNAME:HD Work Orders',
+        'X-WR-TIMEZONE:America/New_York',
+    ]
+    for p in proposals:
+        snap = p.get('snap') or {}
+        if isinstance(snap, str):
+            try:
+                snap = json.loads(snap)
+            except Exception:
+                snap = {}
+        if not snap.get('is_project'):
+            continue
+        for wo in snap.get('work_orders', []):
+            if not wo.get('scheduled_date'):
+                continue
+            d = wo['scheduled_date'].replace('-', '')
+            uid = f"wo-{wo.get('id', '')}-{p['id']}@hdhauling"
+            lines.append('BEGIN:VEVENT')
+            lines.append(f'UID:{uid}')
+            if wo.get('scheduled_time'):
+                t = wo['scheduled_time'].replace(':', '') + '00'
+                lines.append(f'DTSTART;TZID=America/New_York:{d}T{t}')
+                lines.append(f'DTEND;TZID=America/New_York:{d}T{t}')
+            else:
+                lines.append(f'DTSTART;VALUE=DATE:{d}')
+                lines.append(f'DTEND;VALUE=DATE:{d}')
+            summary = f"{p.get('name', 'Project')} — {wo.get('name', 'Work Order')}"
+            lines.append(f'SUMMARY:{summary}')
+            desc_parts = []
+            if wo.get('assigned_to'):
+                desc_parts.append(f"Crew: {wo['assigned_to']}")
+            if wo.get('onsite_contact'):
+                contact = wo['onsite_contact']
+                if wo.get('onsite_phone'):
+                    contact += f" ({wo['onsite_phone']})"
+                desc_parts.append(f"Contact: {contact}")
+            if wo.get('description'):
+                desc_parts.append(wo['description'])
+            if desc_parts:
+                lines.append('DESCRIPTION:' + '\\n'.join(desc_parts).replace('\n', '\\n'))
+            addr = snap.get('address', '')
+            if snap.get('city_state'):
+                addr += (', ' if addr else '') + snap['city_state']
+            if addr:
+                lines.append(f'LOCATION:{addr}')
+            status_map = {'active': 'CONFIRMED', 'complete': 'COMPLETED', 'pending': 'TENTATIVE'}
+            lines.append(f'STATUS:{status_map.get(wo.get("status", ""), "TENTATIVE")}')
+            lines.append('END:VEVENT')
+    lines.append('END:VCALENDAR')
+
+    from flask import Response
+    return Response(
+        '\r\n'.join(lines),
+        mimetype='text/calendar',
+        headers={'Content-Disposition': 'inline; filename="hd_schedule.ics"'}
+    )
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
