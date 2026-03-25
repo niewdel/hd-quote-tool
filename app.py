@@ -194,7 +194,7 @@ def pipeline_stages():
 def pipeline_list():
     try:
         r = http.get(
-            sb_url('proposals', '?select=*,pipeline_stages!left(name,color,counts_in_ratio,is_closed)&order=created_at.desc'),
+            sb_url('proposals', '?select=id,name,client,total,stage_id,snap,created_at,pipeline_stages!left(name,color,counts_in_ratio,is_closed)&order=created_at.desc'),
             headers=sb_headers(), timeout=10
         )
         r.raise_for_status()
@@ -544,11 +544,31 @@ def send_email():
 # ── File Upload (Supabase Storage) ───────────────────────────────────────────
 
 STORAGE_BUCKET = 'site-plans'
+_bucket_ensured = False
+
+def ensure_storage_bucket():
+    """Create the storage bucket if it doesn't exist."""
+    global _bucket_ensured
+    if _bucket_ensured:
+        return
+    svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+    try:
+        r = http.post(
+            f'{SUPABASE_URL}/storage/v1/bucket',
+            headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
+            json={'id': STORAGE_BUCKET, 'name': STORAGE_BUCKET, 'public': True},
+            timeout=10
+        )
+        # 200 = created, 409 = already exists — both fine
+        if r.status_code in (200, 201, 409):
+            _bucket_ensured = True
+    except Exception:
+        pass
 
 @app.route('/upload/site-plan/<int:project_id>', methods=['POST'])
 @require_auth
 def upload_site_plan(project_id):
-    """Upload a site plan image to Supabase Storage, save URL in project snap."""
+    """Upload a site plan to Supabase Storage, save URL in project snap."""
     if 'file' not in request.files:
         return jsonify({'ok': False, 'error': 'No file provided'}), 400
     file = request.files['file']
@@ -557,8 +577,14 @@ def upload_site_plan(project_id):
 
     # Determine content type
     ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else 'png'
+    allowed = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'webp'}
+    if ext not in allowed:
+        return jsonify({'ok': False, 'error': f'File type .{ext} not supported. Use PNG, JPG, PDF, or WebP.'}), 400
     content_types = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'gif': 'image/gif', 'pdf': 'application/pdf', 'webp': 'image/webp'}
     ct = content_types.get(ext, 'application/octet-stream')
+
+    # Ensure bucket exists
+    ensure_storage_bucket()
 
     # Upload to Supabase Storage
     svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
@@ -578,7 +604,8 @@ def upload_site_plan(project_id):
             timeout=30
         )
         if r.status_code not in (200, 201):
-            return jsonify({'ok': False, 'error': f'Storage upload failed: {r.status_code} {r.text}'}), 500
+            err_detail = r.text[:200] if r.text else 'Unknown error'
+            return jsonify({'ok': False, 'error': f'Storage upload failed ({r.status_code}): {err_detail}'}), 500
 
         # Build public URL
         public_url = f'{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{file_path}'

@@ -332,16 +332,80 @@ def total_line(total):
     return t
 
 class SitePlanPage(Flowable):
-    """Renders the uploaded site plan image at top of page with Exhibit A heading."""
-    def __init__(self, image_data=None):
+    """Renders the uploaded site plan image at top of page with Exhibit A heading.
+    Accepts base64 data URL, remote image URL, or remote PDF URL."""
+    def __init__(self, image_data=None, site_plan_url=None):
         super().__init__()
         self._image_data = image_data
+        self._site_plan_url = site_plan_url
         self._tmp_path = None
+
+    def _resolve_image(self):
+        """Returns a local file path to the site plan image, or None."""
+        import base64, tempfile
+        # 1. Base64 data URL (from proposal builder file upload)
+        if self._image_data and ',' in self._image_data:
+            try:
+                img_bytes = base64.b64decode(self._image_data.split(',')[1])
+                ext = self._image_data.split(';')[0].split('/')[1] if ';' in self._image_data else 'png'
+                if ext == 'pdf':
+                    return self._pdf_to_image(img_bytes)
+                with tempfile.NamedTemporaryFile(suffix=f'.{ext}', delete=False) as tmp:
+                    tmp.write(img_bytes)
+                    return tmp.name
+            except Exception:
+                pass
+        # 2. Remote URL (from Supabase Storage)
+        if self._site_plan_url:
+            try:
+                import requests as _http
+                r = _http.get(self._site_plan_url, timeout=15, allow_redirects=True)
+                if r.status_code == 200:
+                    ct = r.headers.get('content-type', '')
+                    if 'pdf' in ct or self._site_plan_url.lower().endswith('.pdf'):
+                        return self._pdf_to_image(r.content)
+                    ext = 'png'
+                    if 'jpeg' in ct or 'jpg' in ct:
+                        ext = 'jpg'
+                    elif 'webp' in ct:
+                        ext = 'webp'
+                    with tempfile.NamedTemporaryFile(suffix=f'.{ext}', delete=False) as tmp:
+                        tmp.write(r.content)
+                        return tmp.name
+            except Exception:
+                pass
+        return None
+
+    def _pdf_to_image(self, pdf_bytes):
+        """Convert first page of a PDF to a PNG image file. Returns file path or None."""
+        import tempfile
+        try:
+            from pdf2image import convert_from_bytes
+            images = convert_from_bytes(pdf_bytes, first_page=1, last_page=1, dpi=200)
+            if images:
+                with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+                    images[0].save(tmp.name, 'PNG')
+                    return tmp.name
+        except ImportError:
+            # pdf2image not available — try PyMuPDF as fallback
+            try:
+                import fitz
+                doc = fitz.open(stream=pdf_bytes, filetype='pdf')
+                page = doc[0]
+                pix = page.get_pixmap(dpi=200)
+                with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+                    pix.save(tmp.name)
+                    return tmp.name
+            except ImportError:
+                pass
+        except Exception:
+            pass
+        return None
+
     def wrap(self, aw, ah):
         self._aw, self._ah = aw, ah
         return aw, ah
     def draw(self):
-        import base64, tempfile
         c = self.canv
         heading_h = 0.5*inch
         # Draw heading at top
@@ -352,15 +416,12 @@ class SitePlanPage(Flowable):
         c.setLineWidth(1)
         c.line(0, self._ah - heading_h, self._aw, self._ah - heading_h)
         img_top = self._ah - heading_h - 0.15*inch
-        if self._image_data and ',' in self._image_data:
+
+        img_path = self._resolve_image()
+        if img_path:
             try:
-                img_bytes = base64.b64decode(self._image_data.split(',')[1])
-                ext = self._image_data.split(';')[0].split('/')[1] if ';' in self._image_data else 'png'
-                with tempfile.NamedTemporaryFile(suffix=f'.{ext}', delete=False) as tmp:
-                    tmp.write(img_bytes)
-                    self._tmp_path = tmp.name
                 from reportlab.lib.utils import ImageReader
-                ir = ImageReader(self._tmp_path)
+                ir = ImageReader(img_path)
                 iw, ih = ir.getSize()
                 max_w = self._aw
                 max_h = img_top
@@ -368,13 +429,15 @@ class SitePlanPage(Flowable):
                 dw = iw * scale
                 dh = ih * scale
                 x = (self._aw - dw) / 2
-                y = img_top - dh  # anchor to top
-                c.drawImage(self._tmp_path, x, y, width=dw, height=dh,
+                y = img_top - dh
+                c.drawImage(img_path, x, y, width=dw, height=dh,
                             preserveAspectRatio=True, mask='auto')
-                os.unlink(self._tmp_path)
+                os.unlink(img_path)
                 return
             except Exception:
-                pass
+                if img_path and os.path.exists(img_path):
+                    os.unlink(img_path)
+
         # Fallback placeholder
         c.setStrokeColor(MGRAY)
         c.setLineWidth(1)
@@ -716,8 +779,8 @@ def build(data, out_path):
     story.append(total_line(data.get('total',0)))
     story.append(PageBreak())
 
-    if data.get('site_plan_image'):
-        story.append(SitePlanPage(data['site_plan_image']))
+    if data.get('site_plan_image') or data.get('site_plan_url'):
+        story.append(SitePlanPage(data.get('site_plan_image'), data.get('site_plan_url')))
         story.append(PageBreak())
 
     story += tc_pages(st)

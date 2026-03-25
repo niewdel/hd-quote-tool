@@ -361,9 +361,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
     <nav>
       <div class="nav-item on" onclick="showPanel('dashboard',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg>Dashboard</div>
       <div class="nav-item" onclick="showPanel('projects',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg>Projects</div>
-      <div class="nav-grp">Create</div>
-      <div class="nav-item" onclick="showPanel('build',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Proposal</div>
-      <div class="nav-item" onclick="showPanel('co',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h8l3 3v9H2V2zm5 4H4v1h3V6zm5 2H4v1h6V8zm0 2H4v1h6v-1z"/></svg>Change Order</div>
       <div class="nav-grp">Manage</div>
       <div class="nav-item" onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents</div>
       <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
@@ -661,6 +658,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div class="card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Change Orders</span></div>
               <div class="card-body" id="ps-change-orders"><p style="color:var(--dgray);font-size:12px;">No change orders.</p></div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Work Orders</span></div>
+              <div class="card-body" id="ps-work-orders-list"><p style="color:var(--dgray);font-size:12px;">No work orders yet.</p></div>
             </div>
             <div class="card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Job Costing</span></div>
@@ -1258,10 +1259,11 @@ function boot(){
   updateMatIndicator();
   checkMobile();
   renderTopbar('dashboard');
-  // Pre-load saved quotes for dashboard stats
-  fetch('/quotes/list').then(function(r){return r.json();}).then(function(d){if(d.ok&&d.quotes){savedQuotes=d.quotes;}setTimeout(renderDashboard,50);}).catch(function(){setTimeout(renderDashboard,50);});
-  // Pre-load pipeline stages for auto-move
-  fetch('/pipeline/stages').then(function(r){return r.json();}).then(function(d){if(d.ok)pipelineStages=d.stages;}).catch(function(){});
+  // Pre-load saved quotes and pipeline data, then render dashboard
+  Promise.all([
+    fetch('/quotes/list').then(function(r){return r.json();}).then(function(d){if(d.ok&&d.quotes)savedQuotes=d.quotes;}).catch(function(){}),
+    renderPipeline()
+  ]).then(function(){renderDashboard();}).catch(function(){renderDashboard();});
   
   document.addEventListener('click',function(e){
     if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))
@@ -1341,6 +1343,7 @@ function mu(m,b){return m>0?((b-m)/m*100):0;}
 function fi(n){return Math.round(n).toLocaleString();}
 function f2(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmt12(t){if(!t)return '';var p=t.split(':'),h=parseInt(p[0],10),m=p[1],ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+m+' '+ap;}
 function toast(msg,type){
   var t=document.getElementById('toast');
   t.textContent=msg;t.className='toast '+(type==='ok'?'ok':type==='err'?'err':'');
@@ -1802,11 +1805,56 @@ function renderAnalytics(){
     tbody.appendChild(tr);
   });
   var avgBid=quotes.length?totalBid/quotes.length:0;
-  var avgMargin=null;
+
+  // Compute additional metrics from pipeline data
+  var pp=pipelineProposals||[];
+  var projects=pp.filter(function(p){var sn=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};return sn.is_project===true;});
+  var wonProjects=projects.filter(function(p){return p.pipeline_stages&&p.pipeline_stages.name==='Completed';});
+  var lostProjects=projects.filter(function(p){return p.pipeline_stages&&p.pipeline_stages.name==='Lost';});
+  var activeProjects=projects.filter(function(p){return !p.pipeline_stages||!p.pipeline_stages.is_closed;});
+  var totalPipelineVal=activeProjects.reduce(function(s,p){return s+(parseFloat(p.total)||0);},0);
+  var wonRevenue=wonProjects.reduce(function(s,p){return s+(parseFloat(p.total)||0);},0);
+  var lostRevenue=lostProjects.reduce(function(s,p){return s+(parseFloat(p.total)||0);},0);
+  var winRate=(wonProjects.length+lostProjects.length)>0?Math.round(wonProjects.length/(wonProjects.length+lostProjects.length)*100):0;
+
+  // Average margin across all quotes with job cost data
+  var marginsArr=[];
+  quotes.forEach(function(q){
+    try{var sn=typeof q.snap==='string'?JSON.parse(q.snap):q.snap;
+      if(sn&&sn.jc_total_cost&&parseFloat(sn.jc_total_cost)>0){
+        var bid=parseFloat(q.total)||0;var cost=parseFloat(sn.jc_total_cost);
+        if(bid>0)marginsArr.push((bid-cost)/bid*100);
+      }
+    }catch(e){}
+  });
+  var avgMarginVal=marginsArr.length?marginsArr.reduce(function(a,b){return a+b;},0)/marginsArr.length:null;
+
+  // Largest project
+  var largestProject=projects.reduce(function(best,p){var t=parseFloat(p.total)||0;return t>(best.val||0)?{name:p.name,val:t}:best;},{name:'',val:0});
+
+  // Bid counts by month (last 6 months)
+  var now=new Date();var monthCounts={};
+  for(var mi=0;mi<6;mi++){
+    var md=new Date(now.getFullYear(),now.getMonth()-mi,1);
+    var mk=md.getFullYear()+'-'+String(md.getMonth()+1).padStart(2,'0');
+    monthCounts[mk]=0;
+  }
+  quotes.forEach(function(q){if(q.date){var k=q.date.substring(0,7);if(k in monthCounts)monthCounts[k]++;}});
+  var thisMonthKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  var thisMonthCount=monthCounts[thisMonthKey]||0;
+
   [{lbl:'Total Proposals',val:quotes.length,sub:'saved in tool'},
-   {lbl:'Avg Bid Price',val:'$'+Math.round(avgBid).toLocaleString(),sub:'across all saved'},
-   {lbl:'Avg Job Margin',val:'See rows below',sub:'based on job cost data'},
-   {lbl:'Highest Margin',val:highestMargin!==null?highestMargin.toFixed(1)+'%':'N/A',sub:highestJob||'no data',cls:marginClass(highestMargin)}
+   {lbl:'Total Projects',val:projects.length,sub:activeProjects.length+' active'},
+   {lbl:'Avg Bid Price',val:'$'+Math.round(avgBid).toLocaleString(),sub:'across all proposals'},
+   {lbl:'Pipeline Value',val:'$'+Math.round(totalPipelineVal).toLocaleString(),sub:activeProjects.length+' active projects'},
+   {lbl:'Won Revenue',val:'$'+Math.round(wonRevenue).toLocaleString(),sub:wonProjects.length+' won projects',cls:'m-green'},
+   {lbl:'Lost Revenue',val:'$'+Math.round(lostRevenue).toLocaleString(),sub:lostProjects.length+' lost projects',cls:'m-red'},
+   {lbl:'Win Rate',val:winRate+'%',sub:wonProjects.length+'W / '+lostProjects.length+'L',cls:winRate>=50?'m-green':'m-red'},
+   {lbl:'Avg Margin',val:avgMarginVal!==null?avgMarginVal.toFixed(1)+'%':'N/A',sub:marginsArr.length+' proposals with cost data',cls:marginClass(avgMarginVal)},
+   {lbl:'Highest Margin',val:highestMargin!==null?highestMargin.toFixed(1)+'%':'N/A',sub:highestJob||'no data',cls:marginClass(highestMargin)},
+   {lbl:'Lowest Margin',val:lowestMargin!==null?lowestMargin.toFixed(1)+'%':'N/A',sub:lowestJob||'no data',cls:marginClass(lowestMargin)},
+   {lbl:'Largest Project',val:largestProject.val?'$'+Math.round(largestProject.val).toLocaleString():'N/A',sub:largestProject.name||'no projects'},
+   {lbl:'This Month',val:thisMonthCount+' proposals',sub:new Date().toLocaleString('en-US',{month:'long',year:'numeric'})}
   ].forEach(function(card){
     var div=document.createElement('div');div.className='a-card';
     var lbl=document.createElement('div');lbl.className='a-card-lbl';lbl.textContent=card.lbl;
@@ -1827,23 +1875,19 @@ var _pendingCOProjectLink = null;
 
 function loadDashBidDates(){
   dashBidDueDates={};
-  fetch('/pipeline/list').then(function(r){return r.json();}).then(function(d){
-    if(!d.ok||!d.proposals)return;
-    d.proposals.forEach(function(p){
-      var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
-      if(snap.is_project&&snap.bid_due_date){
-        if(!dashBidDueDates[snap.bid_due_date])dashBidDueDates[snap.bid_due_date]=[];
-        dashBidDueDates[snap.bid_due_date].push({name:p.name||'',client:p.client||'',time:snap.bid_due_time||'',id:p.id});
-      }
-    });
-    renderDashCal();
-    renderDashStats();
-  }).catch(function(){});
+  var proposals=pipelineProposals||[];
+  proposals.forEach(function(p){
+    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    if(snap.is_project&&snap.bid_due_date){
+      if(!dashBidDueDates[snap.bid_due_date])dashBidDueDates[snap.bid_due_date]=[];
+      dashBidDueDates[snap.bid_due_date].push({name:p.name||'',client:p.client||'',time:snap.bid_due_time||'',id:p.id});
+    }
+  });
 }
 
 function renderDashboard(){
-  renderDashStats();
   loadDashBidDates();
+  renderDashStats();
   renderDashCal();
   renderDashSignature();
 }
@@ -2153,7 +2197,7 @@ function _renderProjectSummaryInner(proj){
     var dueStr='';
     if(snap.bid_due_date){
       var dp=snap.bid_due_date.split('-');
-      dueStr='Due '+dp[1]+'/'+dp[2]+'/'+dp[0]+(snap.bid_due_time?' @ '+snap.bid_due_time:'');
+      dueStr='Due '+dp[1]+'/'+dp[2]+'/'+dp[0]+(snap.bid_due_time?' @ '+fmt12(snap.bid_due_time):'');
     }
     hdr.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">'
       +'<h2 style="margin:0;font-size:22px;font-weight:800;">'+esc(proj.name||'Untitled Project')+'</h2>'
@@ -2214,9 +2258,7 @@ function _renderProjectSummaryInner(proj){
     var actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;margin-top:10px;';
     var newBtn=document.createElement('button');newBtn.className='btn btn-red btn-sm';newBtn.textContent='+ Create Proposal';
     newBtn.addEventListener('click',function(){createProposalFromProject(_currentProjectId);});
-    var attachBtn=document.createElement('button');attachBtn.className='btn btn-sec btn-sm';attachBtn.textContent='+ Attach Existing';
-    attachBtn.addEventListener('click',function(){attachProposalToProject(_currentProjectId);});
-    actions.appendChild(newBtn);actions.appendChild(attachBtn);
+    actions.appendChild(newBtn);
     psProposals.appendChild(actions);
   }
 
@@ -2250,6 +2292,54 @@ function _renderProjectSummaryInner(proj){
     coBtn.textContent='+ Create Change Order';
     coBtn.addEventListener('click',function(){createCOFromProject(_currentProjectId);});
     psCO.appendChild(coBtn);
+  }
+
+  // ── Work Orders Card ──
+  var psWOList=document.getElementById('ps-work-orders-list');
+  if(psWOList){
+    var woList=snap.work_orders||[];
+    psWOList.innerHTML='';
+    if(woList.length){
+      woList.forEach(function(wo,idx){
+        var row=document.createElement('div');
+        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);';
+        var statusColors={pending:'#999',active:'#2B5FA6',complete:'#27500A'};
+        var dot=document.createElement('span');
+        dot.style.cssText='width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(statusColors[wo.status]||'#999')+';';
+        row.appendChild(dot);
+        var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+        info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(wo.name||'Work Order')+'</div>'
+          +'<div style="font-size:11px;color:var(--dgray);">'+(wo.assigned_to?esc(wo.assigned_to)+' &middot; ':'')+(wo.date?esc(wo.date):'')+'</div>'
+          +(wo.description?'<div style="font-size:11px;color:#555;margin-top:2px;">'+esc(wo.description)+'</div>':'');
+        row.appendChild(info);
+        var statusBtn=document.createElement('select');statusBtn.style.cssText='font-size:11px;padding:2px 6px;border:1px solid var(--bdr);border-radius:4px;background:#fff;cursor:pointer;';
+        ['pending','active','complete'].forEach(function(s){
+          var opt=document.createElement('option');opt.value=s;opt.textContent=s.charAt(0).toUpperCase()+s.slice(1);
+          if(wo.status===s)opt.selected=true;
+          statusBtn.appendChild(opt);
+        });
+        (function(i){statusBtn.addEventListener('change',function(){
+          snap.work_orders[i].status=this.value;
+          addProjectActivity(snap,'wo','Work order "'+snap.work_orders[i].name+'" marked '+this.value);
+          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+            .then(function(){renderProjectSummary();});
+        });})(idx);
+        row.appendChild(statusBtn);
+        var del=document.createElement('button');del.className='btn-ico';del.style.cssText='color:var(--dgray);font-size:14px;';del.textContent='×';del.title='Remove';
+        (function(i){del.addEventListener('click',function(){
+          if(!confirm('Remove this work order?'))return;
+          snap.work_orders.splice(i,1);
+          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+            .then(function(){renderProjectSummary();});
+        });})(idx);
+        row.appendChild(del);
+        psWOList.appendChild(row);
+      });
+    }
+    var woBtn=document.createElement('button');woBtn.className='btn btn-red btn-sm';woBtn.style.marginTop='10px';
+    woBtn.textContent='+ Add Work Order';
+    woBtn.addEventListener('click',function(){openWorkOrderModal();});
+    psWOList.appendChild(woBtn);
   }
 
   // ── Site Plan ──
@@ -2294,8 +2384,8 @@ function _renderProjectSummaryInner(proj){
     var log=snap.activity_log||[];
     psAct.innerHTML='';
     if(log.length){
-      var icons={created:'\u25CB',proposal:'\u25A0',co:'\u25B2',note:'\u270E',stage:'\u2192',default:'\u2022'};
-      var colors={created:'#999',proposal:'var(--red)',co:'#2B5FA6',note:'#27500A',stage:'#8B5E3C',default:'#999'};
+      var icons={created:'\u25CB',proposal:'\u25A0',co:'\u25B2',wo:'\u2699',note:'\u270E',stage:'\u2192',default:'\u2022'};
+      var colors={created:'#999',proposal:'var(--red)',co:'#2B5FA6',wo:'#E67E22',note:'#27500A',stage:'#8B5E3C',default:'#999'};
       log.slice().reverse().forEach(function(entry){
         var row=document.createElement('div');row.style.cssText='display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:12px;';
         var icon=document.createElement('span');
@@ -2383,6 +2473,51 @@ function addProjectNote(){
           proj.snap=snap;
           toast('Note added','ok');modal.remove();renderProjectSummary();
         } else toast(d.error||'Failed','err');
+      }).catch(function(e){toast('Error: '+e.message,'err');});
+  });
+}
+
+function openWorkOrderModal(){
+  if(!_currentProjectId)return;
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var ex=document.getElementById('wo-modal');if(ex)ex.remove();
+  var modal=document.createElement('div');modal.id='wo-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:440px;max-width:92vw;';
+  box.innerHTML='<h3 style="margin:0 0 16px;font-size:15px;">Add Work Order</h3>'
+    +'<div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Name</label><input id="wo-name" class="inp" placeholder="e.g. Grading Phase 1" style="width:100%;"></div>'
+    +'<div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Description</label><textarea id="wo-desc" rows="3" class="inp" placeholder="Work order details..." style="width:100%;resize:vertical;"></textarea></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'
+    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Assigned To</label><input id="wo-assigned" class="inp" placeholder="Crew or person" style="width:100%;"></div>'
+    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Status</label><select id="wo-status" class="inp" style="width:100%;"><option value="pending">Pending</option><option value="active">Active</option><option value="complete">Complete</option></select></div>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'wo-modal\').remove()">Cancel</button>'
+    +'<button class="btn btn-red btn-sm" id="wo-save">Save Work Order</button></div>';
+  modal.appendChild(box);
+  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+  document.getElementById('wo-save').addEventListener('click',function(){
+    var name=document.getElementById('wo-name').value.trim();
+    if(!name){toast('Enter a work order name','err');return;}
+    if(!snap.work_orders)snap.work_orders=[];
+    var wo={
+      id:Date.now(),
+      name:name,
+      description:document.getElementById('wo-desc').value.trim(),
+      assigned_to:document.getElementById('wo-assigned').value.trim(),
+      status:document.getElementById('wo-status').value,
+      date:new Date().toISOString().split('T')[0]
+    };
+    snap.work_orders.push(wo);
+    addProjectActivity(snap,'wo','Work order "'+name+'" created');
+    fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+      .then(function(r){return r.json();}).then(function(d){
+        if(d.ok){proj.snap=snap;toast('Work order added','ok');modal.remove();renderProjectSummary();}
+        else toast(d.error||'Failed','err');
       }).catch(function(e){toast('Error: '+e.message,'err');});
   });
 }
@@ -2689,19 +2824,19 @@ async function loadCOList(){
 }
 
 var TOPBAR_CFG = {
-  dashboard:[{html:'+ New Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'},{html:'+ Create Proposal',cls:'btn btn-sec btn-sm',fn:"showPanel('build',document.querySelector('[onclick*=build]'))"},{html:'+ Create CO',cls:'btn btn-sec btn-sm',fn:"showPanel('co',document.querySelector('[onclick*=co]'))"}],
+  dashboard:[{html:'+ New Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'}],
   projects:[{html:'+ New Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'}],
   project:[
     {html:'+ Proposal',cls:'btn btn-red btn-sm',fn:'createProposalFromProject(_currentProjectId)'},
     {html:'+ Change Order',cls:'btn btn-sec btn-sm',fn:'createCOFromProject(_currentProjectId)'},
+    {html:'Analytics',cls:'btn btn-sec btn-sm',fn:"showPanel('analytics',null)"},
+    {html:'Job Cost',cls:'btn btn-sec btn-sm',fn:"showPanel('jobcost',null)"},
     {html:'Edit',cls:'btn btn-sec btn-sm',fn:'editCurrentProject()'},
     {html:'&lsaquo; Projects',cls:'btn btn-sec btn-sm',fn:"showPanel('projects',document.querySelector('[onclick*=projects]'))"}
   ],
   build:[
     {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
     {html:"Reset",cls:"btn btn-sec btn-sm",fn:"resetAll()"},
-    {html:"Analytics",cls:"btn btn-sec btn-sm",fn:"showPanel('analytics',null)"},
-    {html:"Job Cost",cls:"btn btn-sec btn-sm",fn:"showPanel('jobcost',null)"},
     {id:"site-plan-btn",html:"<svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path d=\"M8 1v10M4 7l4-5 4 5\"/><path d=\"M2 13h12\"/></svg> Upload Site Plan",cls:"btn btn-sec btn-sm",fn:"document.getElementById('site-plan-input').click()"},
     {id:"email-btn",html:"Email",cls:"btn btn-sec btn-sm",fn:"openEmailModal()"},
     {id:"docx-btn",html:"<svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path d=\"M4 7h8v1H4zm0 2h8v1H4zm0 2h5v1H4z\"/></svg> Export Word",cls:"btn btn-blue btn-sm",fn:"exportDOCX()"},
@@ -2715,10 +2850,10 @@ var TOPBAR_CFG = {
     {html:'Export All',cls:'btn btn-sec btn-sm',fn:'exportAllQuotes()'},
     {html:'Import',cls:'btn btn-sec btn-sm',fn:'importQuotes()'}
   ],
-  analytics:[{html:'&lsaquo; Back to Proposal',cls:'btn btn-sec btn-sm',fn:"showPanel('build',document.querySelector('[onclick*=build]'))"},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderAnalytics()'}],
+  analytics:[{html:'&lsaquo; Back to Project',cls:'btn btn-sec btn-sm',fn:"showPanel('project',null)"},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderAnalytics()'}],
   pipeline:[{html:'+ Create Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderPipeline()'}],
   clients:[{html:'+ Add Client',cls:'btn btn-red btn-sm',fn:'openClientModal()'}],
-  jobcost:[{html:'&lsaquo; Back to Proposal',cls:'btn btn-sec btn-sm',fn:"showPanel('build',document.querySelector('[onclick*=build]'))"},{html:'Export Job Cost PDF',cls:'btn btn-red btn-sm',fn:'exportJobCostPDF()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderEVA()'}],
+  jobcost:[{html:'&lsaquo; Back to Project',cls:'btn btn-sec btn-sm',fn:"showPanel('project',null)"},{html:'Export Job Cost PDF',cls:'btn btn-red btn-sm',fn:'exportJobCostPDF()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderEVA()'}],
   admin:[],
   settings:[]
 };
@@ -2748,7 +2883,7 @@ function showPanel(id,el){
   if(id==='projects')renderProjectsList();
   if(id==='lineitems')renderLineItems();
   if(id==='crewcosts')renderCrewCosts();
-  if(id==='dashboard'){renderDashboard();setTimeout(renderPipeline,50);}
+  if(id==='dashboard'){renderPipeline().then(function(){renderDashboard();}).catch(function(){renderDashboard();});}
   if(id==='project')renderProjectSummary();
   if(id==='co'){populateCOProposalDropdown();}
   if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');}
@@ -3500,6 +3635,11 @@ async function exportPDF(){
   try{
     var p=buildPayload();
     if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
+    // Include project site plan URL if available
+    if(!p.site_plan_image&&window._pendingProjectLink){
+      var _proj=pipelineProposals.find(function(x){return x.id===window._pendingProjectLink;});
+      if(_proj){var _sn=typeof _proj.snap==='string'?JSON.parse(_proj.snap):_proj.snap||{};if(_sn.site_plan_url)p.site_plan_url=_sn.site_plan_url;}
+    }
     var r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
     if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
     var blob=await r.blob();
@@ -3524,6 +3664,10 @@ async function exportDOCX(){
   try{
     var p=buildPayload();
     if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
+    if(!p.site_plan_image&&window._pendingProjectLink){
+      var _proj=pipelineProposals.find(function(x){return x.id===window._pendingProjectLink;});
+      if(_proj){var _sn=typeof _proj.snap==='string'?JSON.parse(_proj.snap):_proj.snap||{};if(_sn.site_plan_url)p.site_plan_url=_sn.site_plan_url;}
+    }
     var r=await fetch('/generate-docx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
     if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
     var blob=await r.blob();
@@ -3956,10 +4100,9 @@ async function renderPipeline() {
   if (!board) return;
   board.innerHTML = '<div style="color:var(--dgray);font-size:13px;padding:20px;">Loading...</div>';
   try {
-    var rs = await fetch('/pipeline/stages');
-    var rp = await fetch('/pipeline/list');
-    var ds = await rs.json();
-    var dp = await rp.json();
+    var results = await Promise.all([fetch('/pipeline/stages'),fetch('/pipeline/list')]);
+    var ds = await results[0].json();
+    var dp = await results[1].json();
     if (!ds.ok || !dp.ok) throw new Error('Failed to load');
     pipelineStages = ds.stages;
     pipelineProposals = dp.proposals;
@@ -4020,7 +4163,7 @@ async function renderPipeline() {
         var dueStr='';
         if(isProject&&snap.bid_due_date){
           var dueParts=snap.bid_due_date.split('-');
-          dueStr='<div style="font-size:10px;color:var(--red);font-weight:600;margin-top:3px;">Bid Due: '+dueParts[1]+'/'+dueParts[2]+'/'+dueParts[0]+(snap.bid_due_time?' @ '+snap.bid_due_time:'')+'</div>';
+          dueStr='<div style="font-size:10px;color:var(--red);font-weight:600;margin-top:3px;">Bid Due: '+dueParts[1]+'/'+dueParts[2]+'/'+dueParts[0]+(snap.bid_due_time?' @ '+fmt12(snap.bid_due_time):'')+'</div>';
         }
         var actions='';
         if(isProject){
