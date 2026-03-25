@@ -153,20 +153,37 @@ class CoverPage(Flowable):
         fy = 0.55 * inch
         lx = aw * 0.18
         rx = aw * 0.62
+        line_h = 0.17 * inch  # line spacing
+
         c.setFont('Helvetica-Bold', 10)
         c.setFillColor(BLACK)
-        c.drawString(lx, fy + 0.58*inch, 'Prepared by:')
-        c.setFont('Helvetica', 10)
+        c.drawString(lx, fy + 0.75*inch, 'Prepared by:')
+        y = fy + 0.53*inch
+        c.setFont('Helvetica-Bold', 10)
         c.setFillColor(DGRAY)
-        c.drawString(lx, fy + 0.36*inch, d.get('sender_name', ''))
-        c.drawString(lx, fy + 0.16*inch, d.get('company', 'HD Hauling & Grading'))
+        c.drawString(lx, y, d.get('sender_name', '')); y -= line_h
+        c.setFont('Helvetica', 9)
+        if d.get('company'):
+            c.drawString(lx, y, d.get('company', 'HD Hauling & Grading')); y -= line_h
+        if d.get('sender_email'):
+            c.drawString(lx, y, d['sender_email']); y -= line_h
+        if d.get('sender_phone'):
+            c.drawString(lx, y, d['sender_phone'])
+
         c.setFont('Helvetica-Bold', 10)
         c.setFillColor(BLACK)
-        c.drawString(rx, fy + 0.58*inch, 'Prepared for:')
-        c.setFont('Helvetica', 10)
+        c.drawString(rx, fy + 0.75*inch, 'Prepared for:')
+        y = fy + 0.53*inch
+        c.setFont('Helvetica-Bold', 10)
         c.setFillColor(DGRAY)
-        c.drawString(rx, fy + 0.36*inch, d.get('client_name', ''))
-        c.drawString(rx, fy + 0.16*inch, d.get('client_company', ''))
+        c.drawString(rx, y, d.get('client_name', '')); y -= line_h
+        c.setFont('Helvetica', 9)
+        if d.get('client_company'):
+            c.drawString(rx, y, d['client_company']); y -= line_h
+        if d.get('client_email'):
+            c.drawString(rx, y, d['client_email']); y -= line_h
+        if d.get('client_phone'):
+            c.drawString(rx, y, d['client_phone'])
 
 def info_block(data, st):
     """Option C — single horizontal band, no boxes, subtle top/bottom lines,
@@ -258,11 +275,11 @@ def bid_table(items, st):
     ch_l = ParagraphStyle('chl', fontName='Helvetica-Bold', fontSize=8, textColor=WHITE)
     ch_r = ParagraphStyle('chr', fontName='Helvetica-Bold', fontSize=8, textColor=WHITE, alignment=TA_RIGHT)
 
-    ban_l = ParagraphStyle('banl', fontName='Helvetica-Bold', fontSize=10, textColor=WHITE, alignment=TA_CENTER)
+    ban_l = ParagraphStyle('banl', fontName='Helvetica-Bold', fontSize=11, textColor=WHITE, alignment=TA_CENTER)
     rows = [
-        [Paragraph('Bid Items', ban_l), '', '', '', ''],
-        [Paragraph('Item &amp; Design', ch_l), Paragraph('Qty',ch_r),
-         Paragraph('Unit',ch_r), Paragraph('Price',ch_r), Paragraph('Subtotal',ch_r)],
+        [Paragraph('BID ITEMS', ban_l), '', '', '', ''],
+        [Paragraph('ITEM &amp; DESCRIPTION', ch_l), Paragraph('QTY',ch_r),
+         Paragraph('UNIT',ch_r), Paragraph('PRICE',ch_r), Paragraph('SUBTOTAL',ch_r)],
     ]
     for item in items:
         name  = item.get('name','')
@@ -291,8 +308,8 @@ def bid_table(items, st):
         ('BACKGROUND',(0,1),(-1,1),colors.HexColor('#4A4A4A')),
         ('TOPPADDING',(0,1),(-1,1),7), ('BOTTOMPADDING',(0,1),(-1,1),7),
         ('LEFTPADDING',(0,1),(0,1),8), ('RIGHTPADDING',(-1,1),(-1,1),8),
-        ('TOPPADDING',(0,2),(-1,-1),4), ('BOTTOMPADDING',(0,2),(-1,-1),4),
-        ('LEFTPADDING',(0,2),(0,-1),8), ('RIGHTPADDING',(-1,2),(-1,-1),8),
+        ('TOPPADDING',(0,2),(-1,-1),6), ('BOTTOMPADDING',(0,2),(-1,-1),6),
+        ('LEFTPADDING',(0,2),(0,-1),10), ('RIGHTPADDING',(-1,2),(-1,-1),10),
         ('LINEBELOW',(0,2),(-1,-1),0.3,TBLBORD),
         ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
         ('ALIGN',(1,0),(-1,-1),'RIGHT'),
@@ -309,15 +326,15 @@ def total_line(total):
     positions them identically."""
     cw  = W - inch
     # Use the same font size for both cells — label slightly smaller via bold weight
-    lbl = ParagraphStyle('tl', fontName='Helvetica-Bold', fontSize=11,
-                          textColor=BLACK, leading=11, spaceAfter=0, spaceBefore=0)
-    val = ParagraphStyle('tv', fontName='Helvetica-Bold', fontSize=11,
-                          textColor=BLACK, leading=11, spaceAfter=0, spaceBefore=0,
+    lbl = ParagraphStyle('tl', fontName='Helvetica-Bold', fontSize=12,
+                          textColor=BLACK, leading=12, spaceAfter=0, spaceBefore=0)
+    val = ParagraphStyle('tv', fontName='Helvetica-Bold', fontSize=12,
+                          textColor=BLACK, leading=12, spaceAfter=0, spaceBefore=0,
                           alignment=TA_RIGHT)
     t = Table([[Paragraph('CONTRACT TOTAL', lbl),
                 Paragraph(f'${total:,.2f}', val)]],
               colWidths=[cw * 0.60, cw * 0.40],
-              rowHeights=[0.44 * inch])
+              rowHeights=[0.48 * inch])
     t.setStyle(TableStyle([
         ('ALIGN',         (1,0),(1,-1),  'RIGHT'),
         ('VALIGN',        (0,0),(-1,-1), 'MIDDLE'),

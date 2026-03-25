@@ -355,38 +355,51 @@ def _build_cover_page(doc, data):
         p.paragraph_format.space_after = Pt(0)
 
     # Prepared by / Prepared for — two-column table
-    tbl = doc.add_table(rows=3, cols=2)
+    # Count rows needed: label + name + company + email + phone
+    max_rows = 5
+    tbl = doc.add_table(rows=max_rows, cols=2)
     tbl.autofit = False
     tbl.columns[0].width = Inches(3.5)
     tbl.columns[1].width = Inches(3.5)
     _remove_table_borders(tbl)
 
     # Row 0 — labels
-    cell_by = tbl.rows[0].cells[0]
-    p = cell_by.paragraphs[0]
+    p = tbl.rows[0].cells[0].paragraphs[0]
     _add_run(p, 'Prepared by:', bold=True, size=10, color=BLACK)
-
-    cell_for = tbl.rows[0].cells[1]
-    p = cell_for.paragraphs[0]
+    p = tbl.rows[0].cells[1].paragraphs[0]
     _add_run(p, 'Prepared for:', bold=True, size=10, color=BLACK)
 
-    # Row 1 — names
+    # Row 1 — names (bold)
     p = tbl.rows[1].cells[0].paragraphs[0]
-    _set_para_spacing(p, before=4, after=2)
-    _add_run(p, data.get('sender_name', ''), size=10, color=DGRAY)
-
+    _set_para_spacing(p, before=4, after=1)
+    _add_run(p, data.get('sender_name', ''), bold=True, size=10, color=DGRAY)
     p = tbl.rows[1].cells[1].paragraphs[0]
-    _set_para_spacing(p, before=4, after=2)
-    _add_run(p, data.get('client_name', ''), size=10, color=DGRAY)
+    _set_para_spacing(p, before=4, after=1)
+    _add_run(p, data.get('client_name', ''), bold=True, size=10, color=DGRAY)
 
     # Row 2 — company
     p = tbl.rows[2].cells[0].paragraphs[0]
-    _set_para_spacing(p, before=0, after=0)
-    _add_run(p, data.get('company', 'HD Hauling & Grading'), size=10, color=DGRAY)
-
+    _set_para_spacing(p, before=0, after=1)
+    _add_run(p, data.get('company', 'HD Hauling & Grading'), size=9, color=DGRAY)
     p = tbl.rows[2].cells[1].paragraphs[0]
+    _set_para_spacing(p, before=0, after=1)
+    _add_run(p, data.get('client_company', ''), size=9, color=DGRAY)
+
+    # Row 3 — email
+    p = tbl.rows[3].cells[0].paragraphs[0]
+    _set_para_spacing(p, before=0, after=1)
+    _add_run(p, data.get('sender_email', ''), size=9, color=DGRAY)
+    p = tbl.rows[3].cells[1].paragraphs[0]
+    _set_para_spacing(p, before=0, after=1)
+    _add_run(p, data.get('client_email', ''), size=9, color=DGRAY)
+
+    # Row 4 — phone
+    p = tbl.rows[4].cells[0].paragraphs[0]
     _set_para_spacing(p, before=0, after=0)
-    _add_run(p, data.get('client_company', ''), size=10, color=DGRAY)
+    _add_run(p, data.get('sender_phone', ''), size=9, color=DGRAY)
+    p = tbl.rows[4].cells[1].paragraphs[0]
+    _set_para_spacing(p, before=0, after=0)
+    _add_run(p, data.get('client_phone', ''), size=9, color=DGRAY)
 
 
 # ── Info Block ──────────────────────────────────────────────────────────────
@@ -541,12 +554,12 @@ def _build_bid_table(doc, data):
     _set_cell_bg(banner_cell, 'CC0000')
     p = banner_cell.paragraphs[0]
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _add_run(p, 'Bid Items', bold=True, size=10, color=WHITE)
+    _add_run(p, 'BID ITEMS', bold=True, size=11, color=WHITE)
     _set_para_spacing(p, before=6, after=6)
     _set_cell_vertical_alignment(banner_cell, 'center')
 
     # ── Row 1: Column headers (dark gray background) ──
-    headers = ['Item & Design', 'Qty', 'Unit', 'Price', 'Subtotal']
+    headers = ['ITEM & DESCRIPTION', 'QTY', 'UNIT', 'PRICE', 'SUBTOTAL']
     aligns  = [WD_ALIGN_PARAGRAPH.LEFT, WD_ALIGN_PARAGRAPH.RIGHT,
                WD_ALIGN_PARAGRAPH.RIGHT, WD_ALIGN_PARAGRAPH.RIGHT,
                WD_ALIGN_PARAGRAPH.RIGHT]
