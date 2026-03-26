@@ -1373,7 +1373,7 @@ tr:nth-child(even) td{background:var(--lgray);}
             <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
             <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
             <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
-            <div class="dash-stat-cell" id="dash-stat-weather"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+            <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
           </div>
 
           <!-- Today's Schedule — most prominent card -->
@@ -4124,8 +4124,8 @@ function loadDashBidDates(){
 function renderDashboard(){
   _setDashGreeting();
   loadDashBidDates();
-  renderDashWeatherMini();
   renderDashStats();
+  renderDashWeatherMini();
   renderDashUpcomingWO();
   renderDashTodaySchedule();
   renderDashRecentActivity();
@@ -4388,6 +4388,10 @@ function renderDashStats(){
       +(s.sub?'<div class="dash-stat-sub">'+s.sub+'</div>':'');
     c.appendChild(div);
   });
+  // Append weather cell at the end — renderDashWeatherMini will populate it
+  var wxCell=document.createElement('div');wxCell.className='dash-stat-cell';wxCell.id='dash-stat-weather';
+  wxCell.innerHTML='<div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div>';
+  c.appendChild(wxCell);
 }
 function renderDashPipelineSnapshot(){
   var c=document.getElementById('dash-pipeline-snapshot');if(!c)return;
