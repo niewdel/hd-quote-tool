@@ -203,6 +203,8 @@ body.dark .login-bar{background:#ffffff;}
 /* Dynamic elements created via JS — use .dk-card class for dark mode */
 .dk-card{background:#fff;border:1px solid var(--bdr);border-radius:8px;}
 body.dark .dk-card{background:#222 !important;border-color:#333 !important;color:#e0e0e0 !important;}
+.dk-card.ps-clickable{cursor:pointer;transition:background .15s;}
+.dk-card.ps-clickable:hover{background:var(--lgray) !important;}
 body.dark .dk-card select{background:#2a2a2a !important;color:#e0e0e0 !important;border-color:#444 !important;}
 /* Schedule — calendar day columns */
 body.dark #sched-cal-grid>div{background:#222 !important;border-color:#444 !important;}
@@ -3442,23 +3444,56 @@ function _renderProjectSummaryInner(proj){
     if(linked.length){
       linked.forEach(function(qid,idx){
         var q=savedQuotes.find(function(x){return x.id===qid;});
-        var row=document.createElement('div');
-        row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);';
+        var card=document.createElement('div');
+        card.className='dk-card';
+        card.style.cssText='padding:12px 14px;margin-bottom:10px;';
+        card.classList.add('ps-clickable');
         if(q){
-          var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
-          var pLabel='P'+(idx+1);
-          info.innerHTML='<span style="display:inline-block;background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;">'+pLabel+'</span>'
-            +'<span style="font-weight:600;font-size:13px;vertical-align:middle;">'+esc(q.name||'Untitled')+'</span>'
-            +'<div style="font-size:11px;color:var(--dgray);margin-top:2px;">$'+Math.round(q.total||0).toLocaleString()+' &middot; '+esc(q.date||'')+'</div>';
-          row.appendChild(info);
-          var btns=document.createElement('div');btns.style.cssText='display:flex;gap:6px;flex-shrink:0;';
-          var openBtn=document.createElement('button');openBtn.className='btn btn-sec btn-sm';openBtn.textContent='Open';
-          (function(id){openBtn.addEventListener('click',function(){loadQuote(id);showPanel('build',document.querySelector('[onclick*=build]'));});})(qid);
-          btns.appendChild(openBtn);row.appendChild(btns);
+          // Top row: label + name + total badge
+          var topRow=document.createElement('div');
+          topRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;';
+          var nameEl=document.createElement('div');nameEl.style.cssText='font-weight:700;font-size:14px;flex:1;min-width:0;';
+          var pLabel=document.createElement('span');pLabel.style.cssText='display:inline-block;background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;';
+          pLabel.textContent='P'+(idx+1);
+          nameEl.appendChild(pLabel);
+          nameEl.appendChild(document.createTextNode(q.name||'Untitled'));
+          topRow.appendChild(nameEl);
+          var totalBadge=document.createElement('span');
+          totalBadge.style.cssText='font-size:10px;font-weight:700;color:#fff;background:#2B5FA6;padding:3px 10px;border-radius:4px;flex-shrink:0;';
+          totalBadge.textContent='$'+Math.round(q.total||0).toLocaleString();
+          topRow.appendChild(totalBadge);
+          card.appendChild(topRow);
+          // Detail row
+          var details=[];
+          if(q.date)details.push(esc(q.date));
+          if(q.client)details.push(esc(q.client));
+          if(details.length){
+            var detEl=document.createElement('div');detEl.style.cssText='font-size:12px;color:var(--dgray);margin-bottom:4px;';
+            detEl.innerHTML=details.join(' &middot; ');
+            card.appendChild(detEl);
+          }
+          // Action row
+          var actRow=document.createElement('div');
+          actRow.style.cssText='display:flex;align-items:center;gap:8px;margin-top:6px;';
+          var del=document.createElement('button');del.className='btn btn-sec btn-sm';del.style.cssText='color:var(--dgray);';del.textContent='Remove';
+          (function(i,qId){
+            del.addEventListener('click',function(e){
+              e.stopPropagation();
+              if(!confirm('Remove this proposal from the project?'))return;
+              snap.linked_proposals.splice(i,1);
+              var newTotals=calcProjectTotal(proj);
+              fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap,total:newTotals.grandTotal})})
+                .then(function(){proj.total=newTotals.grandTotal;renderProjectSummary();});
+            });
+          })(idx,qid);
+          actRow.appendChild(del);
+          card.appendChild(actRow);
+          // Click whole card to open proposal
+          (function(id){card.addEventListener('click',function(){loadQuote(id);showPanel('build',document.querySelector('[onclick*=build]'));});})(qid);
         } else {
-          row.innerHTML='<div style="font-size:12px;color:var(--dgray);">Proposal #'+qid+' (not found)</div>';
+          card.innerHTML='<div style="font-size:12px;color:var(--dgray);">Proposal #'+qid+' (not found)</div>';
         }
-        psProposals.appendChild(row);
+        psProposals.appendChild(card);
       });
     }
     // Action buttons
@@ -3476,30 +3511,51 @@ function _renderProjectSummaryInner(proj){
     psCO.innerHTML='';
     if(coList.length){
       coList.forEach(function(co,idx){
-        var row=document.createElement('div');
-        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);';
-        var info=document.createElement('div');info.style.cssText='flex:1;';
-        var sign=co.total>=0?'+':'';
-        var coLabel='CO'+(co.co_number||idx+1);
-        info.innerHTML='<span style="display:inline-block;background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;">'+coLabel+'</span>'
-          +'<span style="font-weight:600;font-size:13px;vertical-align:middle;">'+esc(co.name||'Change Order')+'</span>'
-          +'<div style="font-size:11px;color:var(--dgray);margin-top:2px;">'+sign+'$'+Math.round(Math.abs(co.total||0)).toLocaleString()+(co.date?' &middot; '+esc(co.date):'')+'</div>';
-        row.appendChild(info);
-        var coBtns=document.createElement('div');coBtns.style.cssText='display:flex;gap:6px;flex-shrink:0;align-items:center;';
-        var coOpenBtn=document.createElement('button');coOpenBtn.className='btn btn-sec btn-sm';coOpenBtn.textContent='Open';
-        (function(coId){coOpenBtn.addEventListener('click',function(){loadCO(coId);});})(co.id);
-        coBtns.appendChild(coOpenBtn);
-        var del=document.createElement('button');del.className='btn-ico';del.style.cssText='color:var(--dgray);font-size:14px;';del.textContent='×';del.title='Remove';
-        (function(i){del.addEventListener('click',function(){
+        var card=document.createElement('div');
+        card.className='dk-card';
+        card.style.cssText='padding:12px 14px;margin-bottom:10px;';
+        card.classList.add('ps-clickable');
+        // Top row: label + name + total badge
+        var topRow=document.createElement('div');
+        topRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;';
+        var nameEl=document.createElement('div');nameEl.style.cssText='font-weight:700;font-size:14px;flex:1;min-width:0;';
+        var coLabel=document.createElement('span');coLabel.style.cssText='display:inline-block;background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;';
+        coLabel.textContent='CO'+(co.co_number||idx+1);
+        nameEl.appendChild(coLabel);
+        nameEl.appendChild(document.createTextNode(co.name||'Change Order'));
+        topRow.appendChild(nameEl);
+        var sign=co.total>=0?'+':'−';
+        var totalBadge=document.createElement('span');
+        totalBadge.style.cssText='font-size:10px;font-weight:700;color:#fff;background:'+(co.total>=0?'#27500A':'#CC0000')+';padding:3px 10px;border-radius:4px;flex-shrink:0;';
+        totalBadge.textContent=sign+'$'+Math.round(Math.abs(co.total||0)).toLocaleString();
+        topRow.appendChild(totalBadge);
+        card.appendChild(topRow);
+        // Detail row
+        var details=[];
+        if(co.date)details.push(esc(co.date));
+        if(co.reason)details.push(esc(co.reason));
+        if(details.length){
+          var detEl=document.createElement('div');detEl.style.cssText='font-size:12px;color:var(--dgray);margin-bottom:4px;';
+          detEl.innerHTML=details.join(' &middot; ');
+          card.appendChild(detEl);
+        }
+        // Action row
+        var actRow=document.createElement('div');
+        actRow.style.cssText='display:flex;align-items:center;gap:8px;margin-top:6px;';
+        var del=document.createElement('button');del.className='btn btn-sec btn-sm';del.style.cssText='color:var(--dgray);';del.textContent='Remove';
+        (function(i){del.addEventListener('click',function(e){
+          e.stopPropagation();
           if(!confirm('Remove this change order from the project?'))return;
           snap.change_orders.splice(i,1);
           var newTotals=calcProjectTotal(proj);
           fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap,total:newTotals.grandTotal})})
             .then(function(){proj.total=newTotals.grandTotal;renderProjectSummary();});
         });})(idx);
-        coBtns.appendChild(del);
-        row.appendChild(coBtns);
-        psCO.appendChild(row);
+        actRow.appendChild(del);
+        card.appendChild(actRow);
+        // Click whole card to open change order
+        (function(coId){card.addEventListener('click',function(){loadCO(coId);});})(co.id);
+        psCO.appendChild(card);
       });
     }
     var coBtn=document.createElement('button');coBtn.className='btn btn-red btn-sm';coBtn.style.marginTop='10px';
@@ -3518,18 +3574,18 @@ function _renderProjectSummaryInner(proj){
         var card=document.createElement('div');
         card.className='dk-card';
         card.style.cssText='padding:12px 14px;margin-bottom:10px;';
+        card.classList.add('ps-clickable');
         var statusColors={pending:'#999',active:'#2B5FA6',complete:'#27500A'};
         var statusLabels={pending:'Pending',active:'Active',complete:'Complete'};
         // Top row: name + status badge
         var topRow=document.createElement('div');
         topRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;';
-        var nameEl=document.createElement('div');nameEl.style.cssText='font-weight:700;font-size:14px;cursor:pointer;flex:1;min-width:0;';
+        var nameEl=document.createElement('div');nameEl.style.cssText='font-weight:700;font-size:14px;flex:1;min-width:0;';
         var woLabel=document.createElement('span');woLabel.style.cssText='display:inline-block;background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;';
         woLabel.textContent='WO'+(idx+1);
         nameEl.appendChild(woLabel);
         var woNameTxt=document.createTextNode(wo.name||'Work Order');
         nameEl.appendChild(woNameTxt);
-        (function(woId){nameEl.addEventListener('click',function(){openWorkOrderView(woId);});})(wo.id);
         topRow.appendChild(nameEl);
         var badge=document.createElement('span');
         badge.style.cssText='font-size:10px;font-weight:700;color:#fff;background:'+(statusColors[wo.status]||'#999')+';padding:3px 10px;border-radius:4px;text-transform:uppercase;flex-shrink:0;';
@@ -3560,18 +3616,17 @@ function _renderProjectSummaryInner(proj){
           if(wo.status===s)opt.selected=true;
           statusBtn.appendChild(opt);
         });
-        (function(i){statusBtn.addEventListener('change',function(){
+        (function(i){statusBtn.addEventListener('change',function(e){
+          e.stopPropagation();
           snap.work_orders[i].status=this.value;
           addProjectActivity(snap,'wo','Work order "'+snap.work_orders[i].name+'" marked '+this.value);
           fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
             .then(function(){renderProjectSummary();});
         });})(idx);
         actRow.appendChild(statusBtn);
-        var viewBtn=document.createElement('button');viewBtn.className='btn btn-sec btn-sm';viewBtn.textContent='View';
-        (function(woId){viewBtn.addEventListener('click',function(){openWorkOrderView(woId);});})(wo.id);
-        actRow.appendChild(viewBtn);
         var del=document.createElement('button');del.className='btn btn-sec btn-sm';del.style.cssText='color:var(--dgray);';del.textContent='Remove';
-        (function(i){del.addEventListener('click',function(){
+        (function(i){del.addEventListener('click',function(e){
+          e.stopPropagation();
           if(!confirm('Remove this work order?'))return;
           snap.work_orders.splice(i,1);
           fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
@@ -3579,6 +3634,8 @@ function _renderProjectSummaryInner(proj){
         });})(idx);
         actRow.appendChild(del);
         card.appendChild(actRow);
+        // Click whole card to open work order
+        (function(woId){card.addEventListener('click',function(){openWorkOrderView(woId);});})(wo.id);
         psWOList.appendChild(card);
       });
     }
