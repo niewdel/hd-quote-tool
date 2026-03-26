@@ -960,49 +960,72 @@ def setup_user_fields():
 
 # ── Notifications ─────────────────────────────────────────────────────────────
 
+_notif_table_ensured = False
+_NOTIF_SQL = """
+CREATE TABLE IF NOT EXISTS hd_notifications (
+    id SERIAL PRIMARY KEY,
+    recipient TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'info',
+    title TEXT NOT NULL,
+    body TEXT DEFAULT '',
+    project_id INT,
+    project_name TEXT DEFAULT '',
+    link TEXT DEFAULT '',
+    read BOOLEAN DEFAULT FALSE,
+    dismissed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by TEXT DEFAULT ''
+);
+ALTER TABLE hd_notifications DISABLE ROW LEVEL SECURITY;
+CREATE INDEX IF NOT EXISTS idx_notif_recipient ON hd_notifications(recipient, dismissed, created_at DESC);
+"""
+
+def ensure_notif_table():
+    """Auto-create hd_notifications table if it doesn't exist."""
+    global _notif_table_ensured
+    if _notif_table_ensured:
+        return True
+    svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+    # Quick check: try to query the table
+    try:
+        r = http.get(sb_url('hd_notifications', '?select=id&limit=1'), headers=sb_headers(), timeout=5)
+        if r.status_code == 200:
+            _notif_table_ensured = True
+            return True
+    except Exception:
+        pass
+    # Table doesn't exist — try to create it
+    try:
+        r = http.post(f'{SUPABASE_URL}/rest/v1/rpc/exec_sql',
+            headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
+            json={'query': _NOTIF_SQL}, timeout=10)
+        if r.status_code == 200:
+            _notif_table_ensured = True
+            return True
+        r2 = http.post(f'{SUPABASE_URL}/pg/query',
+            headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
+            json={'query': _NOTIF_SQL}, timeout=10)
+        if r2.status_code == 200:
+            _notif_table_ensured = True
+            return True
+    except Exception:
+        pass
+    return False
+
 @app.route('/setup/notifications-table', methods=['POST'])
 @require_admin
 def setup_notifications_table():
     """Create hd_notifications table. Run once."""
-    sql = """
-    CREATE TABLE IF NOT EXISTS hd_notifications (
-        id SERIAL PRIMARY KEY,
-        recipient TEXT NOT NULL,
-        type TEXT NOT NULL DEFAULT 'info',
-        title TEXT NOT NULL,
-        body TEXT DEFAULT '',
-        project_id INT,
-        project_name TEXT DEFAULT '',
-        link TEXT DEFAULT '',
-        read BOOLEAN DEFAULT FALSE,
-        dismissed BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMPTZ DEFAULT NOW(),
-        created_by TEXT DEFAULT ''
-    );
-    ALTER TABLE hd_notifications DISABLE ROW LEVEL SECURITY;
-    CREATE INDEX IF NOT EXISTS idx_notif_recipient ON hd_notifications(recipient, dismissed, created_at DESC);
-    """
-    svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
-    try:
-        r = http.post(f'{SUPABASE_URL}/rest/v1/rpc/exec_sql',
-            headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
-            json={'query': sql}, timeout=10)
-        if r.status_code != 200:
-            r2 = http.post(f'{SUPABASE_URL}/pg/query',
-                headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
-                json={'query': sql}, timeout=10)
-            if r2.status_code == 200:
-                return jsonify({'ok': True, 'method': 'pg/query'})
-            return jsonify({'ok': False, 'error': 'Run this SQL manually in Supabase dashboard.', 'sql': sql.strip()})
+    if ensure_notif_table():
         return jsonify({'ok': True})
-    except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)})
+    return jsonify({'ok': False, 'error': 'Run this SQL manually in Supabase dashboard.', 'sql': _NOTIF_SQL.strip()})
 
 
 @app.route('/notifications/list')
 @require_auth
 def notifications_list():
     """Get notifications for the current user."""
+    ensure_notif_table()
     username = session.get('username', '')
     try:
         r = http.get(
@@ -1016,6 +1039,7 @@ def notifications_list():
 @app.route('/notifications/unread-count')
 @require_auth
 def notifications_unread_count():
+    ensure_notif_table()
     username = session.get('username', '')
     try:
         r = http.get(
@@ -1062,7 +1086,8 @@ def notifications_dismiss(nid):
 @app.route('/notifications/send', methods=['POST'])
 @require_auth
 def notifications_send():
-    """Create notifications — used for @mentions, assignments, etc."""
+    """Create notifications — used for @mentions, assignments, stage changes, etc."""
+    ensure_notif_table()
     data = request.get_json() or {}
     recipients = data.get('recipients', [])
     ntype = data.get('type', 'info')
@@ -1070,18 +1095,66 @@ def notifications_send():
     body = data.get('body', '')
     project_id = data.get('project_id')
     project_name = data.get('project_name', '')
+    email_notify = data.get('email_notify', False)
     created_by = session.get('username', '')
     if not recipients or not title:
         return jsonify({'ok': False, 'error': 'recipients and title required'}), 400
     try:
+        # If '_all' is in recipients, expand to all active users
+        if '_all' in recipients:
+            r = http.get(sb_url('hd_users', '?active=eq.true&select=username'), headers=sb_headers(), timeout=5)
+            all_users = r.json() if r.status_code == 200 else []
+            recipients = [u['username'] for u in all_users]
+
         rows = [{'recipient': r, 'type': ntype, 'title': title, 'body': body,
                  'project_id': project_id, 'project_name': project_name,
                  'created_by': created_by} for r in recipients if r != created_by]
         if rows:
             http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=rows, timeout=10)
+
+        # Send email notifications if requested
+        if email_notify and GMAIL_AVAILABLE:
+            _send_notif_emails(recipients, created_by, title, body, project_name)
+
         return jsonify({'ok': True, 'sent': len(rows)})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+def _send_notif_emails(recipients, created_by, title, body, project_name):
+    """Send email alerts for notifications to recipients who have emails on file."""
+    try:
+        import base64
+        from email.mime.text import MIMEText
+        token_json = os.environ.get('GMAIL_TOKEN_JSON', '')
+        if not token_json:
+            return
+        creds = Credentials.from_authorized_user_info(json.loads(token_json))
+        service = gmail_build('gmail', 'v1', credentials=creds)
+        # Look up emails for recipients
+        for username in recipients:
+            if username == created_by:
+                continue
+            r = http.get(sb_url('hd_users', f'?username=eq.{username}&select=email,full_name'), headers=sb_headers(), timeout=5)
+            users = r.json() if r.status_code == 200 else []
+            if not users or not users[0].get('email'):
+                continue
+            email_addr = users[0]['email']
+            full_name = users[0].get('full_name', username)
+            subject = f'HD Hauling — {title}'
+            email_body = f'Hi {full_name},\n\n{title}\n'
+            if body:
+                email_body += f'\n{body}\n'
+            if project_name:
+                email_body += f'\nProject: {project_name}\n'
+            email_body += '\n— HD Hauling & Grading'
+            msg = MIMEText(email_body, 'plain')
+            msg['to'] = email_addr
+            msg['subject'] = subject
+            raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+            service.users().messages().send(userId='me', body={'raw': raw}).execute()
+    except Exception as e:
+        app.logger.error(f'Email notification error: {e}')
 
 
 # ── Settings (shared key/value store in hd_settings table) ──────────────────

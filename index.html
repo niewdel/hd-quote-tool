@@ -229,6 +229,10 @@ body.dark ::-webkit-scrollbar-thumb:hover{background:#555;}
 .dark-switch .slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
 .dark-switch input:checked+.slider{background:var(--red);}
 .dark-switch input:checked+.slider:before{transform:translateX(20px);}
+.notif-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--lgray);border-radius:6px;cursor:default;}
+.notif-toggle-label{display:flex;flex-direction:column;font-size:13px;font-weight:500;}
+.notif-toggle-desc{font-size:11px;color:var(--dgray);font-weight:400;margin-top:1px;}
+body.dark .notif-toggle-row{background:#1e1e1e;}
 /* Notification panel */
 .notif-bell{position:relative;background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;padding:4px;transition:color .15s;}
 .notif-bell:hover{color:#fff;}
@@ -313,6 +317,12 @@ body.dark .mention-dropdown{background:#222;border-color:#444;}
 .topbar{background:#fff;border-bottom:1px solid var(--bdr);padding:11px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
 .topbar-title{font-size:15px;font-weight:600;}
 .topbar-actions{display:flex;gap:7px;align-items:center;}
+.topbar-bell{position:relative;background:none;border:none;color:#666;cursor:pointer;padding:6px;border-radius:6px;transition:background .15s,color .15s;}
+.topbar-bell:hover{background:var(--lgray);color:#333;}
+body.dark .topbar-bell{color:#999;}body.dark .topbar-bell:hover{background:#333;color:#fff;}
+.topbar-bell .notif-dot{position:absolute;top:4px;right:4px;width:9px;height:9px;background:var(--red);border-radius:50%;display:none;border:2px solid #fff;}
+.topbar-bell .notif-dot.on{display:block;animation:notifPulse 2s infinite;}
+body.dark .topbar-bell .notif-dot{border-color:#222;}
 .content{padding:22px;max-width:1080px;}
 
 /* Panels */
@@ -702,7 +712,13 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <div class="main">
     <div class="topbar">
       <span class="topbar-title" id="topbar-title">Dashboard</span>
-      <div class="topbar-actions" id="topbar-actions"></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="topbar-actions" id="topbar-actions"></div>
+        <button class="topbar-bell" onclick="toggleNotifPanel()" title="Notifications">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-dot" id="notif-dot-topbar"></span>
+        </button>
+      </div>
       <input type="file" id="site-plan-input" accept="image/*" style="display:none" onchange="setSitePlan(this)"/>
     </div>
 
@@ -1284,6 +1300,32 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 <div style="font-size:11px;color:var(--dgray);margin-top:2px;">Switch to a dark color scheme for reduced eye strain</div>
               </div>
               <label class="dark-switch"><input type="checkbox" id="dark-switch-cb" onchange="toggleDarkMode()"><span class="slider"></span></label>
+            </div>
+          </div>
+
+          <!-- Notifications Card -->
+          <div class="card" id="notif-prefs-card">
+            <div class="card-hdr"><span class="card-title">Notifications</span></div>
+            <div class="card-body" style="padding:16px;">
+              <p style="font-size:12px;color:var(--dgray);margin-bottom:14px;">Choose which notifications you receive in-app and by email.</p>
+
+              <div style="font-weight:600;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);">In-App Notifications</div>
+              <div id="notif-toggles-inapp" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+                <div class="notif-toggle-row"><span class="notif-toggle-label">@Mentions<span class="notif-toggle-desc">When someone tags you in a note</span></span><label class="dark-switch"><input type="checkbox" data-notif-key="mention" checked onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
+                <div class="notif-toggle-row"><span class="notif-toggle-label">Assignments<span class="notif-toggle-desc">When you're assigned to a project</span></span><label class="dark-switch"><input type="checkbox" data-notif-key="assignment" checked onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
+                <div class="notif-toggle-row"><span class="notif-toggle-label">Stage Changes<span class="notif-toggle-desc">When a project moves to a new pipeline stage</span></span><label class="dark-switch"><input type="checkbox" data-notif-key="stage_change" checked onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
+                <div class="notif-toggle-row"><span class="notif-toggle-label">Due Dates<span class="notif-toggle-desc">Reminders for upcoming project due dates</span></span><label class="dark-switch"><input type="checkbox" data-notif-key="due_date" checked onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
+                <div class="notif-toggle-row"><span class="notif-toggle-label">Weather Alerts<span class="notif-toggle-desc">Severe weather warnings for scheduled jobs</span></span><label class="dark-switch"><input type="checkbox" data-notif-key="weather" checked onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
+              </div>
+
+              <div style="font-weight:600;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);">Email Alerts</div>
+              <p style="font-size:11px;color:var(--dgray);margin-bottom:8px;">Get emailed for important events — requires an email on your account.</p>
+              <div id="notif-toggles-email" style="display:flex;flex-direction:column;gap:6px;">
+                <div class="notif-toggle-row"><span class="notif-toggle-label">Jobs Won<span class="notif-toggle-desc">When a project moves to Approved stage</span></span><label class="dark-switch"><input type="checkbox" data-email-key="jobs_won" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
+                <div class="notif-toggle-row"><span class="notif-toggle-label">New Assignments<span class="notif-toggle-desc">When you're assigned to a project</span></span><label class="dark-switch"><input type="checkbox" data-email-key="assignment" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
+                <div class="notif-toggle-row"><span class="notif-toggle-label">@Mentions<span class="notif-toggle-desc">When someone tags you in a note</span></span><label class="dark-switch"><input type="checkbox" data-email-key="mention" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
+                <div class="notif-toggle-row"><span class="notif-toggle-label">Jobs Lost<span class="notif-toggle-desc">When a project moves to Lost stage</span></span><label class="dark-switch"><input type="checkbox" data-email-key="jobs_lost" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
+              </div>
             </div>
           </div>
         </div>
@@ -2208,6 +2250,7 @@ async function doLogout(){
 
 function boot(){
   loadStorage();
+  loadNotifPrefs();
   applyBadgeStyles();
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   var coD=document.getElementById('co-date');if(coD)coD.value=new Date().toISOString().split('T')[0];
@@ -2301,7 +2344,7 @@ function _applyJCDefaults(d){
 }
 
 function _loadFromSupabase(){
-  fetch('/settings/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:['hd_sender','hd_presets','hd_badge_defs','hd_mat_prices','hd_jc_defaults','hd_crews','hd_bid_library','hd_handbook_url','hd_equipment','hd_unit_prices']})})
+  fetch('/settings/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:['hd_sender','hd_presets','hd_badge_defs','hd_mat_prices','hd_jc_defaults','hd_crews','hd_bid_library','hd_handbook_url','hd_equipment','hd_unit_prices','hd_notif_prefs']})})
     .then(function(r){return r.json();}).then(function(d){
       if(!d.ok||!d.values)return;
       var v=d.values;
@@ -2315,6 +2358,7 @@ function _loadFromSupabase(){
       if(v.hd_equipment){EQUIPMENT=v.hd_equipment;_eqId=EQUIPMENT.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},17);try{localStorage.setItem('hd_equipment',JSON.stringify(v.hd_equipment));}catch(e){}}
       if(v.hd_unit_prices){UNIT_PRICES=v.hd_unit_prices;_upId=UNIT_PRICES.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},11);try{localStorage.setItem('hd_unit_prices',JSON.stringify(v.hd_unit_prices));}catch(e){}}
       if(v.hd_handbook_url){var el=document.getElementById('dash-handbook-url');if(el)el.value=v.hd_handbook_url;}
+      if(v.hd_notif_prefs){try{if(v.hd_notif_prefs.inapp)Object.assign(_notifPrefs.inapp,v.hd_notif_prefs.inapp);if(v.hd_notif_prefs.email)Object.assign(_notifPrefs.email,v.hd_notif_prefs.email);localStorage.setItem('hd_notif_prefs',JSON.stringify(_notifPrefs));loadNotifPrefs();}catch(e){}}
     }).catch(function(){});
 }
 
@@ -6898,6 +6942,15 @@ async function moveCard(proposalId, stageId) {
     await fetch('/pipeline/move/'+proposalId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage_id:stageId})});
     await renderPipeline();
     autoCreateWorkOrder(proposalId,stageId);
+    // Send stage change notification
+    if(shouldNotify('stage_change')){
+      var stage=pipelineStages.find(function(s){return s.id===stageId;});
+      var stageName=stage?stage.name:'Unknown';
+      // Find project name from pipeline data
+      var projName='Project #'+proposalId;
+      try{var pCards=document.querySelectorAll('[data-proposal-id="'+proposalId+'"]');if(pCards.length)projName=pCards[0].querySelector('.pipe-card-title')?.textContent||projName;}catch(e){}
+      sendStageChangeNotification(proposalId,projName,stageName);
+    }
     toast('Moved','ok');
   } catch(e){toast('Move failed: '+e.message,'err');}
 }
@@ -8844,8 +8897,10 @@ function loadNotifications(){
 function pollNotifCount(){
   fetch('/notifications/unread-count').then(function(r){return r.json();}).then(function(d){
     if(!d.ok)return;
-    var dot=document.getElementById('notif-dot');
-    if(dot){if(d.count>0){dot.classList.add('on');}else{dot.classList.remove('on');}}
+    ['notif-dot','notif-dot-topbar'].forEach(function(id){
+      var dot=document.getElementById(id);
+      if(dot){if(d.count>0){dot.classList.add('on');}else{dot.classList.remove('on');}}
+    });
   }).catch(function(){});
 }
 
@@ -8916,6 +8971,36 @@ function markAllNotifsRead(){
   });
 }
 
+// ── Notification Preferences ──────────────────────────────────────────────
+var _notifPrefs={inapp:{mention:true,assignment:true,stage_change:true,due_date:true,weather:true},email:{jobs_won:false,assignment:false,mention:false,jobs_lost:false}};
+
+function loadNotifPrefs(){
+  try{var s=localStorage.getItem('hd_notif_prefs');if(s){var p=JSON.parse(s);if(p.inapp)Object.assign(_notifPrefs.inapp,p.inapp);if(p.email)Object.assign(_notifPrefs.email,p.email);}}catch(e){}
+  // Apply to checkboxes
+  document.querySelectorAll('[data-notif-key]').forEach(function(cb){
+    var k=cb.getAttribute('data-notif-key');
+    cb.checked=_notifPrefs.inapp[k]!==false;
+  });
+  document.querySelectorAll('[data-email-key]').forEach(function(cb){
+    var k=cb.getAttribute('data-email-key');
+    cb.checked=_notifPrefs.email[k]===true;
+  });
+}
+
+function saveNotifPrefs(){
+  document.querySelectorAll('[data-notif-key]').forEach(function(cb){
+    _notifPrefs.inapp[cb.getAttribute('data-notif-key')]=cb.checked;
+  });
+  document.querySelectorAll('[data-email-key]').forEach(function(cb){
+    _notifPrefs.email[cb.getAttribute('data-email-key')]=cb.checked;
+  });
+  _saveSetting('hd_notif_prefs',_notifPrefs);
+  toast('Notification preferences saved','ok');
+}
+
+function shouldNotify(type){return _notifPrefs.inapp[type]!==false;}
+function shouldEmailNotify(type){return _notifPrefs.email[type]===true;}
+
 // Send notifications for @mentions found in text
 function sendMentionNotifications(text,projectId,projectName){
   var mentions=text.match(/@(\w+)/g);
@@ -8926,23 +9011,40 @@ function sendMentionNotifications(text,projectId,projectName){
     if(_allUsers.some(function(u){return u.username===uname;})&&usernames.indexOf(uname)===-1)usernames.push(uname);
   });
   if(!usernames.length)return;
-  var sender=window._userName||window._userUsername||'Someone';
+  var senderName=window._userName||window._userUsername||'Someone';
   fetch('/notifications/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
     recipients:usernames,type:'mention',
-    title:sender+' mentioned you in a note',
+    title:senderName+' mentioned you in a note',
     body:text.length>100?text.substring(0,100)+'...':text,
-    project_id:projectId,project_name:projectName
+    project_id:projectId,project_name:projectName,
+    email_notify:shouldEmailNotify('mention')
   })});
 }
 
 // Send notification when project is assigned
 function sendAssignmentNotification(username,projectId,projectName){
-  var sender=window._userName||window._userUsername||'Someone';
+  var senderName=window._userName||window._userUsername||'Someone';
   fetch('/notifications/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
     recipients:[username],type:'assignment',
-    title:sender+' assigned you to a project',
+    title:senderName+' assigned you to a project',
     body:projectName,
-    project_id:projectId,project_name:projectName
+    project_id:projectId,project_name:projectName,
+    email_notify:shouldEmailNotify('assignment')
+  })});
+}
+
+// Send notification for stage changes (jobs won/lost)
+function sendStageChangeNotification(projectId,projectName,newStage){
+  var senderName=window._userName||window._userUsername||'Someone';
+  var isWon=newStage==='Approved';
+  var isLost=newStage==='Lost';
+  var emailType=isWon?'jobs_won':isLost?'jobs_lost':null;
+  fetch('/notifications/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    recipients:['_all'],type:'stage_change',
+    title:projectName+' moved to '+newStage,
+    body:senderName+' updated the pipeline stage',
+    project_id:projectId,project_name:projectName,
+    email_notify:emailType?shouldEmailNotify(emailType):false
   })});
 }
 
