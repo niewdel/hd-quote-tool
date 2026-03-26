@@ -1061,14 +1061,30 @@ tr:nth-child(even) td{background:#FAFAFA;}
                       <th style="padding:7px 10px;text-align:center;font-weight:600;">Trade</th>
                       <th style="padding:7px 10px;text-align:right;font-weight:600;">Cost $/unit</th>
                       <th style="padding:7px 10px;text-align:center;font-weight:600;">Unit</th>
+                      <th style="padding:7px 10px;width:36px;"></th>
                     </tr>
                   </thead>
                   <tbody id="mat-tbody"></tbody>
                 </table>
               </div>
-              <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+              <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                 <button class="btn btn-red btn-sm" onclick="saveMatPrices()">Save Prices</button>
+                <button class="btn btn-sec btn-sm" onclick="openAddMaterialForm()">+ Add Material</button>
+                <button class="btn btn-sec btn-sm" onclick="resetMatPrices()">Reset Defaults</button>
                 <span id="mat-prices-updated" style="font-size:11px;color:var(--dgray);"></span>
+              </div>
+              <div id="add-mat-form" style="display:none;margin-top:12px;padding:12px;background:var(--lgray);border-radius:6px;border:1px solid var(--bdr);">
+                <div style="font-weight:600;font-size:13px;margin-bottom:8px;">New Material</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;align-items:end;">
+                  <div><label style="font-size:11px;">Name</label><input id="add-mat-name" type="text" placeholder="e.g. Granite" style="font-size:12px;"/></div>
+                  <div><label style="font-size:11px;">Trade</label><select id="add-mat-trade" style="font-size:12px;"></select></div>
+                  <div><label style="font-size:11px;">Cost $/unit</label><input id="add-mat-cost" type="number" value="0" min="0" step="1" style="font-size:12px;"/></div>
+                  <div><label style="font-size:11px;">Unit</label><select id="add-mat-unit" style="font-size:12px;"><option>TON</option><option>CY</option><option>SY</option><option>LF</option><option>EA</option><option>GAL</option><option>AC</option><option>SF</option><option>HR</option></select></div>
+                </div>
+                <div style="margin-top:10px;display:flex;gap:8px;">
+                  <button class="btn btn-red btn-sm" onclick="confirmAddMaterial()">Add</button>
+                  <button class="btn btn-sec btn-sm" onclick="closeAddMaterialForm()">Cancel</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1356,7 +1372,7 @@ var LTYPES = ['ABC','#57 Stone','S9.5B','S9.5C','I19.0C','B25.0C','Concrete',
   'Tack Coat','Paving Fabric','Rip Rap','Gravel','Select Fill','Structural Fill','Topsoil',
   'RCP Pipe','HDPE Pipe','Precast Structure','PVC Pipe','DIP Pipe','Fire Hydrant','Gate Valve',
   'Silt Fence','Erosion Blanket','Seed Mix','Traffic Paint','Thermoplastic',
-  'Sign Post','Bollard','Wheel Stop','Sod','Mulch','Plant Material','Fence Material','Labor'];
+  'Sign Post','Bollard','Wheel Stop','Sod','Mulch','Plant Material','Fence Material'];
 var LBS = {'ABC':150,'#57 Stone':150,'S9.5B':115,'S9.5C':115,'I19.0C':115,'B25.0C':115,'Concrete':150,'Rip Rap':150,'Gravel':150};
 // MAT is the raw material cost — editable in Settings, saved to Supabase
 var MAT = {
@@ -1366,7 +1382,7 @@ var MAT = {
   'RCP Pipe':35,'HDPE Pipe':22,'Precast Structure':2500,'PVC Pipe':14,'DIP Pipe':30,'Fire Hydrant':3500,'Gate Valve':800,
   'Silt Fence':1.50,'Erosion Blanket':1.50,'Seed Mix':1500,
   'Traffic Paint':0.15,'Thermoplastic':0.80,'Sign Post':200,'Bollard':150,'Wheel Stop':50,
-  'Sod':2,'Mulch':35,'Plant Material':50,'Fence Material':15,'Labor':0
+  'Sod':2,'Mulch':35,'Plant Material':50,'Fence Material':15
 };
 var JC_CREW_RATE_DEFAULT = 5000;
 var JC_PRODUCTIVITY_DEFAULT = 400; // tons/day
@@ -1418,7 +1434,7 @@ var MAT_UNIT = {
   'RCP Pipe':'LF','HDPE Pipe':'LF','Precast Structure':'EA','PVC Pipe':'LF','DIP Pipe':'LF','Fire Hydrant':'EA','Gate Valve':'EA',
   'Silt Fence':'LF','Erosion Blanket':'SY','Seed Mix':'AC',
   'Traffic Paint':'LF','Thermoplastic':'LF','Sign Post':'EA','Bollard':'EA','Wheel Stop':'EA',
-  'Sod':'SY','Mulch':'CY','Plant Material':'EA','Fence Material':'LF','Labor':'HR'
+  'Sod':'SY','Mulch':'CY','Plant Material':'EA','Fence Material':'LF'
 };
 var MAT_UNIT_DEFAULT = JSON.parse(JSON.stringify(MAT_UNIT));
 var MAT_TRADE = {
@@ -1431,7 +1447,7 @@ var MAT_TRADE = {
   'Silt Fence':'b-erosion','Erosion Blanket':'b-erosion','Seed Mix':'b-landscape',
   'Traffic Paint':'b-striping','Thermoplastic':'b-striping','Sign Post':'b-striping','Bollard':'b-striping','Wheel Stop':'b-striping',
   'Sod':'b-landscape','Mulch':'b-landscape','Plant Material':'b-landscape',
-  'Fence Material':'b-general','Labor':'b-general'
+  'Fence Material':'b-general'
 };
 var MAT_TRADE_DEFAULT = JSON.parse(JSON.stringify(MAT_TRADE));
 var MAT_CATEGORY = MAT_TRADE;
@@ -1973,8 +1989,20 @@ function loadStorage(){
 }
 
 function _applyMatPrices(mpd){
-  // Only apply cost overrides — material list, trades, units are all hard-coded
-  if(mpd.mat){
+  // New format: full material list with names, costs, units, trades
+  if(mpd.materials && Array.isArray(mpd.materials)){
+    LTYPES.length=0;
+    Object.keys(MAT).forEach(function(k){delete MAT[k];});
+    Object.keys(MAT_UNIT).forEach(function(k){delete MAT_UNIT[k];});
+    Object.keys(MAT_TRADE).forEach(function(k){delete MAT_TRADE[k];});
+    mpd.materials.forEach(function(m){
+      LTYPES.push(m.name);
+      MAT[m.name]=m.cost;
+      MAT_UNIT[m.name]=m.unit||'TON';
+      MAT_TRADE[m.name]=m.trade||'b-general';
+    });
+  } else if(mpd.mat){
+    // Legacy format: cost overrides only
     LTYPES.forEach(function(k){
       if(mpd.mat[k]!==undefined)MAT[k]=mpd.mat[k];
     });
@@ -4458,17 +4486,80 @@ function renderMatTable(){
     // Unit (read-only)
     var td3=document.createElement('td');td3.style.cssText='padding:8px 10px;text-align:center;font-size:12px;color:var(--dgray);';
     td3.textContent=MAT_UNIT[k]||'TON'; tr.appendChild(td3);
+    // Delete button
+    var td4=document.createElement('td');td4.style.cssText='padding:8px 4px;text-align:center;';
+    var del=document.createElement('button');
+    del.textContent='\u00D7';
+    del.style.cssText='background:none;border:none;color:#999;font-size:16px;cursor:pointer;padding:2px 6px;border-radius:4px;';
+    del.title='Remove '+k;
+    del.addEventListener('mouseenter',function(){this.style.color='#CC0000';this.style.background='#FEE';});
+    del.addEventListener('mouseleave',function(){this.style.color='#999';this.style.background='none';});
+    (function(kk){del.addEventListener('click',function(){deleteMaterial(kk);});})(k);
+    td4.appendChild(del);tr.appendChild(td4);
     tbody.appendChild(tr);
   });
+}
+
+function deleteMaterial(name){
+  if(!confirm('Remove "'+name+'" from materials?')) return;
+  var idx=LTYPES.indexOf(name);
+  if(idx>-1) LTYPES.splice(idx,1);
+  delete MAT[name];
+  delete MAT_UNIT[name];
+  delete MAT_TRADE[name];
+  delete LBS[name];
+  renderMatTable();
+  toast(name+' removed','ok');
+}
+
+function openAddMaterialForm(){
+  var form=document.getElementById('add-mat-form');
+  if(!form) return;
+  form.style.display='block';
+  // Populate trade dropdown from BADGE_DEFS
+  var sel=document.getElementById('add-mat-trade');
+  sel.innerHTML='';
+  Object.keys(BADGE_DEFS).forEach(function(k){
+    var opt=document.createElement('option');
+    opt.value=k;
+    opt.textContent=BADGE_DEFS[k].label;
+    sel.appendChild(opt);
+  });
+  document.getElementById('add-mat-name').value='';
+  document.getElementById('add-mat-cost').value='0';
+  document.getElementById('add-mat-name').focus();
+}
+
+function closeAddMaterialForm(){
+  var form=document.getElementById('add-mat-form');
+  if(form) form.style.display='none';
+}
+
+function confirmAddMaterial(){
+  var name=document.getElementById('add-mat-name').value.trim();
+  if(!name){toast('Enter a material name','warn');return;}
+  if(LTYPES.indexOf(name)>-1){toast('Material "'+name+'" already exists','warn');return;}
+  var trade=document.getElementById('add-mat-trade').value;
+  var cost=parseFloat(document.getElementById('add-mat-cost').value)||0;
+  var unit=document.getElementById('add-mat-unit').value;
+  LTYPES.push(name);
+  MAT[name]=cost;
+  MAT_UNIT[name]=unit;
+  MAT_TRADE[name]=trade;
+  closeAddMaterialForm();
+  renderMatTable();
+  toast(name+' added','ok');
 }
 
 
 
 function saveMatPrices(){
-  // Only save costs (the only editable field) — everything else is hard-coded
-  var costs={};
-  LTYPES.forEach(function(k){costs[k]=MAT[k];});
-  _saveSetting('hd_mat_prices', {mat:costs,updated:Date.now()});
+  // Save full material list — names, costs, units, trades (list is now dynamic)
+  var materials=[];
+  LTYPES.forEach(function(k){
+    materials.push({name:k, cost:MAT[k]||0, unit:MAT_UNIT[k]||'TON', trade:MAT_TRADE[k]||'b-general'});
+  });
+  _saveSetting('hd_mat_prices', {materials:materials, updated:Date.now()});
   var el=document.getElementById('mat-prices-updated');
   if(el) el.textContent='Last updated: '+new Date().toLocaleDateString();
   updateMatIndicator();
@@ -4477,9 +4568,11 @@ function saveMatPrices(){
 }
 
 function resetMatPrices(){
-  if(!confirm('Reset all material costs to defaults?')) return;
-  Object.assign(MAT,JSON.parse(JSON.stringify(MAT_DEFAULT)));
+  if(!confirm('Reset all materials to defaults? This will remove any custom materials.')) return;
   LTYPES.length=0; LTYPES_DEFAULT.forEach(function(t){LTYPES.push(t);});
+  Object.keys(MAT).forEach(function(k){delete MAT[k];}); Object.assign(MAT,JSON.parse(JSON.stringify(MAT_DEFAULT)));
+  Object.keys(MAT_UNIT).forEach(function(k){delete MAT_UNIT[k];}); Object.assign(MAT_UNIT,JSON.parse(JSON.stringify(MAT_UNIT_DEFAULT)));
+  Object.keys(MAT_TRADE).forEach(function(k){delete MAT_TRADE[k];}); Object.assign(MAT_TRADE,JSON.parse(JSON.stringify(MAT_TRADE_DEFAULT)));
   _saveSetting('hd_mat_prices', null);
   renderMatTable(); updateMatIndicator();
   toast('Materials reset to defaults');

@@ -353,3 +353,25 @@ Add an entry to `CTYPES` array with `{id, name, desc, unit:'LF', cy_per_lf:X}`.
 
 ### Create a new user
 Use the Admin panel in the app, or POST to `/admin/users` with `{username, full_name, pin, role}`.
+
+---
+
+## Skill References
+
+- Before performing any algorithmic art tasks, read and follow the instructions in `skills/algorithmic-art/SKILL.md`.
+- Before performing any brand guidelines tasks, read and follow the instructions in `skills/brand-guidelines/SKILL.md`.
+- Before performing any canvas design tasks, read and follow the instructions in `skills/canvas-design/SKILL.md`.
+- Before performing any Claude API tasks, read and follow the instructions in `skills/claude-api/SKILL.md`.
+- Before performing any document co-authoring tasks, read and follow the instructions in `skills/doc-coauthoring/SKILL.md`.
+- Before performing any Word document (.docx) tasks, read and follow the instructions in `skills/docx/SKILL.md`.
+- Before performing any frontend design tasks, read and follow the instructions in `skills/frontend-design/SKILL.md`.
+- Before performing any internal communications tasks, read and follow the instructions in `skills/internal-comms/SKILL.md`.
+- Before performing any MCP server building tasks, read and follow the instructions in `skills/mcp-builder/SKILL.md`.
+- Before performing any PDF tasks, read and follow the instructions in `skills/pdf/SKILL.md`.
+- Before performing any PowerPoint (.pptx) tasks, read and follow the instructions in `skills/pptx/SKILL.md`.
+- Before performing any skill creation tasks, read and follow the instructions in `skills/skill-creator/SKILL.md`.
+- Before performing any Slack GIF creation tasks, read and follow the instructions in `skills/slack-gif-creator/SKILL.md`.
+- Before performing any theme/styling tasks, read and follow the instructions in `skills/theme-factory/SKILL.md`.
+- Before performing any web artifact building tasks, read and follow the instructions in `skills/web-artifacts-builder/SKILL.md`.
+- Before performing any web application testing tasks, read and follow the instructions in `skills/webapp-testing/SKILL.md`.
+- Before performing any spreadsheet (.xlsx) tasks, read and follow the instructions in `skills/xlsx/SKILL.md`.
