@@ -1036,7 +1036,8 @@ def notifications_list():
         return jsonify({'ok': True, 'notifications': [], 'needs_setup': True,
                        'setup_sql': _NOTIF_SQL.strip()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return jsonify({'ok': True, 'notifications': [], 'needs_setup': True,
+                       'setup_sql': _NOTIF_SQL.strip(), 'error': str(e)})
 
 
 @app.route('/notifications/unread-count')
