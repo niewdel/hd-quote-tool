@@ -963,7 +963,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
                     </div>
                     <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;">
                       <button class="btn btn-sec btn-sm" onclick="saveCO()">Save Change Order</button>
-                      <button class="btn btn-red btn-sm" onclick="exportCO()">Export PDF</button>
                     </div>
                   </div>
                 </div>
@@ -1019,7 +1018,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <button class="stab" data-field-hidden id="stab-badges" onclick="showSettingsTab('badges')">Layer Badges</button>
           <button class="stab" data-field-hidden id="stab-crews" onclick="showSettingsTab('crews')">Crew Costs</button>
           <button class="stab" data-field-hidden id="stab-equipment" onclick="showSettingsTab('equipment')">Equipment</button>
-          <button class="stab" data-field-hidden id="stab-unitprices" onclick="showSettingsTab('unitprices')">Unit Prices</button>
         </div>
 
         <!-- General Tab -->
@@ -1150,21 +1148,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
           </div>
         </div>
 
-        <div id="stab-content-unitprices" style="display:none;">
-          <div class="card">
-            <div class="card-hdr">
-              <span class="card-title">Unit Price Schedule</span>
-            </div>
-            <div class="card-body">
-              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Standard unit prices for unforeseen conditions. These rates appear on proposals as a reference schedule for additional work (rock excavation, undercut, dewatering, etc.).</p>
-              <div id="unitprice-list"></div>
-              <div style="margin-top:12px;display:flex;gap:8px;">
-                <button class="btn btn-red btn-sm" onclick="saveUnitPrices()">Save Prices</button>
-                <button class="btn btn-sec btn-sm" onclick="addUnitPrice()">+ Add Item</button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
       <!-- WORK ORDER DETAIL PANEL -->
       <div class="panel" id="panel-workorder"><div class="content" style="padding:20px;">
@@ -1588,6 +1571,19 @@ var DEFAULT_BID_LIBRARY=[
   {name:'Chain Link Fence',desc:'Furnish & install chain link fence',unit:'LF',rate:0,category:'General / Misc'},
   {name:'Privacy Fence (6\' Wood)',desc:'Furnish & install 6-foot wood privacy fence',unit:'LF',rate:0,category:'General / Misc'}
 ];
+var BID_PRESETS=[
+  {name:'Site Prep',icon:'\u2692',items:['Mobilization','Traffic Control','Surveying / Staking','Material Testing','Construction Entrance','Silt Fence','Temporary Fencing']},
+  {name:'Grading',icon:'\u2B07',items:['Mass Grading (Cut)','Mass Grading (Fill)','Fine Grading / Subgrade Prep','Proof Rolling','Topsoil Strip & Stockpile','Import Select Fill','Export Spoil Material','Structural Fill']},
+  {name:'Erosion Control',icon:'\u26C8',items:['Silt Fence','Construction Entrance','Inlet Protection','Rock Check Dam','Temporary Seeding','Erosion Control Blanket','Wattle / Fiber Roll','SWPPP Inspection','Erosion Control Maintenance']},
+  {name:'Storm Drain',icon:'\u26C5',items:['15" RCP Storm Pipe','18" RCP Storm Pipe','24" RCP Storm Pipe','Catch Basin / Drop Inlet','Junction Box','Storm Manhole','Headwall','Flared End Section','Rip Rap (Class A)']},
+  {name:'Water',icon:'\u{1F4A7}',items:['6" DIP Water Main','8" DIP Water Main','6" Gate Valve','8" Gate Valve','Fire Hydrant Assembly','Water Service Connection (3/4" - 1")','Thrust Blocking','Pressure Test','Bacteriological Test','Connect to Existing Water']},
+  {name:'Sewer',icon:'\u{1F6B0}',items:['8" PVC Sanitary Sewer','Sanitary Manhole','Cleanout','Service Lateral / Stub','Connect to Existing Sanitary','Sanitary Sewer Testing (Air/Mandrel)','CCTV Inspection']},
+  {name:'Paving',icon:'\u{1F6E3}',items:['Heavy Duty Aggregate Base Course','Heavy Duty Asphalt Binder','Heavy Duty Asphalt Surface','Tack Coat','Sawcutting','Pavement Markings (Latex Paint)']},
+  {name:'Concrete',icon:'\u{1F9F1}',items:['Concrete Curb & Gutter (18" Std)','Concrete Sidewalk (4")','ADA Ramp','Concrete Driveway Apron','Concrete Pad']},
+  {name:'Striping & Signage',icon:'\u{1F6A7}',items:['Pavement Markings (Latex Paint)','4" White Line (Latex)','4" Yellow Line (Latex)','24" Stop Bar','Handicap Stencil','Arrow Stencil','Fire Lane Markings','Wheel Stop','Signage on U-Channel']},
+  {name:'Land Clearing',icon:'\u{1F333}',items:['Clearing & Grubbing (Light)','Clearing & Grubbing (Heavy)','Tree Removal (6"-12" DBH)','Stump Grinding','Structure Demolition','Concrete Demolition','Debris Hauling','Fence Removal']},
+  {name:'Landscaping',icon:'\u{1F33F}',items:['Topsoil (4" Depth)','Permanent Seeding','Sod','Mulch (3" Depth)','Shade Tree (2" Cal)','Shrub (3 Gallon)']}
+];
 var BID_LIBRARY=JSON.parse(localStorage.getItem('hd_bid_library')||'[]');
 var _libId=BID_LIBRARY.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},0);
 var LTYPES_DEFAULT = ['ABC','#57 Stone','S9.5B','S9.5C','I19.0C','B25.0C','Concrete'];
@@ -1770,6 +1766,30 @@ function openLibraryPicker(){
   var tt=document.createElement("span");tt.style.cssText="font-weight:700;font-size:15px;";tt.textContent="Insert from Library";
   var cl=document.createElement("button");cl.className="btn-ico";cl.textContent="\u00d7";cl.onclick=function(){modal.remove();};
   tr.appendChild(tt);tr.appendChild(cl);box.appendChild(tr);
+  // Quick-add preset chips
+  var presetBar=document.createElement("div");presetBar.style.cssText="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0;";
+  BID_PRESETS.forEach(function(preset){
+    var chip=document.createElement("button");
+    chip.style.cssText="font-size:11px;padding:4px 10px;border:1px solid var(--bdr);border-radius:16px;background:#fff;cursor:pointer;color:var(--dgray);font-weight:600;white-space:nowrap;transition:all .15s;";
+    chip.textContent=preset.icon+' '+preset.name;
+    chip.addEventListener("mouseenter",function(){chip.style.background='var(--red)';chip.style.color='#fff';chip.style.borderColor='var(--red)';});
+    chip.addEventListener("mouseleave",function(){chip.style.background='#fff';chip.style.color='var(--dgray)';chip.style.borderColor='var(--bdr)';});
+    chip.addEventListener("click",function(){
+      var added=0;
+      var libMap={};BID_LIBRARY.forEach(function(x){libMap[x.name]=x;});
+      preset.items.forEach(function(itemName){
+        var item=libMap[itemName];
+        if(item){
+          extraItems.push({id:eid++,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:item.badge||"",mat_cost:0,labor_cost:0});
+          added++;
+        }
+      });
+      if(added){renderExtra();recalc();toast(added+" "+preset.name+" items added","ok");}
+      else{toast("No matching items in library. Load defaults first.","err");}
+    });
+    presetBar.appendChild(chip);
+  });
+  box.appendChild(presetBar);
   // Search + category filter
   var filterBar=document.createElement("div");filterBar.style.cssText="display:flex;gap:8px;margin-bottom:10px;flex-shrink:0;";
   var searchInp=document.createElement("input");searchInp.type="text";searchInp.placeholder="Search items...";searchInp.style.cssText="flex:1;padding:6px 10px;border:1px solid var(--bdr);border-radius:5px;font-size:12px;";
@@ -2961,21 +2981,21 @@ function _renderProjectSummaryInner(proj){
     var linked=snap.linked_proposals||[];
     psProposals.innerHTML='';
     if(linked.length){
-      linked.forEach(function(qid){
+      linked.forEach(function(qid,idx){
         var q=savedQuotes.find(function(x){return x.id===qid;});
         var row=document.createElement('div');
         row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);';
         if(q){
           var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
-          info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(q.name||'Untitled')+'</div>'
-            +'<div style="font-size:11px;color:var(--dgray);">$'+Math.round(q.total||0).toLocaleString()+' &middot; '+esc(q.date||'')+'</div>';
+          var pLabel='P'+(idx+1);
+          info.innerHTML='<span style="display:inline-block;background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;">'+pLabel+'</span>'
+            +'<span style="font-weight:600;font-size:13px;vertical-align:middle;">'+esc(q.name||'Untitled')+'</span>'
+            +'<div style="font-size:11px;color:var(--dgray);margin-top:2px;">$'+Math.round(q.total||0).toLocaleString()+' &middot; '+esc(q.date||'')+'</div>';
           row.appendChild(info);
           var btns=document.createElement('div');btns.style.cssText='display:flex;gap:6px;flex-shrink:0;';
           var openBtn=document.createElement('button');openBtn.className='btn btn-sec btn-sm';openBtn.textContent='Open';
           (function(id){openBtn.addEventListener('click',function(){loadQuote(id);showPanel('build',document.querySelector('[onclick*=build]'));});})(qid);
-          var jcBtn=document.createElement('button');jcBtn.className='btn btn-sec btn-sm';jcBtn.textContent='Job Cost';
-          (function(id){jcBtn.addEventListener('click',function(){loadQuote(id);showPanel('jobcost',document.querySelector('[onclick*=jobcost]'));});})(qid);
-          btns.appendChild(openBtn);btns.appendChild(jcBtn);row.appendChild(btns);
+          btns.appendChild(openBtn);row.appendChild(btns);
         } else {
           row.innerHTML='<div style="font-size:12px;color:var(--dgray);">Proposal #'+qid+' (not found)</div>';
         }
@@ -3001,9 +3021,15 @@ function _renderProjectSummaryInner(proj){
         row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);';
         var info=document.createElement('div');info.style.cssText='flex:1;';
         var sign=co.total>=0?'+':'';
-        info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(co.name||'Change Order')+'</div>'
-          +'<div style="font-size:11px;color:var(--dgray);">'+sign+'$'+Math.round(Math.abs(co.total||0)).toLocaleString()+(co.date?' &middot; '+esc(co.date):'')+'</div>';
+        var coLabel='CO'+(co.co_number||idx+1);
+        info.innerHTML='<span style="display:inline-block;background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;">'+coLabel+'</span>'
+          +'<span style="font-weight:600;font-size:13px;vertical-align:middle;">'+esc(co.name||'Change Order')+'</span>'
+          +'<div style="font-size:11px;color:var(--dgray);margin-top:2px;">'+sign+'$'+Math.round(Math.abs(co.total||0)).toLocaleString()+(co.date?' &middot; '+esc(co.date):'')+'</div>';
         row.appendChild(info);
+        var coBtns=document.createElement('div');coBtns.style.cssText='display:flex;gap:6px;flex-shrink:0;align-items:center;';
+        var coOpenBtn=document.createElement('button');coOpenBtn.className='btn btn-sec btn-sm';coOpenBtn.textContent='Open';
+        (function(coId){coOpenBtn.addEventListener('click',function(){loadCO(coId);});})(co.id);
+        coBtns.appendChild(coOpenBtn);
         var del=document.createElement('button');del.className='btn-ico';del.style.cssText='color:var(--dgray);font-size:14px;';del.textContent='×';del.title='Remove';
         (function(i){del.addEventListener('click',function(){
           if(!confirm('Remove this change order from the project?'))return;
@@ -3012,7 +3038,8 @@ function _renderProjectSummaryInner(proj){
           fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap,total:newTotals.grandTotal})})
             .then(function(){proj.total=newTotals.grandTotal;renderProjectSummary();});
         });})(idx);
-        row.appendChild(del);
+        coBtns.appendChild(del);
+        row.appendChild(coBtns);
         psCO.appendChild(row);
       });
     }
@@ -3037,7 +3064,11 @@ function _renderProjectSummaryInner(proj){
         var topRow=document.createElement('div');
         topRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;';
         var nameEl=document.createElement('div');nameEl.style.cssText='font-weight:700;font-size:14px;cursor:pointer;flex:1;min-width:0;';
-        nameEl.textContent=wo.name||'Work Order';
+        var woLabel=document.createElement('span');woLabel.style.cssText='display:inline-block;background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;';
+        woLabel.textContent='WO'+(idx+1);
+        nameEl.appendChild(woLabel);
+        var woNameTxt=document.createTextNode(wo.name||'Work Order');
+        nameEl.appendChild(woNameTxt);
         (function(woId){nameEl.addEventListener('click',function(){openWorkOrderView(woId);});})(wo.id);
         topRow.appendChild(nameEl);
         var badge=document.createElement('span');
@@ -4245,6 +4276,7 @@ var TOPBAR_CFG = {
   ],
   co:[
     {html:'Reset CO',cls:'btn btn-sec btn-sm',fn:'resetCO()'},
+    {html:'Save CO',cls:'btn btn-sec btn-sm',fn:'saveCO()'},
     {id:'co-pdf-btn',html:'Export CO PDF',cls:'btn btn-red btn-sm',fn:'exportCOPDF()'}
   ],
   saved:[
@@ -5851,7 +5883,7 @@ function loadSenderUI(){
   document.getElementById('s-phone').value=sender.phone||'';
 }
 function showSettingsTab(tab){
-  ['general','badges','presets','library','crews','equipment','unitprices'].forEach(function(t){
+  ['general','badges','presets','library','crews','equipment'].forEach(function(t){
     var el=document.getElementById('stab-content-'+t);if(el)el.style.display=t===tab?'':'none';
     var btn=document.getElementById('stab-'+t);if(btn)btn.classList.toggle('on',t===tab);
   });
@@ -5860,7 +5892,6 @@ function showSettingsTab(tab){
   if(tab==='library'){renderLibraryList();}
   if(tab==='crews'){renderCrewsList();}
   if(tab==='equipment'){renderEquipmentList();}
-  if(tab==='unitprices'){renderUnitPrices();}
 }
 
 function applyBadgeStyles(){
