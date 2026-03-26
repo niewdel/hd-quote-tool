@@ -790,13 +790,16 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div class="card-hdr"><span class="card-title">Invoices</span></div>
               <div class="card-body" id="ps-invoices"><p style="color:var(--dgray);font-size:12px;">No invoices yet.</p></div>
             </div>
-            <div class="card" data-field-hidden style="margin-bottom:14px;">
-              <div class="card-hdr"><span class="card-title">Job Costing</span></div>
-              <div class="card-body" id="ps-job-costing"><p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p></div>
-            </div>
           </div>
           <!-- Right column -->
           <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Notes</span></div>
+              <div class="card-body" id="ps-work-orders">
+                <div id="ps-wo-list"></div>
+                <button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="addProjectNote()">+ Add Note</button>
+              </div>
+            </div>
             <div class="card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Site Plan</span></div>
               <div class="card-body" id="ps-site-plan">
@@ -804,17 +807,13 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 <label class="btn btn-sec btn-sm" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Upload Site Plan</label>
               </div>
             </div>
-            <!-- Equipment tracking moved to work orders -->
+            <div class="card" data-field-hidden style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Job Costing</span></div>
+              <div class="card-body" id="ps-job-costing"><p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p></div>
+            </div>
             <div class="card" data-field-hidden style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Activity</span></div>
               <div class="card-body" id="ps-activity" style="max-height:360px;overflow-y:auto;"><p style="color:var(--dgray);font-size:12px;">No activity yet.</p></div>
-            </div>
-            <div class="card">
-              <div class="card-hdr"><span class="card-title">Notes</span></div>
-              <div class="card-body" id="ps-work-orders">
-                <div id="ps-wo-list"></div>
-                <button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="addProjectNote()">+ Add Note</button>
-              </div>
             </div>
           </div>
         </div>
