@@ -335,7 +335,7 @@ body.dark .mention-dropdown{background:#1C1C1E;border-color:#48484A;}
 .sb-foot button:hover{color:rgba(255,255,255,.5);}
 .main{overflow-y:auto;}
 .topbar{background:var(--glass);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-bottom:1px solid var(--bdr);padding:13px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
-.topbar-title{font-size:15px;font-weight:600;}
+.topbar-title{font-size:15px;font-weight:600;min-width:0;flex:1;}
 .topbar-actions{display:flex;gap:7px;align-items:center;}
 .topbar-bell{position:relative;background:none;border:none;color:#666;cursor:pointer;padding:6px;border-radius:6px;transition:background .15s,color .15s;}
 .topbar-bell:hover{background:var(--lgray);color:var(--blk);}
@@ -346,7 +346,14 @@ body.dark .topbar-bell .notif-dot{border-color:#1C1C1E;}
 .content{padding:22px;max-width:1080px;}
 
 /* Panels */
-.panel{display:none;}.panel.on{display:block;width:100%;box-sizing:border-box;}
+.panel{display:none;}.panel.on{display:block;width:100%;box-sizing:border-box;animation:panelIn .2s ease both;}
+@keyframes panelIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+/* Breadcrumb */
+.bc{display:flex;align-items:center;gap:6px;font-size:13px;min-width:0;}
+.bc-item{color:var(--dgray);cursor:pointer;transition:color .12s;white-space:nowrap;font-weight:500;}
+.bc-item:hover{color:var(--red);}
+.bc-sep{color:var(--dgray);opacity:.4;font-size:11px;}
+.bc-current{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 /* Reports Panel */
 .rpt-nav-item{padding:8px 14px;font-size:12px;color:var(--blk);cursor:pointer;border-left:2px solid transparent;transition:all .12s;}
@@ -5578,8 +5585,7 @@ var TOPBAR_CFG = {
     {html:'+ Change Order',cls:'btn btn-sec btn-sm',fn:'createCOFromProject(_currentProjectId)',minRole:'user'},
     {html:'Analytics',cls:'btn btn-sec btn-sm',fn:"showPanel('analytics',null)",minRole:'user'},
     {html:'Job Cost',cls:'btn btn-sec btn-sm',fn:"showPanel('jobcost',null)",minRole:'user'},
-    {html:'Edit',cls:'btn btn-sec btn-sm',fn:'editCurrentProject()'},
-    {html:'&lsaquo; Projects',cls:'btn btn-sec btn-sm',fn:"showPanel('projects',document.querySelector('[onclick*=projects]'))"}
+    {html:'Edit',cls:'btn btn-sec btn-sm',fn:'editCurrentProject()'}
   ],
   build:[
     {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
@@ -5598,11 +5604,11 @@ var TOPBAR_CFG = {
     {html:'Export All',cls:'btn btn-sec btn-sm',fn:'exportAllQuotes()'},
     {html:'Import',cls:'btn btn-sec btn-sm',fn:'importQuotes()'}
   ],
-  analytics:[{html:'&lsaquo; Back to Project',cls:'btn btn-sec btn-sm',fn:"showPanel('project',null)"},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderAnalytics()'}],
+  analytics:[{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderAnalytics()'}],
   pipeline:[{html:'+ Create Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderPipeline()'}],
   clients:[{html:'+ Add Client',cls:'btn btn-red btn-sm',fn:'openClientModal()'}],
-  'client-summary':[{html:'&lsaquo; Back to Clients',cls:'btn btn-sec btn-sm',fn:"showPanel('clients',document.querySelector('[onclick*=clients]'))"}],
-  jobcost:[{html:'&lsaquo; Back to Project',cls:'btn btn-sec btn-sm',fn:"showPanel('project',null)"},{html:'Export Job Cost PDF',cls:'btn btn-red btn-sm',fn:'exportJobCostPDF()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderEVA()'}],
+  'client-summary':[],
+  jobcost:[{html:'Export Job Cost PDF',cls:'btn btn-red btn-sm',fn:'exportJobCostPDF()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderEVA()'}],
   workorder:[
     {html:'Export PDF',cls:'btn btn-red btn-sm',fn:'exportWorkOrderPDF()'},
     {html:'Edit',cls:'btn btn-sec btn-sm',fn:'editWorkOrder()'},
@@ -5626,13 +5632,6 @@ function renderTopbar(panelId){
     c.appendChild(el);
   });
   if(panelId==='build'){
-    // Add "Back to Project" button if linked to a project
-    if(window._pendingProjectLink){
-      var backBtn=document.createElement('button');backBtn.className='btn btn-sec btn-sm';
-      backBtn.innerHTML='&lsaquo; Back to Project';
-      backBtn.setAttribute('onclick','openProjectSummary('+window._pendingProjectLink+')');
-      c.insertBefore(backBtn,c.firstChild);
-    }
     var btn=document.getElementById('phase-toggle-btn');
     if(btn)btn.textContent=(typeof multiPhase!=='undefined'&&multiPhase)?(phases.length+' Phases'):'1 Phase';
   }
@@ -5654,8 +5653,15 @@ function showPanel(id,el){
   if(el)el.classList.add('on');
   renderTopbar(id);
   var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients',subs:'Subcontractors','client-summary':'Client Summary',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule',reports:'Reports',bugs:'Bug Report',roadmap:'Roadmap'}[id]||id;
-  document.getElementById('topbar-title').textContent=_panelTitle;
+  // Breadcrumb navigation
+  var titleEl=document.getElementById('topbar-title');
+  var bc=_buildBreadcrumb(id,_panelTitle);
+  if(bc){titleEl.innerHTML='';titleEl.appendChild(bc);}
+  else{titleEl.textContent=_panelTitle;}
   updateMobTitle(_panelTitle);
+  // Browser history
+  if(!window._popNav){try{history.pushState({panel:id},'','#'+id);}catch(e){}}
+  window._popNav=false;
   if(id==='saved'){renderSaved();loadCOList();loadWOList();}
   if(id==='projects'){renderProjectsList();renderProjectStats();}
   if(id==='lineitems')renderLineItems();
@@ -5678,6 +5684,62 @@ function showPanel(id,el){
   if(id==='roadmap')loadRoadmapList();
   if(typeof isMobile!=='undefined'&&isMobile)closeMobileNav();
 }
+
+// -- Breadcrumb builder --------------------------------------------------------
+function _buildBreadcrumb(panelId,title){
+  var crumbs=[];
+  if(panelId==='project'){
+    crumbs.push({label:'Projects',fn:"showPanel('projects',document.querySelector('[onclick*=projects]'))"});
+    crumbs.push({label:title,current:true});
+  } else if(panelId==='workorder'){
+    crumbs.push({label:'Projects',fn:"showPanel('projects',document.querySelector('[onclick*=projects]'))"});
+    if(window._currentProjectId){
+      var pname='Project';
+      try{var pp=window._allProjects||[];for(var i=0;i<pp.length;i++){if(pp[i].id===window._currentProjectId){pname=pp[i].name||pp[i].project_name||'Project';break;}}}catch(e){}
+      crumbs.push({label:pname,fn:'openProjectSummary('+window._currentProjectId+')'});
+    }
+    crumbs.push({label:title,current:true});
+  } else if(panelId==='build'&&window._pendingProjectLink){
+    crumbs.push({label:'Projects',fn:"showPanel('projects',document.querySelector('[onclick*=projects]'))"});
+    crumbs.push({label:'Project',fn:'openProjectSummary('+window._pendingProjectLink+')'});
+    crumbs.push({label:title,current:true});
+  } else if(panelId==='co'&&window._pendingCOProjectLink){
+    crumbs.push({label:'Projects',fn:"showPanel('projects',document.querySelector('[onclick*=projects]'))"});
+    crumbs.push({label:'Project',fn:'openProjectSummary('+window._pendingCOProjectLink+')'});
+    crumbs.push({label:title,current:true});
+  } else if(panelId==='client-summary'){
+    crumbs.push({label:'Clients',fn:"showPanel('clients',document.querySelector('[onclick*=clients]'))"});
+    crumbs.push({label:title,current:true});
+  } else if(panelId==='analytics'&&window._currentProjectId){
+    crumbs.push({label:'Projects',fn:"showPanel('projects',document.querySelector('[onclick*=projects]'))"});
+    crumbs.push({label:'Project',fn:'openProjectSummary('+window._currentProjectId+')'});
+    crumbs.push({label:title,current:true});
+  } else if(panelId==='jobcost'&&window._currentProjectId){
+    crumbs.push({label:'Projects',fn:"showPanel('projects',document.querySelector('[onclick*=projects]'))"});
+    crumbs.push({label:'Project',fn:'openProjectSummary('+window._currentProjectId+')'});
+    crumbs.push({label:title,current:true});
+  }
+  if(crumbs.length<2)return null;
+  var div=document.createElement('div');div.className='bc';
+  for(var i=0;i<crumbs.length;i++){
+    if(i>0){var sep=document.createElement('span');sep.className='bc-sep';sep.textContent='\u203A';div.appendChild(sep);}
+    var span=document.createElement('span');
+    if(crumbs[i].current){span.className='bc-current';span.textContent=crumbs[i].label;}
+    else{span.className='bc-item';span.textContent=crumbs[i].label;span.setAttribute('onclick',crumbs[i].fn);}
+    div.appendChild(span);
+  }
+  return div;
+}
+
+// -- Browser history (back button support) ------------------------------------
+window._popNav=false;
+window.addEventListener('popstate',function(e){
+  if(e.state&&e.state.panel){
+    window._popNav=true;
+    var nav=document.querySelector('.nav-item[onclick*="'+e.state.panel+'"]');
+    showPanel(e.state.panel,nav);
+  }
+});
 
 // -- Material Prices -----------------------------------------------------------
 function updateMatIndicator(){
