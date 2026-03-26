@@ -785,10 +785,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div class="card-hdr"><span class="card-title">Work Orders</span></div>
               <div class="card-body" id="ps-work-orders-list"><p style="color:var(--dgray);font-size:12px;">No work orders yet.</p></div>
             </div>
-            <div class="card" id="ps-material-tracking" style="margin-bottom:14px;">
-              <div class="card-hdr"><span class="card-title">Material Tracking</span></div>
-              <div class="card-body" id="ps-material-tracking-body"><p style="color:var(--dgray);font-size:12px;">No materials to track.</p></div>
-            </div>
+            <!-- Material tracking moved to work orders -->
             <div class="card" data-field-hidden style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Job Costing</span></div>
               <div class="card-body" id="ps-job-costing"><p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p></div>
@@ -807,10 +804,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 <label class="btn btn-sec btn-sm" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Upload Site Plan</label>
               </div>
             </div>
-            <div class="card" data-field-hidden style="margin-bottom:14px;">
-              <div class="card-hdr"><span class="card-title">Equipment</span></div>
-              <div class="card-body" id="ps-equipment"><p style="color:var(--dgray);font-size:12px;">No equipment logged.</p></div>
-            </div>
+            <!-- Equipment tracking moved to work orders -->
             <div class="card" data-field-hidden style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Activity</span></div>
               <div class="card-body" id="ps-activity" style="max-height:360px;overflow-y:auto;"><p style="color:var(--dgray);font-size:12px;">No activity yet.</p></div>
@@ -1189,6 +1183,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div class="card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Materials</span></div>
               <div class="card-body" id="wo-materials"><p style="color:var(--dgray);font-size:12px;">No materials data.</p></div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Equipment</span></div>
+              <div class="card-body" id="wo-equipment"><p style="color:var(--dgray);font-size:12px;">No equipment logged.</p></div>
             </div>
           </div>
           <div>
@@ -2352,6 +2350,45 @@ function clearActuals(){
   toast('Actuals cleared');
 }
 
+function aggregateWOActualsIntoEVA(){
+  // Find the parent project for the current proposal
+  var projId=window._pendingProjectLink||_currentProjectId;
+  if(!projId||!lastSavedQuoteId)return;
+  var proj=pipelineProposals.find(function(p){return p.id===projId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var wos=snap.work_orders||[];
+  if(!wos.length)return;
+  // Aggregate material_actuals from all work orders, keyed by item key
+  var agg={};
+  wos.forEach(function(wo){
+    (wo.material_actuals||[]).forEach(function(a){
+      if(a.actual_qty===null||a.actual_qty===undefined)return;
+      if(!agg[a.key])agg[a.key]=0;
+      agg[a.key]+=a.actual_qty;
+    });
+  });
+  // Aggregate equipment costs from all work orders
+  var totalEquipCost=0;
+  wos.forEach(function(wo){
+    (wo.equipment||[]).forEach(function(eq){
+      totalEquipCost+=(eq.hours||0)*(eq.rate||0);
+    });
+  });
+  // Merge aggregated WO qty data into evaActuals
+  Object.keys(agg).forEach(function(key){
+    if(!evaActuals[key])evaActuals[key]={};
+    evaActuals[key].qty=agg[key];
+    // Also calculate material cost from qty: actual_qty * material cost
+    var items=buildEVAEstimates();
+    var item=items.find(function(i){return i.key===key;});
+    if(item&&item.qty>0){
+      var costPerUnit=item.estMat/item.qty;
+      evaActuals[key].cost=Math.round(agg[key]*costPerUnit);
+    }
+  });
+}
+
 function renderEVASummary(totEstCost,totActCost){
   var g=function(id){return document.getElementById(id);};
   var hasActuals=Object.keys(evaActuals).length>0;
@@ -3246,8 +3283,7 @@ function _renderProjectSummaryInner(proj){
     psWOList.appendChild(woBtn);
   }
 
-  // ── Material Tracking Card ──
-  renderMaterialTracking(proj,snap);
+  // Material tracking moved to work orders
 
   // ── Site Plan ──
   var psSP=document.getElementById('ps-site-plan');
@@ -4411,7 +4447,7 @@ var TOPBAR_CFG = {
     {html:'Edit',cls:'btn btn-sec btn-sm',fn:'editWorkOrder()'},
     {html:'&lsaquo; Back to Project',cls:'btn btn-sec btn-sm',fn:"showPanel('project',null)"}
   ],
-  schedule:[{html:'Export Daily Report',cls:'btn btn-red btn-sm',fn:'exportDailyReport()'},{html:'Mark Day Complete',cls:'btn btn-sec btn-sm',fn:'openMarkDayCompleteModal()'},{html:'Sync to Google Calendar',cls:'btn btn-sec btn-sm',fn:'openCalSyncModal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderSchedule()'}],
+  schedule:[{html:'Export Daily Report',cls:'btn btn-red btn-sm',fn:'exportDailyReport()'},{html:'Sync to Google Calendar',cls:'btn btn-sec btn-sm',fn:'openCalSyncModal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderSchedule()'}],
   reports:[{html:'Export PDF',cls:'btn btn-red btn-sm',fn:'exportReportPDF()',minRole:'user'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderCurrentReport()'}],
   admin:[],
   settings:[]
@@ -4468,7 +4504,7 @@ function showPanel(id,el){
   if(id==='build')updateProposalDocBadge();
   if(id==='co'){populateCOProposalDropdown();updateCODocBadge();}
   if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');var pn=document.getElementById('pin-change-notice');if(pn&&isFieldUser())pn.style.display='block';}
-  if(id==='jobcost'){renderJobCost();renderEVA();}
+  if(id==='jobcost'){aggregateWOActualsIntoEVA();renderJobCost();renderEVA();}
   if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
   if(id==='pipeline')setTimeout(renderPipeline,50);
   if(id==='clients')setTimeout(renderClients,50);
@@ -7061,9 +7097,10 @@ function renderWorkOrderDetail(){
   }
   scopeEl.innerHTML=scopeHtml||'<p style="color:var(--dgray);font-size:12px;">No scope details entered.</p>';
 
-  // Materials — combined table: Item, Description, Qty, Unit, Material Qty, Material Unit
+  // Materials — combined table with editable Actual Qty column
   var matEl=document.getElementById('wo-materials');
-  var matHtml='';
+  matEl.innerHTML='';
+  if(!wo.material_actuals)wo.material_actuals=[];
   if(linkedQ){
     var qs=typeof linkedQ.snap==='string'?JSON.parse(linkedQ.snap||'{}'):linkedQ.snap||{};
     var secs=qs.sections||[];var cItems=qs.concItems||[];var eItems=qs.extraItems||[];
@@ -7075,7 +7112,7 @@ function renderWorkOrderDetail(){
         var desc=lyr.description||('Install '+lyr.depth+'" '+(lyr.name||lyr.type));
         var rawT=(sf>0&&lyr.depth)?Math.ceil((sf*(lyr.depth/12)*(LBS[lyr.type]||LBS[lyr.name]||115))/2000):0;
         var t=lyr.tons?Math.round(lyr.tons):Math.round(rawT);
-        rows.push({name:sec.name+' \u2014 '+(lyr.name||lyr.type),desc:desc,qty:sy,unit:'SY',matQty:t,matUnit:'TON'});
+        rows.push({key:'lyr-'+sec.id+'-'+lyr.id,name:sec.name+' \u2014 '+(lyr.name||lyr.type),desc:desc,qty:sy,unit:'SY',matQty:t,matUnit:'TON',matName:lyr.type});
         totalTons+=t;
       });
     });
@@ -7085,44 +7122,117 @@ function renderWorkOrderDetail(){
       var ct=CTYPES.find(function(x){return x.id===ci.type;})||{};
       var cyPerLf=ct.cy_per_lf||0;
       var cy=Math.round(ci.qty*cyPerLf*100)/100;
-      rows.push({name:ct.name||ci.name||ci.type,desc:ci.description||ct.desc||'',qty:ci.qty,unit:ct.unit||'LF',matQty:cy,matUnit:cy?'CY':''});
+      rows.push({key:'conc-'+ci.id,name:ct.name||ci.name||ci.type,desc:ci.description||ct.desc||'',qty:ci.qty,unit:ct.unit||'LF',matQty:cy,matUnit:cy?'CY':'EA',matName:'Concrete'});
       if(cy)totalCY+=cy;
     });
-    // Extra items: qty + unit only, no material conversion
+    // Extra items
     eItems.forEach(function(ei){
       if(!ei.name)return;
-      rows.push({name:ei.name,desc:ei.desc||'',qty:ei.qty||0,unit:ei.unit||'EA',matQty:0,matUnit:''});
+      rows.push({key:'extra-'+ei.id,name:ei.name,desc:ei.desc||'',qty:ei.qty||0,unit:ei.unit||'EA',matQty:0,matUnit:ei.unit||'EA',matName:ei.material||''});
     });
     if(rows.length){
-      matHtml+='<table style="width:100%;font-size:12px;border-collapse:collapse;">';
-      matHtml+='<tr style="background:var(--lgray);">'
+      // Build actuals lookup
+      var actualsMap={};
+      wo.material_actuals.forEach(function(a){actualsMap[a.key]=a;});
+
+      var tbl=document.createElement('table');
+      tbl.style.cssText='width:100%;font-size:12px;border-collapse:collapse;';
+      var thead=document.createElement('thead');
+      thead.innerHTML='<tr style="background:var(--lgray);">'
+        +'<th style="text-align:center;padding:6px 4px;font-size:10px;width:28px;"></th>'
         +'<th style="text-align:left;padding:6px 8px;font-size:11px;">Item</th>'
-        +'<th style="text-align:left;padding:6px 8px;font-size:11px;">Description</th>'
-        +'<th style="text-align:right;padding:6px 8px;font-size:11px;">Qty</th>'
+        +'<th style="text-align:right;padding:6px 8px;font-size:11px;">Est Qty</th>'
         +'<th style="text-align:center;padding:6px 8px;font-size:11px;">Unit</th>'
-        +'<th style="text-align:right;padding:6px 8px;font-size:11px;">Material</th>'
+        +'<th style="text-align:right;padding:6px 8px;font-size:11px;">Est Material</th>'
         +'<th style="text-align:center;padding:6px 8px;font-size:11px;">Mat Unit</th>'
+        +'<th style="text-align:right;padding:6px 8px;font-size:11px;border-left:2px solid var(--red);background:#FFF5F5;">Actual Qty</th>'
         +'</tr>';
+      tbl.appendChild(thead);
+      var tbody=document.createElement('tbody');
+      var allFilled=true;
       rows.forEach(function(r,i){
-        matHtml+='<tr style="border-bottom:1px solid var(--bdr);'+(i%2?'background:#FAFAFA;':'')+'">'
-          +'<td style="padding:6px 8px;font-weight:600;">'+esc(r.name)+'</td>'
-          +'<td style="padding:6px 8px;color:#555;">'+esc(r.desc)+'</td>'
-          +'<td style="padding:6px 8px;text-align:right;">'+(r.qty?r.qty.toLocaleString():'—')+'</td>'
-          +'<td style="padding:6px 8px;text-align:center;">'+esc(r.unit)+'</td>'
-          +'<td style="padding:6px 8px;text-align:right;font-weight:600;">'+(r.matQty?r.matQty.toLocaleString():'—')+'</td>'
-          +'<td style="padding:6px 8px;text-align:center;">'+esc(r.matUnit)+'</td>'
-          +'</tr>';
+        var act=actualsMap[r.key];
+        var actVal=act?act.actual_qty:null;
+        var isFilled=actVal!==null&&actVal!==undefined&&actVal!=='';
+        if(!isFilled&&r.matQty>0)allFilled=false;
+        var tr=document.createElement('tr');
+        tr.style.cssText='border-bottom:1px solid var(--bdr);'+(i%2?'background:#FAFAFA;':'');
+        // Checkmark column
+        var tdChk=document.createElement('td');tdChk.style.cssText='padding:6px 4px;text-align:center;';
+        if(isFilled){
+          tdChk.innerHTML='<span style="color:#27500A;font-size:14px;font-weight:700;">&#10003;</span>';
+        }
+        tr.appendChild(tdChk);
+        // Item name + desc
+        var tdName=document.createElement('td');tdName.style.cssText='padding:6px 8px;';
+        tdName.innerHTML='<div style="font-weight:600;">'+esc(r.name)+'</div>'+(r.desc?'<div style="font-size:10px;color:#777;">'+esc(r.desc)+'</div>':'');
+        tr.appendChild(tdName);
+        // Est Qty
+        var tdQ=document.createElement('td');tdQ.style.cssText='padding:6px 8px;text-align:right;';
+        tdQ.textContent=r.qty?r.qty.toLocaleString():'\u2014';
+        tr.appendChild(tdQ);
+        // Unit
+        var tdU=document.createElement('td');tdU.style.cssText='padding:6px 8px;text-align:center;';
+        tdU.textContent=r.unit;
+        tr.appendChild(tdU);
+        // Est Material
+        var tdM=document.createElement('td');tdM.style.cssText='padding:6px 8px;text-align:right;font-weight:600;';
+        tdM.textContent=r.matQty?r.matQty.toLocaleString():'\u2014';
+        tr.appendChild(tdM);
+        // Mat Unit
+        var tdMU=document.createElement('td');tdMU.style.cssText='padding:6px 8px;text-align:center;';
+        tdMU.textContent=r.matUnit;
+        tr.appendChild(tdMU);
+        // Actual Qty input
+        var tdAct=document.createElement('td');tdAct.style.cssText='padding:6px 8px;text-align:right;border-left:2px solid var(--red);background:#FFF5F5;';
+        var inp=document.createElement('input');inp.type='number';inp.min='0';inp.step='1';
+        inp.value=actVal!==null&&actVal!==undefined?actVal:'';
+        inp.placeholder='\u2014';
+        inp.style.cssText='width:80px;font-size:12px;text-align:right;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;';
+        (function(key,matUnit,matName){inp.addEventListener('change',function(){
+          updateWOMaterialActual(key,this.value,matUnit,matName);
+        });})(r.key,r.matUnit,r.matName);
+        tdAct.appendChild(inp);
+        tr.appendChild(tdAct);
+        tbody.appendChild(tr);
       });
+      tbl.appendChild(tbody);
+      // Totals row
       var totals=[];
       if(totalTons>0)totals.push(totalTons.toLocaleString()+' tons');
       if(totalCY>0)totals.push(totalCY.toLocaleString()+' CY');
       if(totals.length){
-        matHtml+='<tr style="font-weight:700;border-top:2px solid #333;"><td colspan="4" style="padding:6px 8px;">Total</td><td colspan="2" style="padding:6px 8px;text-align:right;">'+totals.join(' &nbsp;|&nbsp; ')+'</td></tr>';
+        var tfoot=document.createElement('tfoot');
+        tfoot.innerHTML='<tr style="font-weight:700;border-top:2px solid #333;"><td></td><td colspan="3" style="padding:6px 8px;">Estimated Total</td><td colspan="2" style="padding:6px 8px;text-align:right;">'+totals.join(' | ')+'</td><td style="padding:6px 8px;text-align:right;border-left:2px solid var(--red);background:#FFF5F5;font-size:11px;" id="wo-actual-total"></td></tr>';
+        tbl.appendChild(tfoot);
       }
-      matHtml+='</table>';
+      matEl.appendChild(tbl);
+      // Save button
+      var saveRow=document.createElement('div');saveRow.style.cssText='margin-top:10px;display:flex;gap:8px;align-items:center;';
+      var saveBtn=document.createElement('button');saveBtn.className='btn btn-red btn-sm';saveBtn.textContent='Save Material Quantities';
+      saveBtn.addEventListener('click',function(){saveWOMaterials();});
+      saveRow.appendChild(saveBtn);
+      // Completion indicator
+      var statusSpan=document.createElement('span');
+      statusSpan.style.cssText='font-size:12px;font-weight:600;';
+      if(allFilled&&rows.some(function(r){return r.matQty>0;})){
+        statusSpan.style.color='#27500A';
+        statusSpan.textContent='\u2713 All materials logged';
+      } else {
+        var filled=rows.filter(function(r){return r.matQty>0&&actualsMap[r.key]&&actualsMap[r.key].actual_qty!==null&&actualsMap[r.key].actual_qty!==undefined&&actualsMap[r.key].actual_qty!=='';}).length;
+        var total=rows.filter(function(r){return r.matQty>0;}).length;
+        statusSpan.style.color='var(--dgray)';
+        statusSpan.textContent=filled+'/'+total+' items logged';
+      }
+      saveRow.appendChild(statusSpan);
+      matEl.appendChild(saveRow);
+      // Update actual totals display
+      updateWOActualTotals(wo,rows);
     }
   }
-  matEl.innerHTML=matHtml||'<p style="color:var(--dgray);font-size:12px;">No materials data. Link a proposal to populate.</p>';
+  if(!matEl.children.length){
+    matEl.innerHTML='<p style="color:var(--dgray);font-size:12px;">No materials data. Link a proposal to populate.</p>';
+  }
 
   // Crew Notes
   var notesEl=document.getElementById('wo-notes');
@@ -7174,6 +7284,141 @@ function renderWorkOrderDetail(){
 
   // Photos
   renderWOPhotos(wo);
+
+  // Equipment
+  renderWOEquipment(wo,snap);
+}
+
+function updateWOMaterialActual(key,val,matUnit,matName){
+  if(!_currentProjectId||!_currentWorkOrderId)return;
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var wo=(snap.work_orders||[]).find(function(w){return w.id===_currentWorkOrderId;});
+  if(!wo)return;
+  if(!wo.material_actuals)wo.material_actuals=[];
+  var existing=wo.material_actuals.find(function(a){return a.key===key;});
+  var numVal=val===''?null:parseFloat(val);
+  if(existing){
+    existing.actual_qty=numVal;
+    existing.mat_unit=matUnit;
+    existing.mat_name=matName;
+  } else {
+    wo.material_actuals.push({key:key,actual_qty:numVal,mat_unit:matUnit,mat_name:matName});
+  }
+}
+
+function saveWOMaterials(){
+  if(!_currentProjectId||!_currentWorkOrderId)return;
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var wo=(snap.work_orders||[]).find(function(w){return w.id===_currentWorkOrderId;});
+  if(!wo)return;
+  // Check if all material items have actuals — auto-mark complete
+  var hasAllFilled=true;
+  if(wo.material_actuals&&wo.material_actuals.length){
+    wo.material_actuals.forEach(function(a){
+      if(a.actual_qty===null||a.actual_qty===undefined||a.actual_qty==='')hasAllFilled=false;
+    });
+  } else {hasAllFilled=false;}
+  if(hasAllFilled&&wo.status!=='complete'){
+    wo.status='complete';
+    addProjectActivity(snap,'wo','Work order "'+wo.name+'" auto-completed (all materials logged)');
+  }
+  fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.ok){proj.snap=snap;toast('Material quantities saved','ok');renderWorkOrderDetail();}
+      else toast('Save failed','err');
+    });
+}
+
+function updateWOActualTotals(wo,rows){
+  var el=document.getElementById('wo-actual-total');if(!el)return;
+  var actualsMap={};
+  (wo.material_actuals||[]).forEach(function(a){actualsMap[a.key]=a;});
+  var actTons=0;var actCY=0;
+  rows.forEach(function(r){
+    var a=actualsMap[r.key];
+    if(!a||a.actual_qty===null||a.actual_qty===undefined)return;
+    if(r.matUnit==='TON')actTons+=a.actual_qty;
+    else if(r.matUnit==='CY')actCY+=a.actual_qty;
+  });
+  var parts=[];
+  if(actTons>0)parts.push(actTons.toLocaleString()+' tons');
+  if(actCY>0)parts.push(actCY.toLocaleString()+' CY');
+  el.textContent=parts.length?parts.join(' | '):'\u2014';
+}
+
+function renderWOEquipment(wo,snap){
+  var el=document.getElementById('wo-equipment');if(!el)return;
+  if(!wo.equipment)wo.equipment=[];
+  el.innerHTML='';
+  // Equipment list
+  if(wo.equipment.length){
+    var tbl=document.createElement('table');
+    tbl.style.cssText='width:100%;font-size:12px;border-collapse:collapse;margin-bottom:8px;';
+    tbl.innerHTML='<thead><tr style="background:var(--lgray);"><th style="text-align:left;padding:6px 8px;font-size:11px;">Equipment</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Hours</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Rate ($/hr)</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Total</th><th style="width:28px;"></th></tr></thead>';
+    var tbody=document.createElement('tbody');
+    wo.equipment.forEach(function(eq,idx){
+      var tr=document.createElement('tr');tr.style.borderBottom='1px solid var(--bdr)';
+      if(idx%2)tr.style.background='#FAFAFA';
+      // Name
+      var td1=document.createElement('td');td1.style.padding='6px 8px';
+      var n=document.createElement('input');n.type='text';n.value=eq.name||'';n.placeholder='e.g. CAT 320 Excavator';
+      n.style.cssText='width:100%;font-size:12px;padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;';
+      (function(i){n.addEventListener('change',function(){wo.equipment[i].name=this.value;});})(idx);
+      td1.appendChild(n);tr.appendChild(td1);
+      // Hours
+      var td2=document.createElement('td');td2.style.cssText='padding:6px 8px;text-align:right;';
+      var h=document.createElement('input');h.type='number';h.min='0';h.step='0.5';h.value=eq.hours||0;
+      h.style.cssText='width:60px;font-size:12px;text-align:right;padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;';
+      (function(i){h.addEventListener('change',function(){wo.equipment[i].hours=parseFloat(this.value)||0;renderWOEquipment(wo,snap);});})(idx);
+      td2.appendChild(h);tr.appendChild(td2);
+      // Rate
+      var td3=document.createElement('td');td3.style.cssText='padding:6px 8px;text-align:right;';
+      var r=document.createElement('input');r.type='number';r.min='0';r.step='5';r.value=eq.rate||0;
+      r.style.cssText='width:70px;font-size:12px;text-align:right;padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;';
+      (function(i){r.addEventListener('change',function(){wo.equipment[i].rate=parseFloat(this.value)||0;renderWOEquipment(wo,snap);});})(idx);
+      td3.appendChild(r);tr.appendChild(td3);
+      // Total
+      var td4=document.createElement('td');td4.style.cssText='padding:6px 8px;text-align:right;font-weight:600;';
+      td4.textContent='$'+((eq.hours||0)*(eq.rate||0)).toLocaleString();
+      tr.appendChild(td4);
+      // Delete
+      var td5=document.createElement('td');td5.style.cssText='padding:6px 4px;text-align:center;';
+      var del=document.createElement('button');del.className='btn-ico';del.style.color='var(--red)';del.textContent='\u00D7';
+      (function(i){del.addEventListener('click',function(){wo.equipment.splice(i,1);renderWOEquipment(wo,snap);});})(idx);
+      td5.appendChild(del);tr.appendChild(td5);
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    el.appendChild(tbl);
+  }
+  var btnRow=document.createElement('div');btnRow.style.cssText='display:flex;gap:8px;align-items:center;';
+  var addBtn=document.createElement('button');addBtn.className='btn btn-sec btn-sm';addBtn.textContent='+ Add Equipment';
+  addBtn.addEventListener('click',function(){
+    wo.equipment.push({name:'',hours:8,rate:100});
+    renderWOEquipment(wo,snap);
+  });
+  btnRow.appendChild(addBtn);
+  if(wo.equipment.length){
+    var saveBtn=document.createElement('button');saveBtn.className='btn btn-red btn-sm';saveBtn.textContent='Save Equipment';
+    saveBtn.addEventListener('click',function(){
+      fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+        .then(function(r){return r.json();}).then(function(d){
+          if(d.ok){var pr=pipelineProposals.find(function(p){return p.id===_currentProjectId;});if(pr)pr.snap=snap;toast('Equipment saved','ok');}
+        });
+    });
+    btnRow.appendChild(saveBtn);
+    // Total cost
+    var total=wo.equipment.reduce(function(s,e){return s+(e.hours||0)*(e.rate||0);},0);
+    var totalSpan=document.createElement('span');
+    totalSpan.style.cssText='font-size:12px;font-weight:600;color:var(--dgray);';
+    totalSpan.textContent='Total: $'+total.toLocaleString();
+    btnRow.appendChild(totalSpan);
+  }
+  el.appendChild(btnRow);
 }
 
 function renderWOPhotos(wo){
