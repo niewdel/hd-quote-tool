@@ -1090,11 +1090,11 @@ tr:nth-child(even) td{background:#FAFAFA;}
           </div>
         </div>
 
-        <!-- Layer Badges Tab -->
+        <!-- Trade Badges Tab -->
         <div id="stab-content-badges" style="display:none;">
           <div class="card">
             <div class="card-hdr">
-              <span class="card-title">Layer Badges</span>
+              <span class="card-title">Trade Badges</span>
               <button class="btn btn-sec btn-sm" onclick="addBadge()">+ Add Badge</button>
             </div>
             <div class="card-body">
@@ -1399,8 +1399,17 @@ var jcTonsPerTruck = TONS_PER_TRUCK_DEFAULT;
 
 // Crew list — simple name + daily rate, editable, stored in localStorage
 var CREWS_DEFAULT = [
-  {id:1, name:'Stone Crew', trade:'b-stone', daily_rate:2500, productivity:800},
-  {id:2, name:'Asphalt Crew', trade:'b-asphalt', daily_rate:5000, productivity:400}
+  {id:1, name:'Asphalt Crew', trade:'b-asphalt', daily_rate:5000, productivity:400, prod_unit:'TON'},
+  {id:2, name:'Stone Crew', trade:'b-stone', daily_rate:2500, productivity:800, prod_unit:'TON'},
+  {id:3, name:'Concrete Crew', trade:'b-concrete', daily_rate:3500, productivity:50, prod_unit:'CY'},
+  {id:4, name:'Grading Crew', trade:'b-grading', daily_rate:4000, productivity:500, prod_unit:'CY'},
+  {id:5, name:'Storm Drain Crew', trade:'b-storm-drain', daily_rate:3500, productivity:120, prod_unit:'LF'},
+  {id:6, name:'Sewer Crew', trade:'b-sewer', daily_rate:3500, productivity:100, prod_unit:'LF'},
+  {id:7, name:'Water Crew', trade:'b-water', daily_rate:3500, productivity:120, prod_unit:'LF'},
+  {id:8, name:'Erosion Control Crew', trade:'b-erosion', daily_rate:1800, productivity:2000, prod_unit:'LF'},
+  {id:9, name:'Striping Crew', trade:'b-striping', daily_rate:2500, productivity:5000, prod_unit:'LF'},
+  {id:10, name:'Clearing Crew', trade:'b-clearing', daily_rate:3000, productivity:1, prod_unit:'AC'},
+  {id:11, name:'Landscape Crew', trade:'b-landscape', daily_rate:2000, productivity:2000, prod_unit:'SY'}
 ];
 var CREWS = JSON.parse(localStorage.getItem('hd_crews')||'null') || JSON.parse(JSON.stringify(CREWS_DEFAULT));
 var _crewNextId = CREWS.reduce(function(mx,c){return Math.max(mx,c.id);},0)+1;
@@ -1418,10 +1427,12 @@ function getCrewParam(matType, param){
   if(crew){
     if(param === 'crew_rate') return crew.daily_rate||jcCrewRate;
     if(param === 'productivity') return crew.productivity||jcProductivity;
+    if(param === 'prod_unit') return crew.prod_unit||'TON';
   }
   // Fall back to globals
   if(param === 'crew_rate') return jcCrewRate;
   if(param === 'productivity') return jcProductivity;
+  if(param === 'prod_unit') return 'TON';
   if(param === 'tons_per_truck') return jcTonsPerTruck;
   if(param === 'truck_daily_rate') return jcTruckRate * jcTruckHours;
   return 0;
@@ -1676,10 +1687,32 @@ var CTYPES = [
 ];
 
 var PRESETS = [
-  {name:'Light Duty Asphalt Pavement',layers:[{type:'ABC',depth:6,rate:50},{type:'S9.5C',depth:2,rate:150}]},
-  {name:'Heavy Duty Asphalt Pavement',layers:[{type:'ABC',depth:8,rate:50},{type:'I19.0C',depth:2.5,rate:150},{type:'S9.5C',depth:1.5,rate:150}]},
-  {name:'Parking lot',layers:[{type:'ABC',depth:6,rate:50},{type:'S9.5C',depth:2,rate:150}]},
-  {name:'NCDOT Asphalt Pavement',layers:[{type:'B25.0C',depth:5,rate:150},{type:'I19.0C',depth:4,rate:150},{type:'S9.5C',depth:3,rate:150}]},
+  {name:'Light Duty Asphalt',layers:[
+    {type:'ABC',depth:6,rate:0,description:'Aggregate Base Course 6"'},
+    {type:'S9.5C',depth:2,rate:0,description:'S9.5C Surface Course 2"'}
+  ]},
+  {name:'Heavy Duty Asphalt',layers:[
+    {type:'ABC',depth:8,rate:0,description:'Aggregate Base Course 8"'},
+    {type:'I19.0C',depth:2.5,rate:0,description:'I19.0C Intermediate Course 2.5"'},
+    {type:'S9.5C',depth:1.5,rate:0,description:'S9.5C Surface Course 1.5"'}
+  ]},
+  {name:'Parking Lot',layers:[
+    {type:'ABC',depth:6,rate:0,description:'Aggregate Base Course 6"'},
+    {type:'S9.5C',depth:2,rate:0,description:'S9.5C Surface Course 2"'}
+  ]},
+  {name:'NCDOT Pavement',layers:[
+    {type:'B25.0C',depth:5,rate:0,description:'B25.0C Asphalt Base 5"'},
+    {type:'I19.0C',depth:4,rate:0,description:'I19.0C Intermediate Course 4"'},
+    {type:'S9.5C',depth:3,rate:0,description:'S9.5C Surface Course 3"'}
+  ]},
+  {name:'Mill & Overlay',layers:[
+    {type:'S9.5B',depth:1.5,rate:0,description:'Mill Existing Asphalt 1.5"'},
+    {type:'S9.5C',depth:1.5,rate:0,description:'S9.5C Surface Course 1.5"'}
+  ]},
+  {name:'Stone Driveway',layers:[
+    {type:'ABC',depth:6,rate:0,description:'Aggregate Base Course 6"'},
+    {type:'#57 Stone',depth:3,rate:0,description:'#57 Stone Surface 3"'}
+  ]},
 ];
 
 // -- State ---------------------------------------------------------------------
@@ -1747,7 +1780,7 @@ function showAdminElements(){
 }
 function isFieldUser(){return window._userRole==='field';}
 function canSeePricing(){return window._userRole==='admin'||window._userRole==='user';}
-function renderBadgeList(){var c=document.getElementById("badge-list");if(!c)return;c.innerHTML="";var keys=Object.keys(BADGE_DEFS);if(!keys.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>No badges yet.</p>";return;}keys.forEach(function(cls){var b=BADGE_DEFS[cls];var row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr);";var prev=document.createElement("span");prev.className="badge "+cls;prev.style.minWidth="60px";prev.textContent=b.label;row.appendChild(prev);var li=document.createElement("input");li.type="text";li.value=b.label;li.placeholder="Label";li.style.width="120px";li.addEventListener("change",(function(cc){return function(){BADGE_DEFS[cc].label=this.value;renderBadgeList();};})(cls));row.appendChild(li);var ci=document.createElement("input");ci.type="color";ci.value=b.color;ci.style.cssText="width:40px;height:28px;cursor:pointer;border:1px solid var(--bdr);border-radius:4px;";ci.addEventListener("change",(function(cc){return function(){BADGE_DEFS[cc].color=this.value;};})(cls));row.appendChild(ci);var lbl=document.createElement("span");lbl.style.cssText="font-size:11px;color:var(--dgray);flex:1;";lbl.textContent="CSS: "+cls;row.appendChild(lbl);var del=document.createElement("button");del.className="btn-ico";del.style.color="var(--red)";del.textContent="×";del.addEventListener("click",(function(cc){return function(){delete BADGE_DEFS[cc];renderBadgeList();renderMatTable();};})(cls));row.appendChild(del);c.appendChild(row);});}
+function renderBadgeList(){var c=document.getElementById("badge-list");if(!c)return;c.innerHTML="";var keys=Object.keys(BADGE_DEFS);if(!keys.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>No badges yet.</p>";return;}keys.forEach(function(cls){var b=BADGE_DEFS[cls];var row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr);";var ci=document.createElement("input");ci.type="color";ci.value=b.color;ci.style.cssText="width:40px;height:28px;cursor:pointer;border:1px solid var(--bdr);border-radius:4px;flex-shrink:0;";ci.addEventListener("change",(function(cc){return function(){BADGE_DEFS[cc].color=this.value;applyBadgeStyles();renderBadgeList();};})(cls));row.appendChild(ci);var li=document.createElement("input");li.type="text";li.value=b.label;li.placeholder="Label";li.style.cssText="width:140px;font-size:13px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;";li.addEventListener("change",(function(cc){return function(){BADGE_DEFS[cc].label=this.value;applyBadgeStyles();renderBadgeList();};})(cls));row.appendChild(li);var prev=document.createElement("span");prev.className="badge "+cls;prev.style.minWidth="70px";prev.textContent=b.label;row.appendChild(prev);var spacer=document.createElement("span");spacer.style.flex="1";row.appendChild(spacer);var del=document.createElement("button");del.className="btn-ico";del.style.color="var(--red)";del.textContent="×";del.addEventListener("click",(function(cc){return function(){delete BADGE_DEFS[cc];renderBadgeList();renderMatTable();};})(cls));row.appendChild(del);c.appendChild(row);});}
 function addBadge(){var label=prompt("Badge label:");if(!label)return;var cls="b-"+label.toLowerCase().replace(/[^a-z0-9]/g,"-");if(BADGE_DEFS[cls]){alert("Badge already exists.");return;}BADGE_DEFS[cls]={label:label,color:"#444"};renderBadgeList();renderMatTable();}
 function saveBadges(){_saveSetting('hd_badge_defs',BADGE_DEFS);applyBadgeStyles();renderMatTable();renderAll();renderConc();toast("Badges saved","ok");}
 function renderLibraryList(){
@@ -5144,7 +5177,7 @@ function saveCrews(){
   _saveSetting('hd_crews',CREWS);
 }
 function addCrew(){
-  CREWS.push({id:_crewNextId++, name:'', trade:'other', daily_rate:0, productivity:0});
+  CREWS.push({id:_crewNextId++, name:'', trade:'other', daily_rate:0, productivity:0, prod_unit:'TON'});
   saveCrews();
   renderCrewsList();
 }
@@ -5169,43 +5202,51 @@ function renderCrewsList(){
   }
   var trades=Object.keys(BADGE_DEFS).map(function(k){return {val:k,lbl:BADGE_DEFS[k].label};});
   trades.push({val:'other',lbl:'Other'});
+  var prodUnits=['TON','CY','SY','LF','EA','AC','SF','HR','GAL'];
   var tbl=document.createElement('table');
   tbl.style.cssText='width:100%;border-collapse:collapse;font-size:13px;';
   var thead=document.createElement('thead');
-  thead.innerHTML='<tr style="background:var(--lgray);"><th style="padding:8px 12px;text-align:left;font-weight:600;">Crew Name</th><th style="padding:8px 12px;text-align:center;font-weight:600;">Trade</th><th style="padding:8px 12px;text-align:right;font-weight:600;">Daily Rate ($)</th><th style="padding:8px 12px;text-align:right;font-weight:600;">Productivity (t/day)</th><th style="padding:8px 4px;width:40px;"></th></tr>';
+  thead.innerHTML='<tr style="background:var(--lgray);"><th style="padding:8px 10px;text-align:left;font-weight:600;">Crew Name</th><th style="padding:8px 8px;text-align:center;font-weight:600;">Trade</th><th style="padding:8px 8px;text-align:right;font-weight:600;">Daily Rate ($)</th><th style="padding:8px 8px;text-align:right;font-weight:600;">Productivity</th><th style="padding:8px 8px;text-align:center;font-weight:600;">Unit</th><th style="padding:8px 4px;width:36px;"></th></tr>';
   tbl.appendChild(thead);
   var tbody=document.createElement('tbody');
   CREWS.forEach(function(c,idx){
     var tr=document.createElement('tr');
     if(idx%2)tr.style.background='var(--lgray)';
     // Name
-    var tdName=document.createElement('td');tdName.style.padding='6px 12px';
+    var tdName=document.createElement('td');tdName.style.padding='6px 10px';
     var nameInp=document.createElement('input');
     nameInp.type='text';nameInp.value=c.name;nameInp.placeholder='e.g. Stone Crew';
     nameInp.style.cssText='width:100%;font-size:13px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;';
     (function(id){nameInp.addEventListener('change',function(){updateCrewField(id,'name',this.value);});})(c.id);
     tdName.appendChild(nameInp);tr.appendChild(tdName);
     // Trade
-    var tdTrade=document.createElement('td');tdTrade.style.cssText='padding:6px 12px;text-align:center;';
+    var tdTrade=document.createElement('td');tdTrade.style.cssText='padding:6px 8px;text-align:center;';
     var tradeSel=document.createElement('select');
     tradeSel.style.cssText='font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;';
     trades.forEach(function(t){var o=document.createElement('option');o.value=t.val;o.textContent=t.lbl;if((c.trade||'')==t.val)o.selected=true;tradeSel.appendChild(o);});
     (function(id){tradeSel.addEventListener('change',function(){updateCrewField(id,'trade',this.value);});})(c.id);
     tdTrade.appendChild(tradeSel);tr.appendChild(tdTrade);
     // Daily Rate
-    var tdRate=document.createElement('td');tdRate.style.cssText='padding:6px 12px;text-align:right;';
+    var tdRate=document.createElement('td');tdRate.style.cssText='padding:6px 8px;text-align:right;';
     var rateInp=document.createElement('input');
     rateInp.type='number';rateInp.min='0';rateInp.step='100';rateInp.value=c.daily_rate;
-    rateInp.style.cssText='width:110px;font-size:13px;padding:4px 8px;text-align:right;border:1px solid var(--bdr);border-radius:4px;';
+    rateInp.style.cssText='width:100px;font-size:13px;padding:4px 8px;text-align:right;border:1px solid var(--bdr);border-radius:4px;';
     (function(id){rateInp.addEventListener('change',function(){updateCrewField(id,'daily_rate',this.value);});})(c.id);
     tdRate.appendChild(rateInp);tr.appendChild(tdRate);
     // Productivity
-    var tdProd=document.createElement('td');tdProd.style.cssText='padding:6px 12px;text-align:right;';
+    var tdProd=document.createElement('td');tdProd.style.cssText='padding:6px 8px;text-align:right;';
     var prodInp=document.createElement('input');
     prodInp.type='number';prodInp.min='0';prodInp.step='50';prodInp.value=c.productivity||0;
-    prodInp.style.cssText='width:110px;font-size:13px;padding:4px 8px;text-align:right;border:1px solid var(--bdr);border-radius:4px;';
+    prodInp.style.cssText='width:90px;font-size:13px;padding:4px 8px;text-align:right;border:1px solid var(--bdr);border-radius:4px;';
     (function(id){prodInp.addEventListener('change',function(){updateCrewField(id,'productivity',this.value);});})(c.id);
     tdProd.appendChild(prodInp);tr.appendChild(tdProd);
+    // Productivity Unit
+    var tdPU=document.createElement('td');tdPU.style.cssText='padding:6px 8px;text-align:center;';
+    var puSel=document.createElement('select');
+    puSel.style.cssText='font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;';
+    prodUnits.forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;if((c.prod_unit||'TON')===u)o.selected=true;puSel.appendChild(o);});
+    (function(id){puSel.addEventListener('change',function(){updateCrewField(id,'prod_unit',this.value);});})(c.id);
+    tdPU.appendChild(puSel);tr.appendChild(tdPU);
     // Delete
     var tdDel=document.createElement('td');tdDel.style.cssText='padding:6px 4px;text-align:center;';
     var delBtn=document.createElement('button');delBtn.className='btn-ico';delBtn.style.color='var(--red)';delBtn.innerHTML='&#10005;';
@@ -6071,17 +6112,15 @@ function openPresetModal(editIdx){
       var row=document.createElement('div');
       row.style.cssText='margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;';
       var topRow=document.createElement('div');
-      topRow.style.cssText='display:grid;grid-template-columns:1fr 80px 90px 32px;gap:8px;align-items:center;margin-bottom:6px;';
+      topRow.style.cssText='display:grid;grid-template-columns:1fr 80px 32px;gap:8px;align-items:center;margin-bottom:6px;';
       var ts=document.createElement('select');ts.style.fontSize='13px';
       LTYPES.forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;if(t===l.type)o.selected=true;ts.appendChild(o);});
       ts.onchange=function(){layers[i].type=this.value;};
       var di=document.createElement('input');di.type='number';di.value=l.depth;di.placeholder='Depth"';di.min='0';di.step='0.5';di.style.fontSize='13px';
       di.onchange=function(){layers[i].depth=parseFloat(this.value)||0;};
-      var ri=document.createElement('input');ri.type='number';ri.value=l.rate;ri.placeholder='$/ton';ri.min='0';ri.step='5';ri.style.fontSize='13px';
-      ri.onchange=function(){layers[i].rate=parseFloat(this.value)||0;};
       var db=document.createElement('button');db.className='btn-ico';db.style.color='var(--red)';db.textContent='×';
       db.onclick=function(){layers.splice(i,1);renderRows();};
-      topRow.appendChild(ts);topRow.appendChild(di);topRow.appendChild(ri);topRow.appendChild(db);
+      topRow.appendChild(ts);topRow.appendChild(di);topRow.appendChild(db);
       row.appendChild(topRow);
       var descIn=document.createElement('input');descIn.type='text';descIn.value=l.description||'';
       descIn.placeholder='Line item description for PDF (e.g. Install 2" S9.5C Surface Course)';
@@ -6098,10 +6137,10 @@ function openPresetModal(editIdx){
     +'</div>'
     +'<div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Preset Name</label>'
     +'<input id="pm-name" type="text" value="'+esc(preset.name)+'" placeholder="e.g. Light Duty Parking Lot" style="width:100%;"/></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 80px 90px 32px;gap:8px;margin-bottom:6px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;">'
-    +'<span>Material</span><span>Depth (in)</span><span>$/ton Rate</span><span></span></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 80px 32px;gap:8px;margin-bottom:6px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;">'
+    +'<span>Material</span><span>Depth (in)</span><span></span></div>'
     +'<div id="pm-layers"></div>'
-    +'<button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="window._presetModalLayers.push({type:LTYPES[0],depth:4,rate:50,description:\'\'});window._presetModalRenderRows();">+ Add Layer</button>'
+    +'<button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="window._presetModalLayers.push({type:LTYPES[0],depth:4,rate:0,description:\'\'});window._presetModalRenderRows();">+ Add Line Item</button>'
     +'<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bdr);">'
     +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'preset-modal\').remove()">Cancel</button>'
     +'<button class="btn btn-red btn-sm" onclick="savePresetModal()">Save Preset</button>'
@@ -6122,7 +6161,7 @@ function savePresetModal(){
   if(!name.trim()){toast('Please enter a preset name','err');return;}
   var layers=window._presetModalLayers;
   if(!layers||!layers.length){toast('Add at least one layer','err');return;}
-  var preset={name:name.trim(),layers:layers.map(function(l){return {type:l.type,depth:l.depth,rate:l.rate,description:l.description||''};})};
+  var preset={name:name.trim(),layers:layers.map(function(l){return {type:l.type,depth:l.depth,rate:l.rate||0,description:l.description||''};})};
   if(window._presetModalEditIdx!==null&&window._presetModalEditIdx!==undefined){
     PRESETS[window._presetModalEditIdx]=preset;
   } else {
@@ -6140,12 +6179,10 @@ function renderPresetMgr(){
   c.innerHTML='';
   PRESETS.forEach(function(p,i){
     var row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);';
-    var info=document.createElement('div');info.style.flex='1';
-    var nm=document.createElement('div');nm.style.cssText='font-weight:600;font-size:13px;';nm.textContent=p.name;
-    var layers=document.createElement('div');layers.style.cssText='font-size:11px;color:var(--dgray);margin-top:2px;';
-    layers.textContent=p.layers.map(function(l){return l.type+' '+l.depth+'"';}).join(' · ');
-    info.appendChild(nm);info.appendChild(layers);
+    row.style.cssText='padding:10px 0;border-bottom:1px solid var(--bdr);';
+    var top=document.createElement('div');
+    top.style.cssText='display:flex;align-items:center;gap:10px;';
+    var nm=document.createElement('div');nm.style.cssText='font-weight:600;font-size:13px;flex:1;';nm.textContent=p.name;
     var editBtn=document.createElement('button');editBtn.className='btn btn-sec btn-sm';editBtn.textContent='Edit';
     editBtn.onclick=(function(idx){return function(){openPresetModal(idx);};})(i);
     var delBtn=document.createElement('button');delBtn.className='btn-ico';delBtn.style.color='var(--red)';delBtn.textContent='×';
@@ -6155,7 +6192,23 @@ function renderPresetMgr(){
       _saveSetting('hd_presets',PRESETS);
       renderPresets();renderPresetMgr();
     };})(i);
-    row.appendChild(info);row.appendChild(editBtn);row.appendChild(delBtn);
+    top.appendChild(nm);top.appendChild(editBtn);top.appendChild(delBtn);
+    row.appendChild(top);
+    // Line items list
+    var items=document.createElement('div');items.style.cssText='margin-top:4px;padding-left:16px;';
+    p.layers.forEach(function(l){
+      var li=document.createElement('div');li.style.cssText='font-size:11px;color:var(--dgray);padding:1px 0;display:flex;align-items:center;gap:6px;';
+      li.textContent='\u2022 ';
+      var desc=l.description||(l.type+(l.depth?' '+l.depth+'"':''));
+      var span=document.createElement('span');span.textContent=desc;
+      var tradeCls=MAT_TRADE[l.type]||'b-general';
+      var badge=document.createElement('span');badge.className='badge '+tradeCls;
+      badge.style.cssText='font-size:9px;padding:1px 6px;';
+      badge.textContent=BADGE_DEFS[tradeCls]?BADGE_DEFS[tradeCls].label:'';
+      li.appendChild(span);li.appendChild(badge);
+      items.appendChild(li);
+    });
+    row.appendChild(items);
     c.appendChild(row);
   });
 }
