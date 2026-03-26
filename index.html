@@ -4883,14 +4883,9 @@ function buildPayload(){
     sender_name:sender.name||'HD Hauling & Grading',sender_email:sender.email||'',sender_phone:sender.phone||'',
     company:'HD Hauling & Grading',client_name:client,client_email:selectedClient.email||'',client_phone:selectedClient.phone||'',client_company:selectedClient.company||'',
     notes:notes,total:parseFloat(total.toFixed(2)),line_items:line_items,
-    unit_prices:[
-      {name:'ABC Stone (per ton)',rate:60},
-      {name:'Additional asphalt tonnage (prevailing market rate)',rate:150},
-      {name:'Cold patch / temporary repair (per ton)',rate:200},
-      {name:'Milling overage (per SY)',rate:4.50},
-      {name:'Additional traffic control (per day)',rate:2500},
-      {name:'Additional mobilization (per occurrence)',rate:1500},
-    ],
+    unit_prices:(UNIT_PRICES.length?UNIT_PRICES:DEFAULT_UNIT_PRICES).map(function(u){
+      return {name:u.name+(u.unit?' (per '+u.unit+')':''),unit:u.unit||'',rate:u.rate};
+    }),
     _date_iso:date,
   };
 }
