@@ -1,4 +1,5 @@
-import os, tempfile, functools, json, hashlib
+import os, tempfile, functools, json, hashlib, time
+from datetime import datetime
 from flask import Flask, request, jsonify, session, send_file
 from generate_proposal import build
 try:
@@ -733,6 +734,152 @@ def upload_site_plan(project_id):
         return jsonify({'ok': True, 'url': public_url})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ── Project File Attachments (Supabase Storage) ──────────────────────────────
+
+FILES_BUCKET = 'project-files'
+_files_bucket_ensured = False
+
+def ensure_files_bucket():
+    """Create the project-files storage bucket if it doesn't exist."""
+    global _files_bucket_ensured
+    if _files_bucket_ensured:
+        return
+    svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+    try:
+        r = http.post(
+            f'{SUPABASE_URL}/storage/v1/bucket',
+            headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
+            json={'id': FILES_BUCKET, 'name': FILES_BUCKET, 'public': True, 'file_size_limit': 10485760},
+            timeout=10
+        )
+        if r.status_code in (200, 201, 409):
+            _files_bucket_ensured = True
+    except Exception:
+        pass
+
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+@app.route('/upload/project-file/<int:project_id>', methods=['POST'])
+@require_auth
+def upload_project_file(project_id):
+    """Upload a file attachment to a project. Max 10MB."""
+    if 'file' not in request.files:
+        return jsonify({'ok': False, 'error': 'No file provided'}), 400
+    file = request.files['file']
+    if not file.filename:
+        return jsonify({'ok': False, 'error': 'Empty filename'}), 400
+
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+    allowed = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'txt'}
+    if ext not in allowed:
+        return jsonify({'ok': False, 'error': f'File type .{ext} not supported.'}), 400
+
+    content_types = {
+        'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
+        'gif': 'image/gif', 'webp': 'image/webp', 'pdf': 'application/pdf',
+        'doc': 'application/msword', 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls': 'application/vnd.ms-excel', 'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'csv': 'text/csv', 'txt': 'text/plain'
+    }
+    ct = content_types.get(ext, 'application/octet-stream')
+
+    ensure_files_bucket()
+
+    svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+    file_data = file.read()
+    if len(file_data) > MAX_FILE_SIZE:
+        return jsonify({'ok': False, 'error': 'File exceeds 10 MB limit.'}), 400
+
+    ts = int(time.time() * 1000)
+    safe_name = file.filename.replace(' ', '_').replace('/', '_')
+    storage_path = f'project-{project_id}/files/{ts}-{safe_name}'
+
+    try:
+        r = http.post(
+            f'{SUPABASE_URL}/storage/v1/object/{FILES_BUCKET}/{storage_path}',
+            headers={
+                'apikey': svc_key,
+                'Authorization': f'Bearer {svc_key}',
+                'Content-Type': ct,
+                'x-upsert': 'true'
+            },
+            data=file_data,
+            timeout=30
+        )
+        if r.status_code not in (200, 201):
+            err_detail = r.text[:200] if r.text else 'Unknown error'
+            return jsonify({'ok': False, 'error': f'Upload failed ({r.status_code}): {err_detail}'}), 500
+
+        public_url = f'{SUPABASE_URL}/storage/v1/object/public/{FILES_BUCKET}/{storage_path}'
+
+        # Append file metadata to project snap.files[]
+        proj_r = http.get(sb_url('proposals', f'?id=eq.{project_id}&select=snap'), headers=sb_headers(), timeout=5)
+        rows = proj_r.json()
+        if rows:
+            snap = rows[0].get('snap') or {}
+            if isinstance(snap, str):
+                snap = json.loads(snap)
+            if 'files' not in snap:
+                snap['files'] = []
+            snap['files'].append({
+                'name': file.filename,
+                'url': public_url,
+                'path': storage_path,
+                'size': len(file_data),
+                'type': ext,
+                'uploaded_by': session.get('username', ''),
+                'uploaded_at': datetime.now().isoformat()
+            })
+            http.patch(
+                sb_url('proposals', f'?id=eq.{project_id}'),
+                headers=sb_headers(),
+                json={'snap': snap},
+                timeout=5
+            )
+
+        return jsonify({'ok': True, 'url': public_url, 'name': file.filename, 'path': storage_path, 'size': len(file_data), 'type': ext})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@app.route('/upload/project-file/<int:project_id>/delete', methods=['POST'])
+@require_auth
+def delete_project_file(project_id):
+    """Delete a file attachment from a project."""
+    data = request.get_json() or {}
+    storage_path = data.get('path', '')
+    if not storage_path:
+        return jsonify({'ok': False, 'error': 'No path provided'}), 400
+
+    svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+    try:
+        # Delete from Supabase Storage
+        http.delete(
+            f'{SUPABASE_URL}/storage/v1/object/{FILES_BUCKET}/{storage_path}',
+            headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}'},
+            timeout=10
+        )
+
+        # Remove from project snap.files[]
+        proj_r = http.get(sb_url('proposals', f'?id=eq.{project_id}&select=snap'), headers=sb_headers(), timeout=5)
+        rows = proj_r.json()
+        if rows:
+            snap = rows[0].get('snap') or {}
+            if isinstance(snap, str):
+                snap = json.loads(snap)
+            snap['files'] = [f for f in (snap.get('files') or []) if f.get('path') != storage_path]
+            http.patch(
+                sb_url('proposals', f'?id=eq.{project_id}'),
+                headers=sb_headers(),
+                json={'snap': snap},
+                timeout=5
+            )
+
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 
 # ── Setup: create hd_settings table if needed ───────────────────────────────
 
