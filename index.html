@@ -9215,6 +9215,55 @@ function _startWxCanvas(cv,code){
   var flakes=[];
   var lightning={active:false,timer:0,bolts:[],flashAlpha:0};
 
+  // ── Overcast: procedural noise cloud texture ──
+  var _ocCloud=null,_ocCloud2=null;
+  if(cat==='overcast'||cat==='partly'){
+    function _ocHash(ix,iy,seed){
+      var n=(ix*374761393+iy*668265263+seed*1013904223)|0;
+      n=Math.imul(n^(n>>>13),1274126177);
+      return((n^(n>>>16))>>>0)/4294967296;
+    }
+    function _ocSmooth(x,y,seed){
+      var ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy;
+      fx=fx*fx*(3-2*fx);fy=fy*fy*(3-2*fy);
+      return _ocHash(ix,iy,seed)*(1-fx)*(1-fy)+_ocHash(ix+1,iy,seed)*fx*(1-fy)
+        +_ocHash(ix,iy+1,seed)*(1-fx)*fy+_ocHash(ix+1,iy+1,seed)*fx*fy;
+    }
+    function _ocFbm(x,y,seed){
+      var v=0,a=0.5,f=1;
+      for(var o=0;o<6;o++){v+=_ocSmooth(x*f,y*f,seed+o*71)*a;a*=0.48;f*=2.1;}
+      return v;
+    }
+    function _makeCloudTex(w,h,seed,scaleX,scaleY,rBase,gBase,bBase,aMin,aMax){
+      var c=document.createElement('canvas');c.width=w;c.height=h;
+      var cx=c.getContext('2d');
+      var img=cx.createImageData(w,h);var d=img.data;
+      for(var py=0;py<h;py++){
+        for(var px=0;px<w;px++){
+          var n=_ocFbm(px/w*scaleX,py/h*scaleY,seed);
+          // Darken toward bottom (cloud base)
+          var yDarken=1-Math.pow(py/h,1.5)*0.25;
+          n*=yDarken;
+          var idx=(py*w+px)*4;
+          d[idx]=Math.floor(rBase+n*65);
+          d[idx+1]=Math.floor(gBase+n*58);
+          d[idx+2]=Math.floor(bBase+n*52);
+          d[idx+3]=Math.floor(aMin+n*(aMax-aMin));
+        }
+      }
+      cx.putImageData(img,0,0);
+      return c;
+    }
+    if(cat==='overcast'){
+      // Two layers at different noise scales for depth
+      _ocCloud=_makeCloudTex(320,160,42,8,4,110,118,132,35,65);
+      _ocCloud2=_makeCloudTex(320,160,137,14,7,125,132,148,20,45);
+    } else {
+      // Partly: thinner, sparser clouds
+      _ocCloud=_makeCloudTex(256,128,42,7,3.5,145,152,168,15,35);
+    }
+  }
+
   // Rain particles (only for rain types)
   if(cat==='rain'||cat==='heavyrain'||cat==='drizzle'||cat==='storm'){
     var ct=cat==='heavyrain'||cat==='storm'?180:cat==='rain'?100:35;
@@ -9272,10 +9321,11 @@ function _startWxCanvas(cv,code){
       g.addColorStop(0.4,'rgba(35,35,28,0.12)');
       g.addColorStop(1,'rgba(20,20,18,0.04)');
     } else if(cat==='overcast'){
-      g.addColorStop(0,'rgba(55,58,68,0.28)');
-      g.addColorStop(0.3,'rgba(50,54,62,0.2)');
-      g.addColorStop(0.6,'rgba(45,48,56,0.12)');
-      g.addColorStop(1,'rgba(40,43,50,0.06)');
+      // Flat gray wash — the noise texture provides all the detail
+      g.addColorStop(0,'rgba(62,66,78,0.22)');
+      g.addColorStop(0.35,'rgba(55,60,72,0.16)');
+      g.addColorStop(0.7,'rgba(48,52,62,0.1)');
+      g.addColorStop(1,'rgba(42,46,55,0.05)');
     } else if(cat==='fog'){
       g.addColorStop(0,'rgba(140,148,160,0.15)');
       g.addColorStop(0.4,'rgba(130,138,152,0.12)');
@@ -9357,48 +9407,53 @@ function _startWxCanvas(cv,code){
       ctx.fillStyle=wash;ctx.fillRect(0,0,W,H);
 
     } else if(cat==='partly'){
-      // Dimmed sun + atmospheric cloud tones (no particle clouds)
+      // Dimmed sun visible through cloud gaps
       var sx=W*0.8,sy=H*0.12;
-      // Dim sun glow
-      var s1=ctx.createRadialGradient(sx,sy,0,sx,sy,60*breathe);
+      // Sun corona
+      var s1=ctx.createRadialGradient(sx,sy,0,sx,sy,65*breathe);
       s1.addColorStop(0,'rgba(255,220,130,0.2)');
-      s1.addColorStop(0.4,'rgba(255,190,80,0.08)');
+      s1.addColorStop(0.3,'rgba(255,195,90,0.1)');
+      s1.addColorStop(0.6,'rgba(255,175,65,0.04)');
       s1.addColorStop(1,'transparent');
-      ctx.fillStyle=s1;ctx.beginPath();ctx.arc(sx,sy,60*breathe,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=s1;ctx.beginPath();ctx.arc(sx,sy,65*breathe,0,Math.PI*2);ctx.fill();
       // Sun disc (dimmer)
-      var sd=ctx.createRadialGradient(sx,sy,0,sx,sy,8);
-      sd.addColorStop(0,'rgba(255,250,230,0.5)');sd.addColorStop(1,'rgba(255,240,200,0)');
-      ctx.fillStyle=sd;ctx.beginPath();ctx.arc(sx,sy,8,0,Math.PI*2);ctx.fill();
-      // Cloud atmosphere — soft gray bands drifting very slowly across
-      for(var i=0;i<3;i++){
-        var cx=(0.15+i*0.3+slowDrift*0.5)%1.4-0.2;
-        var cy=0.05+i*0.12;
-        var cw=W*0.35;var ch=H*0.5;
-        var cg=ctx.createRadialGradient(cx*W,cy*H,0,cx*W,cy*H,cw);
-        cg.addColorStop(0,'rgba(160,168,180,0.06)');
-        cg.addColorStop(0.5,'rgba(155,162,175,0.03)');
-        cg.addColorStop(1,'transparent');
-        ctx.fillStyle=cg;ctx.fillRect(0,0,W,H);
+      var sd=ctx.createRadialGradient(sx,sy,0,sx,sy,9);
+      sd.addColorStop(0,'rgba(255,250,230,0.45)');sd.addColorStop(0.6,'rgba(255,242,210,0.15)');sd.addColorStop(1,'rgba(255,240,200,0)');
+      ctx.fillStyle=sd;ctx.beginPath();ctx.arc(sx,sy,9,0,Math.PI*2);ctx.fill();
+      // Noise cloud texture — thinner than overcast, drifting across
+      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+      if(_ocCloud){
+        var off1=(t*0.025)%(W*2);
+        ctx.drawImage(_ocCloud,-off1,-H*0.05,W*2,H*0.85);
+        ctx.drawImage(_ocCloud,W*2-off1,-H*0.05,W*2,H*0.85);
       }
 
     } else if(cat==='overcast'){
-      // Layered gray atmosphere — multiple overlapping soft zones
-      for(var i=0;i<5;i++){
-        var cx=((i*0.22+slowDrift*0.3)%1.6)-0.3;
-        var cy=-0.1+i*0.08;
-        var cg=ctx.createRadialGradient(cx*W,cy*H,0,cx*W,cy*H,W*0.4);
-        cg.addColorStop(0,'rgba(140,148,162,0.06)');
-        cg.addColorStop(0.4,'rgba(135,142,155,0.03)');
-        cg.addColorStop(1,'transparent');
-        ctx.fillStyle=cg;ctx.fillRect(0,0,W,H);
+      // Procedural noise cloud layers — two textures drifting at different speeds
+      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+      if(_ocCloud){
+        // Layer 1: large-scale cloud structure, slow drift right
+        var off1=(t*0.035)%(W*2);
+        ctx.drawImage(_ocCloud,-off1,0,W*2,H);
+        ctx.drawImage(_ocCloud,W*2-off1,0,W*2,H);
       }
-      // Subtle variation bands
-      var band=ctx.createLinearGradient(0,0,W,0);
-      band.addColorStop(0,'rgba(130,138,152,0.03)');
-      band.addColorStop(0.3,'rgba(140,148,162,0.05)');
-      band.addColorStop(0.6,'rgba(135,142,155,0.02)');
-      band.addColorStop(1,'rgba(130,138,150,0.04)');
-      ctx.fillStyle=band;ctx.fillRect(0,0,W,H*0.5);
+      if(_ocCloud2){
+        // Layer 2: finer detail, drifts left at different speed (parallax)
+        var off2=(t*0.018)%(W*2);
+        ctx.drawImage(_ocCloud2,off2-W*0.5,-H*0.08,W*2,H*1.15);
+        ctx.drawImage(_ocCloud2,off2-W*0.5-W*2,-H*0.08,W*2,H*1.15);
+      }
+      // Diffused sun glow — faint bright area behind clouds at upper right
+      var sunX=W*0.65,sunY=H*0.05;
+      var sg=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,H*0.55*breathe);
+      sg.addColorStop(0,'rgba(255,252,240,0.06)');
+      sg.addColorStop(0.25,'rgba(245,242,230,0.03)');
+      sg.addColorStop(1,'transparent');
+      ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);
+      // Darker cloud base at bottom edge
+      var base=ctx.createLinearGradient(0,H,0,H*0.55);
+      base.addColorStop(0,'rgba(65,72,85,0.08)');base.addColorStop(1,'transparent');
+      ctx.fillStyle=base;ctx.fillRect(0,0,W,H);
 
     } else if(cat==='fog'){
       // Dense fog — horizontal bands with very slow vertical drift
