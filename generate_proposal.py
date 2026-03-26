@@ -199,11 +199,11 @@ def info_block(data, st):
     FW = W - inch  # full usable width
 
     title_s  = ParagraphStyle('c_t',   fontName='Helvetica-Bold', fontSize=11,
-                               textColor=BLACK, leading=14, alignment=TA_CENTER)
+                               textColor=BLACK, leading=14, alignment=TA_LEFT)
     addr_s   = ParagraphStyle('c_a',   fontName='Helvetica',      fontSize=8,
-                               textColor=DGRAY, leading=11, alignment=TA_CENTER)
+                               textColor=DGRAY, leading=11, alignment=TA_LEFT)
     date_s   = ParagraphStyle('c_d',   fontName='Helvetica-Bold', fontSize=8,
-                               textColor=RED,   leading=11, alignment=TA_CENTER)
+                               textColor=RED,   leading=11, alignment=TA_LEFT)
     sec_s    = ParagraphStyle('c_sec', fontName='Helvetica-Bold', fontSize=7,
                                textColor=RED,   leading=9,  spaceAfter=2)
     name_s   = ParagraphStyle('c_n',   fontName='Helvetica',      fontSize=9,
@@ -227,6 +227,10 @@ def info_block(data, st):
     ]
     if data.get('company'):
         by_cell.append(Paragraph(data['company'], detail_s))
+    if data.get('sender_email'):
+        by_cell.append(Paragraph(data['sender_email'], detail_s))
+    if data.get('sender_phone'):
+        by_cell.append(Paragraph(data['sender_phone'], detail_s))
 
     for_parts = [
         Paragraph('PREPARED FOR', sec_s),
@@ -234,6 +238,10 @@ def info_block(data, st):
     ]
     if data.get('client_company'):
         for_parts.append(Paragraph(data['client_company'], detail_s))
+    if data.get('client_email'):
+        for_parts.append(Paragraph(data['client_email'], detail_s))
+    if data.get('client_phone'):
+        for_parts.append(Paragraph(data['client_phone'], detail_s))
     for_cell = for_parts
 
     cw_proj = FW * 0.42
@@ -551,59 +559,7 @@ def approval_page(data, st):
         ('ALIGN',        (1,0),(1,-1),  'RIGHT'),
     ]))
     elems.append(amt_t)
-    elems.append(Spacer(1, 0.14*inch))
-
-    # ── Additional Unit Prices (bid-table style) — before signature ──────────
-    unit_items = data.get('unit_prices', [])
-    if unit_items:
-        ch_l = ParagraphStyle('ucl', fontName='Helvetica-Bold', fontSize=8,
-                               textColor=WHITE)
-        ch_r = ParagraphStyle('ucr', fontName='Helvetica-Bold', fontSize=8,
-                               textColor=WHITE, alignment=TA_RIGHT)
-        up_rows = [
-            [Paragraph('Additional Unit Prices', ParagraphStyle(
-                'ub', fontName='Helvetica-Bold', fontSize=10,
-                textColor=WHITE, alignment=TA_CENTER)), ''],
-            [Paragraph('Description', ch_l), Paragraph('Unit Rate', ch_r)],
-        ]
-        for item in unit_items:
-            up_rows.append([
-                Paragraph(item['name'], ParagraphStyle(
-                    'un', fontName='Helvetica', fontSize=8, textColor=BLACK)),
-                Paragraph(f'${item["rate"]:,.2f}', ParagraphStyle(
-                    'uv', fontName='Helvetica-Bold', fontSize=8,
-                    textColor=BLACK, alignment=TA_RIGHT)),
-            ])
-
-        up_t = Table(up_rows,
-                     colWidths=[cw*0.78, cw*0.22],
-                     rowHeights=[None, 0.24*inch] + [None]*(len(up_rows)-2))
-        up_ts = [
-            ('SPAN',         (0,0),(-1,0)),
-            ('BACKGROUND',   (0,0),(-1,0),  RED),
-            ('ALIGN',        (0,0),(-1,0),  'CENTER'),
-            ('TOPPADDING',   (0,0),(-1,0),  5),
-            ('BOTTOMPADDING',(0,0),(-1,0),  5),
-            ('BACKGROUND',   (0,1),(-1,1),  colors.HexColor('#4A4A4A')),
-            ('TOPPADDING',   (0,1),(-1,1),  5),
-            ('BOTTOMPADDING',(0,1),(-1,1),  5),
-            ('TOPPADDING',   (0,2),(-1,-1), 4),
-            ('BOTTOMPADDING',(0,2),(-1,-1), 4),
-            ('LINEBELOW',    (0,2),(-1,-2), 0.3, TBLBORD),
-            ('LINEBELOW',    (0,-1),(-1,-1),1.5, RED),
-            ('LEFTPADDING',  (0,0),(-1,-1), 8),
-            ('RIGHTPADDING', (-1,0),(-1,-1),8),
-            ('ALIGN',        (1,0),(1,-1),  'RIGHT'),
-            ('VALIGN',       (0,0),(-1,-1), 'MIDDLE'),
-            ('BOX',          (0,0),(-1,-1), 0.5, TBLBORD),
-        ]
-        for i in range(2, len(up_rows)):
-            if i % 2 == 0:
-                up_ts.append(('BACKGROUND', (0,i),(-1,i), ROWALT))
-        up_t.setStyle(TableStyle(up_ts))
-        elems.append(up_t)
-
-    elems.append(Spacer(1, 0.14*inch))
+    elems.append(Spacer(1, 0.18*inch))
 
     # ── Authorization language ────────────────────────────────────────────────
     auth_st = ParagraphStyle('auth', fontName='Helvetica-Oblique', fontSize=8,
@@ -645,6 +601,62 @@ def approval_page(data, st):
     ]))
     elems.append(sig_tbl)
 
+    return elems
+
+def unit_prices_block(data):
+    """Renders the Additional Unit Prices table as a list of flowables."""
+    unit_items = data.get('unit_prices', [])
+    if not unit_items:
+        return []
+    cw = W - inch
+    elems = []
+    ch_l = ParagraphStyle('ucl', fontName='Helvetica-Bold', fontSize=8,
+                           textColor=WHITE)
+    ch_r = ParagraphStyle('ucr', fontName='Helvetica-Bold', fontSize=8,
+                           textColor=WHITE, alignment=TA_RIGHT)
+    up_rows = [
+        [Paragraph('Additional Unit Prices', ParagraphStyle(
+            'ub', fontName='Helvetica-Bold', fontSize=10,
+            textColor=WHITE, alignment=TA_CENTER)), ''],
+        [Paragraph('Description', ch_l), Paragraph('Unit Rate', ch_r)],
+    ]
+    for item in unit_items:
+        up_rows.append([
+            Paragraph(item['name'], ParagraphStyle(
+                'un', fontName='Helvetica', fontSize=8, textColor=BLACK)),
+            Paragraph(f'${item["rate"]:,.2f}', ParagraphStyle(
+                'uv', fontName='Helvetica-Bold', fontSize=8,
+                textColor=BLACK, alignment=TA_RIGHT)),
+        ])
+
+    up_t = Table(up_rows,
+                 colWidths=[cw*0.78, cw*0.22],
+                 rowHeights=[None, 0.24*inch] + [None]*(len(up_rows)-2))
+    up_ts = [
+        ('SPAN',         (0,0),(-1,0)),
+        ('BACKGROUND',   (0,0),(-1,0),  RED),
+        ('ALIGN',        (0,0),(-1,0),  'CENTER'),
+        ('TOPPADDING',   (0,0),(-1,0),  5),
+        ('BOTTOMPADDING',(0,0),(-1,0),  5),
+        ('BACKGROUND',   (0,1),(-1,1),  colors.HexColor('#4A4A4A')),
+        ('TOPPADDING',   (0,1),(-1,1),  5),
+        ('BOTTOMPADDING',(0,1),(-1,1),  5),
+        ('TOPPADDING',   (0,2),(-1,-1), 4),
+        ('BOTTOMPADDING',(0,2),(-1,-1), 4),
+        ('LINEBELOW',    (0,2),(-1,-2), 0.3, TBLBORD),
+        ('LINEBELOW',    (0,-1),(-1,-1),1.5, RED),
+        ('LEFTPADDING',  (0,0),(-1,-1), 8),
+        ('RIGHTPADDING', (-1,0),(-1,-1),8),
+        ('ALIGN',        (1,0),(1,-1),  'RIGHT'),
+        ('VALIGN',       (0,0),(-1,-1), 'MIDDLE'),
+        ('BOX',          (0,0),(-1,-1), 0.5, TBLBORD),
+    ]
+    for i in range(2, len(up_rows)):
+        if i % 2 == 0:
+            up_ts.append(('BACKGROUND', (0,i),(-1,i), ROWALT))
+    up_t.setStyle(TableStyle(up_ts))
+    elems.append(Spacer(1, 0.12*inch))
+    elems.append(up_t)
     return elems
 
 def tc_block(title, body_items, st, cw):
@@ -845,6 +857,7 @@ def build(data, out_path):
         story.append(PageBreak())
 
     story += tc_pages(st)
+    story += unit_prices_block(data)
     story.append(PageBreak())
 
     story += approval_page(data, st)

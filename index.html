@@ -4036,12 +4036,21 @@ async function loadCOList(){
       return;
     }
     c.innerHTML='';
+    // Build project number lookup for COs
+    var _coProjMap={};
+    (pipelineProposals||[]).forEach(function(proj){
+      var ps=typeof proj.snap==='string'?JSON.parse(proj.snap||'{}'):proj.snap||{};
+      if(!ps.is_project)return;
+      var pn=ps.project_number||'';
+      (ps.change_orders||[]).forEach(function(coRef){if(coRef.id)_coProjMap[coRef.id]=pn;});
+    });
     savedCOs.forEach(function(co){
       var div=document.createElement('div');
       div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
       var coSnap=typeof co.snap==='string'?JSON.parse(co.snap||'{}'):co.snap||{};
-      var coDocNum=coSnap.project_number?(coSnap.project_number+'-CO'+(co.co_number||1)):('CO-'+co.id);
-      var coDocLabel='<span style="background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;margin-right:6px;">'+esc(coDocNum)+'</span>';
+      var _cpn=_coProjMap[co.id]||coSnap.project_number||'';
+      var coDocNum=_cpn?(_cpn+'-CO'+(co.co_number||1)):'';
+      var coDocLabel=coDocNum?'<span style="background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;margin-right:6px;">'+esc(coDocNum)+'</span>':'';
       var createdBy=co.created_by?'<span style="background:#eee;color:var(--dgray);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase;margin-left:6px;">'+esc(co.created_by)+'</span>':'';
       var ts=co.created_at?new Date(co.created_at).toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}):'';
       var netChange=(co.add_total||0)-(co.deduct_total||0);
@@ -5771,13 +5780,22 @@ async function renderSaved(){
       var sn=typeof q.snap==='string'?JSON.parse(q.snap||'{}'):q.snap||{};
       return !sn.is_project;
     });
+    // Build project number lookup: proposal id -> project_number
+    var _projNumMap={};
+    (pipelineProposals||[]).forEach(function(proj){
+      var ps=typeof proj.snap==='string'?JSON.parse(proj.snap||'{}'):proj.snap||{};
+      if(!ps.is_project)return;
+      var pn=ps.project_number||'';
+      (ps.linked_proposals||[]).forEach(function(pid,idx){_projNumMap[pid]={projNum:pn,idx:idx+1};});
+    });
     if(!docs.length){c.innerHTML='<p style="color:var(--dgray);font-size:13px;">No saved proposals yet.</p>';return;}
     docs.forEach(function(q){
       var div=document.createElement('div');
       div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
       var sn=typeof q.snap==='string'?JSON.parse(q.snap||'{}'):q.snap||{};
       var rev=sn.revision||0;
-      var docNum=sn.document_number||sn.project_number||('P-'+q.id);
+      var _pm=_projNumMap[q.id];
+      var docNum=_pm&&_pm.projNum?_pm.projNum+'-P'+_pm.idx:(sn.document_number||'');
       var docNumLabel=docNum?'<span style="background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;margin-right:6px;">'+esc(docNum)+'</span>':'';
       var revLabel=rev>0?'<span style="background:#e8f0fe;color:#1a73e8;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">Rev '+String.fromCharCode(64+rev)+'</span>':'';
       var createdBy=q.created_by?'<span style="background:#eee;color:var(--dgray);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase;margin-left:6px;">'+esc(q.created_by)+'</span>':'';
