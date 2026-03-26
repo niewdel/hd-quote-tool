@@ -14,6 +14,9 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+::selection{background:var(--red-soft);color:var(--red);}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px;border-radius:var(--rad-s);}
 :root{
   --red:#CC0000;--red-h:#AA0000;--red-soft:rgba(204,0,0,0.12);
   --blk:#1A1A1A;--wht:#fff;--lgray:#F8F7F5;--mgray:#E8E6E3;--dgray:#6B6B6B;--bdr:#D5D3D0;
@@ -210,7 +213,8 @@ body.dark .dk-cal-selected{background:var(--red) !important;color:#fff !importan
 /* Login bar stays white even in dark mode (login screen is already dark-themed) */
 body.dark .login-bar{background:#ffffff;}
 /* Dynamic elements created via JS — use .dk-card class for dark mode */
-.dk-card{background:#fff;border:1px solid var(--bdr);border-radius:8px;}
+.dk-card{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);transition:box-shadow .2s,transform .2s;}
+.dk-card:hover{box-shadow:var(--shadow-m);transform:translateY(-1px);}
 body.dark .dk-card{background:#1C1C1E !important;border-color:#3A3A3C !important;color:#F5F5F7 !important;}
 .dk-card.ps-clickable{cursor:pointer;transition:background .15s;}
 .dk-card.ps-clickable:hover{background:var(--lgray) !important;}
@@ -369,16 +373,16 @@ body.dark .topbar-bell .notif-dot{border-color:#1C1C1E;}
 .rpt-tbl td{padding:7px 12px;border-bottom:1px solid #eee;}
 .rpt-tbl tr:hover{background:var(--lgray);}
 
-/* Schedule View Toggle */
-.sched-view-btn{background:var(--wht);border:none;border-right:1px solid var(--bdr);padding:5px 12px;font-size:11px;font-weight:600;color:var(--dgray);cursor:pointer;font-family:var(--font);transition:all .12s;}
-.sched-view-btn:last-child{border-right:none;}
-.sched-view-btn:hover{background:var(--lgray);}
-.sched-view-active{background:var(--red) !important;color:#fff !important;}
-body.dark .sched-view-btn{background:#2C2C2E;color:#A1A1A6;border-color:#48484A;}
-body.dark .sched-view-btn:hover{background:#3A3A3C;}
+/* Schedule View Toggle — Apple segmented control */
+.sched-seg{display:flex;background:var(--lgray);border-radius:var(--rad-s);padding:2px;gap:2px;}
+.sched-view-btn{background:transparent;border:none;padding:5px 14px;font-size:11px;font-weight:600;color:var(--dgray);cursor:pointer;font-family:var(--font);border-radius:6px;transition:all .15s;}
+.sched-view-btn:hover{color:var(--blk);}
+.sched-view-active{background:var(--wht);color:var(--blk);box-shadow:var(--shadow-s);}
+body.dark .sched-seg{background:rgba(255,255,255,0.06);}
+body.dark .sched-view-active{background:rgba(255,255,255,0.12);color:#F5F5F7;}
 
 /* Cards */
-.card{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-s);}
+.card{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-s);transition:box-shadow .2s,transform .2s;}
 .card-hdr{padding:11px 15px;border-bottom:1px solid var(--bdr);background:var(--lgray);display:flex;align-items:center;justify-content:space-between;}
 .card-title{font-size:13px;font-weight:600;}
 .card-body{padding:15px;}
@@ -404,10 +408,13 @@ textarea{resize:vertical;min-height:52px;}
 .btn-ico{background:none;border:none;cursor:pointer;padding:3px;color:var(--dgray);display:flex;align-items:center;}
 .btn-ico:hover{color:var(--red);}
 .btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn-danger{background:transparent;color:var(--red);border:1px solid var(--red);}.btn-danger:hover{background:var(--red-soft);}
+.btn:active:not(:disabled){transform:scale(.97);}
 
 /* Metrics */
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;}
-.metric{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);padding:14px 16px;box-shadow:var(--shadow-s);}
+.metric{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);padding:14px 16px;box-shadow:var(--shadow-s);transition:box-shadow .2s,transform .2s;}
+.metric:hover{box-shadow:var(--shadow-m);transform:translateY(-1px);}
 .metric.hl{border-color:var(--red);}
 .metric-lbl{font-size:10px;color:var(--dgray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;font-weight:600;}
 .metric-val{font-size:19px;font-weight:700;}
@@ -418,7 +425,7 @@ textarea{resize:vertical;min-height:52px;}
 .tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:12px;}
 th{text-align:left;padding:6px 9px;border-bottom:2px solid var(--bdr);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--dgray);font-weight:600;white-space:nowrap;}
-td{padding:6px 9px;border-bottom:1px solid var(--mgray);vertical-align:middle;}
+td{padding:6px 9px;border-bottom:1px solid var(--mgray);vertical-align:middle;transition:background .12s;}
 tr:last-child td{border-bottom:none;}
 tr:nth-child(even) td{background:var(--lgray);}
 .badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;}
@@ -604,7 +611,7 @@ tr:nth-child(even) td{background:var(--lgray);}
   .login-bar img { height: 32px; }
 }
 
-.phase-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:#fff;color:var(--dgray);transition:all .12s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
+.phase-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--wht);color:var(--dgray);transition:all .12s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
 .phase-tab.on{background:#111;color:#fff;border-color:#111;}
 .phase-tab:hover:not(.on){border-color:#999;color:var(--blk);}
 .phase-tab-name{background:none;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);padding:0;color:inherit;outline:none;}
@@ -615,7 +622,8 @@ tr:nth-child(even) td{background:var(--lgray);}
 .kb-col-hdr{padding:10px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;color:#fff;}
 .kb-col-hdr .kb-count{background:rgba(255,255,255,.3);border-radius:10px;padding:1px 7px;font-size:11px;}
 .kb-cards{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:400px;flex:1;overflow-y:auto;}
-.kb-card{background:#fff;border:1px solid var(--bdr);border-radius:6px;padding:10px 12px;cursor:grab;transition:box-shadow .12s,opacity .15s,transform .15s;}
+.kb-card{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad-s);padding:10px 12px;cursor:grab;transition:box-shadow .15s,opacity .15s,transform .15s;}
+.kb-card:hover{box-shadow:var(--shadow-m);transform:translateY(-1px);}
 .kb-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);}
 .kb-card.dragging{opacity:.4;transform:scale(.96);}
 .kb-cards.drag-over{background:rgba(204,0,0,.06);border:2px dashed var(--red);border-radius:6px;}
@@ -633,20 +641,22 @@ tr:nth-child(even) td{background:var(--lgray);}
 .kb-lost{border-left:3px solid #A32D2D;}
 .kb-disq{border-left:3px solid #888;opacity:.65;}
 .kb-stat-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
-.kb-stat{background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:10px 14px;flex:1;min-width:110px;}
+.kb-stat{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad-s);padding:10px 14px;flex:1;min-width:110px;}
 .kb-stat-lbl{font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;}
 .kb-stat-val{font-size:19px;font-weight:700;margin-top:2px;}
 /* Client cards */
 .clients-tab-btn{color:var(--dgray);transition:all .15s;}
 .clients-tab-btn:hover{background:rgba(0,0,0,.04);}
-.clients-tab-btn.on{color:var(--red);border-left-color:var(--red) !important;background:#fff;font-weight:700 !important;}
-.sub-card{background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:11px;}
-.client-card{background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:11px;}
+.clients-tab-btn.on{color:var(--red);border-left-color:var(--red) !important;background:var(--wht);font-weight:700 !important;}
+.sub-card{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:11px;transition:box-shadow .2s,transform .2s;}
+.sub-card:hover{box-shadow:var(--shadow-m);transform:translateY(-1px);}
+.client-card{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:11px;transition:box-shadow .2s,transform .2s;}
+.client-card:hover{box-shadow:var(--shadow-m);transform:translateY(-1px);}
 .client-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .client-info{flex:1;}
 .client-name{font-weight:600;font-size:13px;}
 .client-sub{font-size:11px;color:var(--dgray);margin-top:2px;}
-.kb-stage-select{font-size:11px;padding:2px 5px;border:1px solid var(--bdr);border-radius:4px;background:#fff;cursor:pointer;max-width:130px;}
+.kb-stage-select{font-size:11px;padding:2px 5px;border:1px solid var(--bdr);border-radius:4px;background:var(--wht);cursor:pointer;max-width:130px;}
 .admin-table{width:100%;border-collapse:collapse;font-size:13px;}.admin-table th{background:var(--lgray);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--dgray);border-bottom:2px solid var(--bdr);letter-spacing:.5px;text-transform:uppercase;}.admin-table td{padding:9px 12px;border-bottom:1px solid var(--bdr);vertical-align:middle;}.admin-table tr:hover td{background:var(--lgray);}.role-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}.role-admin{background:#2d1a1a;color:var(--red);}.role-user{background:#f0f0f0;color:#555;}.role-field{background:#E8F0E8;color:#27500A;}.status-active{color:#27500A;font-weight:600;font-size:11px;}.status-inactive{color:#999;font-size:11px;}.log-row-fail td{color:#cc4444;}.log-ip{font-family:monospace;font-size:11px;color:var(--dgray);}
 [data-admin-hidden]{display:none}
 [data-field-hidden]{display:none}
@@ -855,7 +865,7 @@ tr:nth-child(even) td{background:var(--lgray);}
                 <label>Client</label>
                 <div style="position:relative;">
                   <input id="proj-client" type="text" placeholder="Client name" autocomplete="off" oninput="onClientInput(this.value)"/>
-                  <div id="client-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--bdr);border-radius:6px;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
+                  <div id="client-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad-s);z-index:20;box-shadow:var(--shadow-m);"></div>
                 </div>
               </div>
             </div>
@@ -1597,7 +1607,7 @@ tr:nth-child(even) td{background:var(--lgray);}
             <span class="card-title" id="sched-cal-title" style="flex:1;text-align:center;"></span>
             <button class="btn btn-sec btn-sm" onclick="schedCalNav(1)">Next &rsaquo;</button>
             <button class="btn btn-sec btn-sm" onclick="schedCalNav(0)">Today</button>
-            <div style="display:flex;gap:0;border:1px solid var(--bdr);border-radius:4px;overflow:hidden;">
+            <div class="sched-seg">
               <button class="sched-view-btn" data-view="day" onclick="setSchedView('day')">Day</button>
               <button class="sched-view-btn" data-view="3day" onclick="setSchedView('3day')">3-Day</button>
               <button class="sched-view-btn sched-view-active" data-view="week" onclick="setSchedView('week')">Week</button>
@@ -1619,7 +1629,7 @@ tr:nth-child(even) td{background:var(--lgray);}
       <div class="panel" id="panel-reports" data-field-hidden><div class="content" style="max-width:1200px;">
         <div style="display:flex;gap:18px;align-items:flex-start;">
           <!-- Report Sidebar -->
-          <div id="rpt-sidebar" style="width:220px;flex-shrink:0;background:#fff;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;">
+          <div id="rpt-sidebar" style="width:220px;flex-shrink:0;background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad-s);overflow:hidden;">
             <div style="padding:10px 14px;background:#FAFAFA;border-bottom:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Estimate Reports</div>
             <div class="rpt-nav-item rpt-nav-active" onclick="selectReport('monthly-summary',this)">Monthly Estimate Summary</div>
             <div class="rpt-nav-item" onclick="selectReport('geographic',this)">Geographic Analysis</div>
@@ -2389,7 +2399,7 @@ function openLibraryPicker(){
   var modal=document.createElement("div");modal.id="lib-picker-modal";
   modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;";
   var box=document.createElement("div");
-  box.style.cssText="background:#fff;border-radius:10px;padding:20px;min-width:520px;max-width:640px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.18);";
+  box.style.cssText="background:var(--wht);border-radius:var(--rad);padding:20px;min-width:520px;max-width:640px;max-height:80vh;display:flex;flex-direction:column;box-shadow:var(--shadow-l);";
   // Header
   var tr=document.createElement("div");tr.style.cssText="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0;";
   var tt=document.createElement("span");tt.style.cssText="font-weight:700;font-size:15px;";tt.textContent="Insert from Library";
@@ -2399,7 +2409,7 @@ function openLibraryPicker(){
   var presetBar=document.createElement("div");presetBar.style.cssText="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0;";
   BID_PRESETS.forEach(function(preset){
     var chip=document.createElement("button");
-    chip.style.cssText="font-size:11px;padding:4px 10px;border:1px solid var(--bdr);border-radius:16px;background:#fff;cursor:pointer;color:var(--dgray);font-weight:600;white-space:nowrap;transition:all .15s;";
+    chip.style.cssText="font-size:11px;padding:4px 10px;border:1px solid var(--bdr);border-radius:16px;background:var(--wht);cursor:pointer;color:var(--dgray);font-weight:600;white-space:nowrap;transition:all .15s;";
     chip.textContent=preset.icon+' '+preset.name;
     chip.addEventListener("mouseenter",function(){chip.style.background='var(--red)';chip.style.color='#fff';chip.style.borderColor='var(--red)';});
     chip.addEventListener("mouseleave",function(){chip.style.background='#fff';chip.style.color='var(--dgray)';chip.style.borderColor='var(--bdr)';});
@@ -4096,7 +4106,7 @@ function openInvoiceModal(proj,snap,totals){
   var modal=document.createElement('div');modal.id='invoice-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
   var box=document.createElement('div');
-  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:420px;max-width:92vw;';
+  box.style.cssText='background:var(--wht);border-radius:var(--rad);padding:24px;width:420px;max-width:92vw;';
   box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">Create Invoice</h3>'
     +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Invoice Number</label>'
     +'<input class="inp" id="inv-number" value="'+esc(nextNum)+'" style="margin-bottom:10px;width:100%;"/>'
@@ -4137,7 +4147,7 @@ function openSubcontractorForm(snap){
   var modal=document.createElement('div');modal.id='sub-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
   var box=document.createElement('div');
-  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:420px;max-width:92vw;';
+  box.style.cssText='background:var(--wht);border-radius:var(--rad);padding:24px;width:420px;max-width:92vw;';
   box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">Add Subcontractor</h3>'
     +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Name</label>'
     +'<input class="inp" id="sub-name" placeholder="Company or contact name" style="margin-bottom:10px;width:100%;"/>'
@@ -4179,7 +4189,7 @@ function openEquipmentModal(snap){
   var modal=document.createElement('div');modal.id='equip-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
   var box=document.createElement('div');
-  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:420px;max-width:92vw;';
+  box.style.cssText='background:var(--wht);border-radius:var(--rad);padding:24px;width:420px;max-width:92vw;';
   box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">Log Equipment</h3>'
     +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Equipment Name</label>'
     +'<input class="inp" id="eq-name" placeholder="e.g. Skid Steer, Roller, Paver" style="margin-bottom:10px;width:100%;"/>'
@@ -4343,7 +4353,7 @@ function renderMaterialTracking(proj,snap){
     // Material dropdown
     var matRow=document.createElement('div');matRow.style.cssText='margin-bottom:8px;';
     matRow.innerHTML='<label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Material</label>';
-    var matSel=document.createElement('select');matSel.style.cssText='width:100%;padding:6px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;background:#fff;';
+    var matSel=document.createElement('select');matSel.style.cssText='width:100%;padding:6px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;background:var(--wht);';
     var matOptions=allMats.length>0?allMats:Object.keys(MAT);
     matOptions.forEach(function(m){
       var opt=document.createElement('option');opt.value=m;opt.textContent=m;
@@ -4504,7 +4514,7 @@ function addProjectNote(){
   var modal=document.createElement('div');modal.id='add-note-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
   var box=document.createElement('div');
-  box.style.cssText='background:#fff;border-radius:10px;padding:20px;width:400px;max-width:92vw;';
+  box.style.cssText='background:var(--wht);border-radius:var(--rad);padding:20px;width:400px;max-width:92vw;';
   box.innerHTML='<h3 style="margin:0 0 14px;font-size:15px;">Add Note</h3>'
     +'<textarea id="pn-text" rows="4" placeholder="Enter note or work order details..." style="width:100%;margin-bottom:14px;resize:vertical;"></textarea>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
@@ -7814,7 +7824,7 @@ function openProjectModal(existingData, editId){
   box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">'+title+'</h3>'
     +'<label>Project Name *</label><input id="pm-proj-name" type="text" value="'+esc(d.name||'')+'" placeholder="e.g. Main St Repaving" style="width:100%;margin-bottom:10px;"/>'
     +'<label>Client</label><div style="position:relative;margin-bottom:10px;"><input id="pm-proj-client" type="text" list="pm-client-dl" value="'+esc(d.client||'')+'" placeholder="Start typing client name..." autocomplete="off" style="width:100%;"/><datalist id="pm-client-dl">'+clientDL+'</datalist></div>'
-    +'<label>Job Site Address</label><div style="position:relative;margin-bottom:10px;"><input id="pm-proj-addr" type="text" value="'+esc(fullAddr)+'" placeholder="Start typing address..." autocomplete="off" style="width:100%;"/><div id="pm-addr-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--bdr);border-radius:0 0 6px 6px;box-shadow:0 4px 12px rgba(0,0,0,.12);max-height:200px;overflow-y:auto;z-index:10;"></div></div>'
+    +'<label>Job Site Address</label><div style="position:relative;margin-bottom:10px;"><input id="pm-proj-addr" type="text" value="'+esc(fullAddr)+'" placeholder="Start typing address..." autocomplete="off" style="width:100%;"/><div id="pm-addr-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--wht);border:1px solid var(--bdr);border-radius:0 0 var(--rad-s) var(--rad-s);box-shadow:var(--shadow-m);max-height:200px;overflow-y:auto;z-index:10;"></div></div>'
     +'<div class="fg fg2" style="margin-bottom:10px;"><div><label>Bid Due Date</label><input id="pm-proj-due-date" type="date" value="'+(d.bid_due_date||'')+'" style="width:100%;"/></div>'
     +'<div><label>Bid Due Time</label><input id="pm-proj-due-time" type="time" value="'+(d.bid_due_time||'')+'" style="width:100%;"/></div></div>'
     +'<label>Pipeline Stage</label><select id="pm-proj-stage" style="width:100%;margin-bottom:10px;">'+stageOpts+'</select>'
@@ -7920,7 +7930,7 @@ function attachProposalToProject(projectId){
   var modal=document.createElement('div');modal.id='attach-proposal-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
   var box=document.createElement('div');
-  box.style.cssText='background:#fff;border-radius:10px;padding:20px;width:400px;max-width:92vw;max-height:80vh;overflow-y:auto;';
+  box.style.cssText='background:var(--wht);border-radius:var(--rad);padding:20px;width:400px;max-width:92vw;max-height:80vh;overflow-y:auto;';
   box.innerHTML='<h3 style="margin:0 0 14px;font-size:15px;">Attach Proposal to Project</h3>';
   if(!savedQuotes.length){
     box.innerHTML+='<p style="color:var(--dgray);font-size:12px;">No saved proposals. Create and save a proposal first.</p>'
@@ -8130,7 +8140,7 @@ function openSubModal(editIdx){
   var modal=document.createElement('div');modal.id='sub-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
   var box=document.createElement('div');
-  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:420px;max-width:92vw;';
+  box.style.cssText='background:var(--wht);border-radius:var(--rad);padding:24px;width:420px;max-width:92vw;';
   box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">'+(editing?'Edit':'Add')+' Subcontractor</h3>'
     +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Name</label>'
     +'<input class="inp" id="sub-name" placeholder="Company or contact name" style="margin-bottom:10px;width:100%;" value="'+esc(editing?editing.name:'')+'"/>'
@@ -9835,7 +9845,7 @@ function renderWeatherWidget(elId){
     h+='</div>'; // close data-weather-banner
 
     // 7-day forecast strip
-    h+='<div style="padding:12px 16px 14px;background:#fff;">';
+    h+='<div style="padding:12px 16px 14px;background:var(--wht);">';
     h+='<div style="font-size:10px;font-weight:700;color:var(--dgray);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">7-Day Forecast</div>';
     h+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;">';
     for(var i=0;i<daily.time.length&&i<7;i++){
@@ -10125,7 +10135,7 @@ function renderSchedule(){
       });
       var card=document.createElement('div');
       card.className='dk-card';
-      card.style.cssText='padding:12px 14px;margin-bottom:8px;cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.06);';
+      card.style.cssText='padding:12px 14px;margin-bottom:8px;cursor:grab;background:var(--wht);border-radius:var(--rad-s);box-shadow:var(--shadow-s);border:1px solid var(--bdr);transition:box-shadow .15s,transform .15s;';
       card.setAttribute('draggable','true');
       card.dataset.woId=item.wo.id;
       card.dataset.projectId=item.project.id;
@@ -10135,10 +10145,10 @@ function renderSchedule(){
         +'<span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(statusColors[item.wo.status]||'#999')+';"></span>'
         +'<div style="font-weight:800;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(item.project.name)+'</div>'
         +'</div>'
-        +'<div style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;">'+esc(item.wo.name)+'</div>'
+        +'<div style="font-size:12px;font-weight:600;color:var(--dgray);margin-bottom:4px;">'+esc(item.wo.name)+'</div>'
         +(fullAddr?'<div style="font-size:11px;color:var(--dgray);margin-bottom:3px;">'+esc(fullAddr)+'</div>':'')
         +'<div style="display:flex;align-items:center;gap:10px;margin-top:6px;">'
-        +(totalTons>0?'<span style="font-size:11px;font-weight:700;color:var(--red);background:#FFF0F0;padding:2px 8px;border-radius:4px;">'+totalTons.toLocaleString()+' tons</span>':'')
+        +(totalTons>0?'<span style="font-size:11px;font-weight:700;color:var(--red);background:var(--red-soft);padding:2px 8px;border-radius:4px;">'+totalTons.toLocaleString()+' tons</span>':'')
         +(item.wo.assigned_to?'<span style="font-size:10px;color:var(--dgray);">'+esc(item.wo.assigned_to)+'</span>':'')
         +'</div>';
       // Drag events
@@ -10184,20 +10194,20 @@ function renderSchedule(){
     var minH=_schedView==='month'?'80px':(_schedView==='day'?'400px':'180px');
     var col=document.createElement('div');
     col.className=isToday?'dk-today':'';
-    col.style.cssText='border:1px solid var(--bdr);border-radius:6px;min-height:'+minH+';display:flex;flex-direction:column;background:#fff;'+(isToday?'background:#FFF5F5;border-color:var(--red);':'')+(isOtherMonth?'opacity:.4;':'');
+    col.style.cssText='border:1px solid var(--bdr);border-radius:var(--rad);min-height:'+minH+';display:flex;flex-direction:column;background:var(--wht);box-shadow:var(--shadow-s);'+(isToday?'border-color:var(--red);box-shadow:0 0 0 1px var(--red),var(--shadow-s);':'')+(isOtherMonth?'opacity:.35;':'');
     col.dataset.date=dateStr;
 
     // Day header
     var hdr=document.createElement('div');
     if(_schedView==='month'){
       hdr.className=isToday?'dk-today-hdr':'dk-day-hdr';
-      hdr.style.cssText='text-align:center;padding:4px 2px;border-bottom:1px solid var(--bdr);border-radius:5px 5px 0 0;'+(isToday?'background:var(--red);':'background:#FAFAFA;');
+      hdr.style.cssText='text-align:center;padding:5px 2px;border-bottom:1px solid var(--bdr);border-radius:11px 11px 0 0;'+(isToday?'background:var(--red);':'background:var(--lgray);');
       hdr.innerHTML='<div style="font-size:13px;font-weight:700;'+(isToday?'color:#fff;':'')+'">'+dayDate.getDate()+'</div>';
     } else {
       hdr.className=isToday?'dk-today-hdr':'dk-day-hdr';
-      hdr.style.cssText='text-align:center;padding:8px 4px;border-bottom:1px solid var(--bdr);border-radius:5px 5px 0 0;'+(isToday?'background:var(--red);':'background:#FAFAFA;');
-      hdr.innerHTML='<div style="font-size:10px;font-weight:700;text-transform:uppercase;'+(isToday?'color:#fff;':'color:var(--dgray);')+'">'+dayNames[dayDate.getDay()]+'</div>'
-        +'<div style="font-size:16px;font-weight:800;'+(isToday?'color:#fff;':'')+'">'+dayDate.getDate()+'</div>';
+      hdr.style.cssText='text-align:center;padding:10px 4px;border-bottom:1px solid var(--bdr);border-radius:11px 11px 0 0;'+(isToday?'background:var(--red);':'background:var(--lgray);');
+      hdr.innerHTML='<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;'+(isToday?'color:rgba(255,255,255,.8);':'color:var(--dgray);')+'">'+dayNames[dayDate.getDay()]+'</div>'
+        +'<div style="font-size:18px;font-weight:800;'+(isToday?'color:#fff;':'')+'">'+dayDate.getDate()+'</div>';
     }
     col.appendChild(hdr);
 
@@ -10218,7 +10228,8 @@ function renderSchedule(){
       var tag=document.createElement('div');
       var stColors={pending:'#999',active:'#2B5FA6',complete:'#27500A'};
       var isCompact=_schedView==='month';
-      tag.style.cssText='background:'+(stColors[item.wo.status]||'#999')+';color:#fff;padding:'+(isCompact?'2px 4px':'5px 6px')+';border-radius:4px;font-size:'+(isCompact?'8px':'10px')+';margin-bottom:'+(isCompact?'2px':'4px')+';cursor:pointer;overflow:hidden;';
+      var stColor=stColors[item.wo.status]||'#999';
+      tag.style.cssText='background:var(--lgray);color:var(--blk);padding:'+(isCompact?'3px 4px 3px 8px':'6px 8px 6px 12px')+';border-radius:var(--rad-s);font-size:'+(isCompact?'9px':'11px')+';margin-bottom:'+(isCompact?'2px':'5px')+';cursor:pointer;overflow:hidden;border-left:3px solid '+stColor+';transition:background .12s;';
       var timeStr='';
       if(item.wo.scheduled_time)timeStr=fmt12(item.wo.scheduled_time)+(item.wo.scheduled_end_time?' - '+fmt12(item.wo.scheduled_end_time):'');
       var daysStr=item.wo.scheduled_days&&item.wo.scheduled_days>1?item.wo.scheduled_days+'d':'';
@@ -10226,10 +10237,10 @@ function renderSchedule(){
         tag.innerHTML='<div style="font-weight:700;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.wo.name)+'</div>';
       } else {
         var phaseName='';if(item.wo.phase_id&&snap.phases){var ph=snap.phases.find(function(p){return p.id===item.wo.phase_id;});if(ph)phaseName=ph.name;}
-        tag.innerHTML='<div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.wo.name)+(phaseName?' <span style="opacity:.8;font-size:9px;font-weight:600;background:rgba(255,255,255,.2);padding:0 4px;border-radius:2px;">'+esc(phaseName)+'</span>':'')+'</div>'
-          +'<div style="opacity:.85;font-size:9px;">'+esc(item.project.name)+'</div>'
-          +(addr?'<div style="opacity:.75;font-size:9px;">'+esc(addr)+'</div>':'')
-          +(timeStr||daysStr?'<div style="opacity:.85;font-size:9px;margin-top:1px;">'+(timeStr?timeStr:'')+(timeStr&&daysStr?' &middot; ':'')+daysStr+'</div>':'');
+        tag.innerHTML='<div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.wo.name)+(phaseName?' <span style="font-size:9px;font-weight:600;background:var(--mgray);padding:1px 5px;border-radius:4px;color:var(--dgray);">'+esc(phaseName)+'</span>':'')+'</div>'
+          +'<div style="color:var(--dgray);font-size:9px;">'+esc(item.project.name)+'</div>'
+          +(addr?'<div style="color:var(--text-ter,var(--dgray));font-size:9px;opacity:.7;">'+esc(addr)+'</div>':'')
+          +(timeStr||daysStr?'<div style="color:var(--dgray);font-size:9px;margin-top:2px;">'+(timeStr?timeStr:'')+(timeStr&&daysStr?' &middot; ':'')+daysStr+'</div>':'');
       }
       tag.title=item.project.name+' — '+item.wo.name+(addr?'\n'+addr:'')+(timeStr?'\n'+timeStr:'');
       (function(woId,projId){tag.addEventListener('click',function(){
@@ -10240,10 +10251,10 @@ function renderSchedule(){
     col.appendChild(body);
 
     // Drop target
-    col.addEventListener('dragover',function(ev){ev.preventDefault();this.style.boxShadow='inset 0 0 0 2px #4CAF50';});
-    col.addEventListener('dragleave',function(){this.style.boxShadow='';});
+    col.addEventListener('dragover',function(ev){ev.preventDefault();this.style.boxShadow='inset 0 0 0 2px var(--red)';this.style.background='var(--red-soft)';});
+    col.addEventListener('dragleave',function(){this.style.boxShadow='';this.style.background='';});
     (function(ds){col.addEventListener('drop',function(ev){
-      ev.preventDefault();this.style.boxShadow='';
+      ev.preventDefault();this.style.boxShadow='';this.style.background='';
       try{
         var data=JSON.parse(ev.dataTransfer.getData('text/plain'));
         scheduleWorkOrder(data.projectId,data.woId,ds);
