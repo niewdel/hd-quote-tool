@@ -543,10 +543,10 @@ body.dark .dash-rain-alert svg{color:#FBBF24;}
 /* 7-day forecast strip for schedule */
 .wx-forecast-strip{
   display:grid;grid-template-columns:repeat(7,1fr);gap:0;
-  border:1px solid var(--bdr);border-radius:8px;overflow:hidden;
-  background:var(--wht);margin-bottom:14px;
+  border:1px solid var(--bdr);border-radius:var(--rad-l);overflow:hidden;
+  background:var(--bg-el);margin-bottom:14px;
 }
-body.dark .wx-forecast-strip{background:rgba(24,24,27,0.5);border-color:rgba(255,255,255,0.06);}
+body.dark .wx-forecast-strip{background:rgba(24,24,27,0.65);border-color:rgba(255,255,255,0.06);}
 .wx-forecast-day{
   padding:10px 6px;text-align:center;border-right:1px solid var(--bdr);
   display:flex;flex-direction:column;align-items:center;gap:3px;
@@ -572,17 +572,18 @@ body.dark .wx-forecast-temps{color:#E4E4E7;}
 .wx-current-bar{
   display:flex;align-items:center;gap:14px;padding:10px 16px;
   border-bottom:1px solid var(--bdr);background:var(--lgray);
-  font-size:12px;color:var(--dgray);border-radius:8px 8px 0 0;
+  font-size:12px;color:var(--dgray);border-radius:var(--rad-l) var(--rad-l) 0 0;
 }
 body.dark .wx-current-bar{background:rgba(255,255,255,0.03);}
 .wx-current-bar .wx-cur-temp{font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--blk);font-variant-numeric:tabular-nums;}
 body.dark .wx-current-bar .wx-cur-temp{color:#E4E4E7;}
 .wx-current-bar .wx-cur-icon{font-size:18px;line-height:1;}
 
-/* Stats strip — connected bar */
+/* Stats strip — connected bar (matches mc-card system) */
 .dash-stats-bar{
-  display:flex;border:1px solid var(--bdr);border-radius:8px;
-  background:var(--wht);overflow:hidden;margin-bottom:20px;
+  display:flex;border:1px solid var(--bdr);border-radius:var(--rad-l);
+  background:var(--bg-el);overflow:hidden;margin-bottom:20px;
+  transition:box-shadow .2s,border-color .2s;
 }
 .dash-stat-cell{
   flex:1;padding:14px 16px;border-right:1px solid var(--bdr);
@@ -593,31 +594,30 @@ body.dark .wx-current-bar .wx-cur-temp{color:#E4E4E7;}
 .dash-stat-val.warn{color:var(--red);}
 .dash-stat-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--dgray);}
 .dash-stat-sub{font-size:10px;color:var(--dgray);opacity:.6;}
-body.dark .dash-stats-bar{background:rgba(24,24,27,0.5);border-color:rgba(255,255,255,0.06);}
+body.dark .dash-stats-bar{background:rgba(24,24,27,0.65);border-color:rgba(255,255,255,0.06);}
 body.dark .dash-stat-cell{border-right-color:rgba(255,255,255,0.06);}
 body.dark .dash-stat-val{color:#E4E4E7;}
 
 /* Today card — prominent with colored top edge */
-.dash-today-card{border-top:3px solid var(--red);border-radius:8px;}
-.dash-today-card .mc-sec-hdr{font-size:14px;font-weight:700;font-family:var(--font);text-transform:none;color:var(--blk);padding:12px 18px;}
-body.dark .dash-today-card .mc-sec-hdr{color:#E4E4E7;}
+.dash-today-card{border-top:3px solid var(--red);border-radius:var(--rad-l);}
+.dash-today-card .dash-section-hdr{padding:14px 18px;}
+body.dark .dash-today-card .dash-section-hdr{color:#E4E4E7;}
 
-/* Section cards — white, subtle shadow, no hover glow */
+/* Section cards — matches mc-card system */
 .dash-section{
-  background:var(--wht);border:1px solid var(--bdr);border-radius:8px;overflow:hidden;
+  background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad-l);overflow:hidden;
+  transition:box-shadow .2s,border-color .2s;
 }
-body.dark .dash-section{background:rgba(24,24,27,0.5);border-color:rgba(255,255,255,0.06);}
+body.dark .dash-section{background:rgba(24,24,27,0.65);border-color:rgba(255,255,255,0.06);}
 .dash-section-hdr{
-  padding:12px 18px;border-bottom:1px solid var(--bdr);
+  padding:14px 18px;border-bottom:1px solid var(--bdr);
   display:flex;align-items:center;justify-content:space-between;
 }
-.dash-section-title{font-size:14px;font-weight:700;color:var(--blk);}
-body.dark .dash-section-title{color:#E4E4E7;}
-
-/* Pipeline snapshot — compact row */
-.dash-pipeline-row .mc-card{padding:14px 18px;text-align:center;}
-.dash-pipeline-row .mc-card .mc-kpi-val{font-size:22px;}
-.dash-pipeline-row .mc-card .mc-kpi-lbl{font-size:10px;}
+.dash-section-title{
+  font-family:var(--font-display);font-size:12px;font-weight:700;
+  text-transform:uppercase;color:var(--dgray);
+}
+body.dark .dash-section-title{color:#A1A1AA;}
 
 /* Project card redesign */
 .mc-proj-card{
@@ -1126,9 +1126,8 @@ tr:nth-child(even) td{background:var(--lgray);}
   .dash-wx-temp { font-size: 22px; }
   .dash-wx-details { gap: 8px; }
   .dash-rain-alert { font-size: 12px; padding: 8px 12px; }
-  .dash-section-hdr .dash-section-title { font-size: 13px; }
+  .dash-section-hdr .dash-section-title { font-size: 11px; }
   #panel-dashboard > div > div[style*="grid-template-columns:3fr"] { grid-template-columns: 1fr !important; }
-  #dash-pipeline-snapshot { grid-template-columns: 1fr !important; }
   /* Schedule forecast mobile */
   .wx-forecast-strip { grid-template-columns: repeat(7, 1fr); overflow-x: auto; }
   .wx-forecast-day { min-width: 60px; padding: 8px 4px; }
@@ -1363,8 +1362,8 @@ tr:nth-child(even) td{background:var(--lgray);}
           </div>
 
           <!-- Daily Weather Forecast Banner -->
-          <div id="dash-weather-strip" style="margin-bottom:16px;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;">
-            <div class="wx-current-bar" id="dash-wx-current">
+          <div id="dash-weather-strip" style="margin-bottom:16px;border:1px solid var(--bdr);border-radius:var(--rad-l);overflow:hidden;background:var(--bg-el);">
+            <div class="wx-current-bar" style="border-radius:var(--rad-l) var(--rad-l) 0 0;" id="dash-wx-current">
               <span style="color:var(--dgray);font-size:12px;">Loading weather...</span>
             </div>
           </div>
