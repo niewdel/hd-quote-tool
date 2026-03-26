@@ -27,7 +27,7 @@ html{scroll-behavior:smooth;color-scheme:light dark;}
   --accent:#CC0000;
   --blk:#1A1A1A;--wht:#fff;--lgray:#EEEDF2;--mgray:#E0DFE5;--dgray:#71717A;--bdr:#D8D8DE;
   --bg-base:#E8E7EC;--bg-el:rgba(255,255,255,0.72);--bg-sub:#DDDCE2;
-  --rad:8px;--rad-s:6px;--rad-l:10px;
+  --rad:10px;--rad-s:6px;--rad-l:14px;
   --font:'DM Sans','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   --font-display:'Outfit','DM Sans',sans-serif;
   --shadow-s:0 1px 3px rgba(0,0,0,.06);
@@ -62,6 +62,8 @@ body.dark .skeleton{background:linear-gradient(90deg,#27272A 25%,#3F3F46 50%,#27
 body.dark .card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.3);border-color:rgba(255,255,255,0.08);}
 
 /* Topbar refinement — slightly more prominent */
+.topbar{box-shadow:0 1px 0 var(--bdr);}
+
 /* Table header refinement — less shouting */
 th{font-size:10px;letter-spacing:.06em;font-weight:700;}
 
@@ -79,13 +81,13 @@ body.dark{
 }
 body.dark .main{background:transparent;}
 /* Topbar */
-body.dark .topbar{background:#18181B;border-bottom-color:rgba(255,255,255,0.06);}
+body.dark .topbar{background:rgba(9,9,11,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom-color:rgba(255,255,255,0.06);}
 body.dark .topbar-title{color:#E4E4E7;}
 /* Cards & modals */
-body.dark .card{background:rgba(24,24,27,0.5);border-color:rgba(255,255,255,0.06);color:#E4E4E7;}
+body.dark .card{background:rgba(24,24,27,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(255,255,255,0.06);color:#E4E4E7;}
 body.dark .card-hdr{background:transparent !important;border-bottom-color:rgba(255,255,255,0.06);}
-body.dark .modal{background:#1C1C1E;border-color:rgba(255,255,255,0.08);color:#E4E4E7;}
-body.dark .modal-overlay{background:rgba(0,0,0,.55);}
+body.dark .modal{background:rgba(24,24,27,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-color:rgba(255,255,255,0.08);color:#E4E4E7;}
+body.dark .modal-overlay{background:rgba(0,0,0,.60);backdrop-filter:blur(4px);}
 body.dark .modal-hdr{border-bottom-color:rgba(255,255,255,0.06);}
 body.dark .modal-foot{border-top-color:rgba(255,255,255,0.06);}
 body.dark .modal-body input,body.dark .modal-body textarea{background:#27272A;color:#E4E4E7;border-color:#3F3F46;}
@@ -109,7 +111,7 @@ body.dark tr:nth-child(even) td{background:rgba(255,255,255,0.02) !important;}
 body.dark .admin-table th{background:#2C2C2E;color:#A1A1A6;border-bottom-color:#48484A;}
 body.dark .admin-table tr:hover td{background:#2C2C2E;}
 /* Sections (proposal builder) */
-body.dark .sec{background:#1C1C1E;border-color:rgba(255,255,255,0.06);}
+body.dark .sec{background:rgba(24,24,27,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(255,255,255,0.06);}
 body.dark .sec-hdr{background:rgba(255,255,255,0.03) !important;border-bottom-color:rgba(255,255,255,0.06);}
 body.dark .sec-foot{background:rgba(255,255,255,0.03) !important;border-top-color:rgba(255,255,255,0.06);}
 body.dark .sec-foot-item .sf-val{color:#F5F5F7;}
@@ -123,7 +125,7 @@ body.dark .lyr-top input[type="text"]{color:#F5F5F7;}
 body.dark .chip{background:#2C2C2E;border-color:#48484A;color:#F5F5F7;}
 body.dark .chip:hover{border-color:var(--red);color:#FF453A;}
 /* Metrics */
-body.dark .metric{background:#1C1C1E;border-color:rgba(255,255,255,0.06);}
+body.dark .metric{background:rgba(24,24,27,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(255,255,255,0.06);}
 body.dark .metric-val{color:#F5F5F7;}
 body.dark .metric-lbl{color:#A1A1A6;}
 /* Analytics cards */
@@ -135,12 +137,12 @@ body.dark .a-card-sub{color:#8E8E93;}
 body.dark #sched-split>div:first-child{border-right-color:rgba(255,255,255,0.06);}
 body.dark .sched-nav-btn{color:#71717A;border-color:rgba(255,255,255,0.06);}
 body.dark .sched-nav-btn:hover{background:rgba(255,255,255,0.06);color:#E4E4E7;}
-body.dark #dash-weather-mini{background:#1C1C1E;border-color:rgba(255,255,255,0.06);}
+body.dark #dash-weather-mini{background:rgba(24,24,27,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(255,255,255,0.06);}
 body.dark #proj-stage-filter{background:#27272A;border-color:rgba(255,255,255,0.06);color:#E4E4E7;}
 
 /* Pipeline / Kanban */
 body.dark .kb-col{background:#18181B;}
-body.dark .kb-card{background:#27272A;border-color:rgba(255,255,255,0.06);color:#E4E4E7;}
+body.dark .kb-card{background:rgba(39,39,42,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-color:rgba(255,255,255,0.06);color:#E4E4E7;}
 body.dark .kb-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.4);border-color:rgba(255,255,255,0.10);}
 body.dark .kb-stat{background:#1C1C1E;border-color:#3A3A3C;}
 body.dark .kb-stat-val{color:#F5F5F7;}
@@ -151,8 +153,8 @@ body.dark .kb-add-btn{border-color:#48484A;color:#8E8E93;}
 body.dark .kb-add-btn:hover{border-color:#636366;background:#2C2C2E;}
 body.dark .kb-stage-select{background:#2C2C2E;color:#F5F5F7;border-color:#48484A;}
 /* Client cards */
-body.dark .client-card{background:#1C1C1E;border-color:rgba(255,255,255,0.06);}
-body.dark .sub-card{background:#1C1C1E;border-color:rgba(255,255,255,0.06);}
+body.dark .client-card{background:rgba(24,24,27,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-color:rgba(255,255,255,0.06);}
+body.dark .sub-card{background:rgba(24,24,27,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-color:rgba(255,255,255,0.06);}
 body.dark .clients-tab-btn{color:#A1A1A6;}
 body.dark .clients-tab-btn.on{background:#1C1C1E;color:#FF453A;}
 body.dark .clients-tab-btn:hover{background:rgba(255,255,255,.05);}
@@ -309,12 +311,11 @@ body.dark .notif-toggle-row{background:#232326;}
 .notif-bell .notif-dot{position:absolute;top:0;right:0;width:8px;height:8px;background:var(--red);border-radius:50%;display:none;}
 .notif-bell .notif-dot.on{display:block;animation:notifPulse 2s infinite;}
 @keyframes notifPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.6;transform:scale(1.3);}}
-.notif-panel{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:calc(100vw - 16px);background:var(--wht);z-index:998;transform:translateX(100%);transition:transform .2s ease-out;box-shadow:-4px 0 20px rgba(0,0,0,.1);display:flex;flex-direction:column;border-left:1px solid var(--bdr);overflow:hidden;}
+.notif-panel{position:fixed;top:8px;right:8px;bottom:8px;width:380px;max-width:calc(100vw - 16px);background:var(--bg-el);z-index:998;transform:translateX(calc(100% + 16px));transition:transform .25s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow-l);display:flex;flex-direction:column;border-radius:16px;border:1px solid var(--bdr);overflow:hidden;}
 .notif-panel.open{transform:translateX(0);}
-body.dark .notif-panel{background:#18181B;border-left-color:rgba(255,255,255,0.08);box-shadow:-4px 0 20px rgba(0,0,0,.4);}
-.notif-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:997;opacity:0;pointer-events:none;transition:opacity .25s;}
+.notif-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.2);backdrop-filter:blur(2px);z-index:997;opacity:0;pointer-events:none;transition:opacity .25s;}
 .notif-backdrop.open{opacity:1;pointer-events:auto;}
-/* notif-panel dark mode handled alongside .notif-panel.open above */
+body.dark .notif-panel{background:rgba(24,24,27,0.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-color:rgba(255,255,255,0.08);box-shadow:0 12px 40px rgba(0,0,0,.6);}
 .notif-hdr{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .notif-hdr h3{margin:0;font-size:15px;font-weight:700;}
 .notif-list{flex:1;overflow-y:auto;padding:8px 0;}
@@ -349,31 +350,31 @@ body.dark .mention-dropdown{background:#1C1C1E;border-color:#48484A;}
 
 /* Glass card — unified card style for redesigned panels */
 .mc-card{
-  background:var(--wht);
-  border:1px solid var(--bdr);border-radius:8px;overflow:hidden;
+  background:var(--bg-el);
+  border:1px solid var(--bdr);border-radius:14px;overflow:hidden;
+  transition:box-shadow .2s,border-color .2s;
 }
-.mc-card:hover{box-shadow:none;}
-body.dark .mc-card{background:rgba(24,24,27,0.5);border-color:rgba(255,255,255,0.06);}
-body.dark .mc-card:hover{box-shadow:none;}
+.mc-card:hover{box-shadow:var(--shadow-m);border-color:rgba(204,0,0,0.12);}
+body.dark .mc-card{background:rgba(24,24,27,0.65);border-color:rgba(255,255,255,0.06);}
+body.dark .mc-card:hover{border-color:rgba(204,0,0,0.25);box-shadow:0 4px 20px rgba(0,0,0,.4);}
 
 /* KPI Stat Tile */
 .mc-kpi{
-  padding:12px 16px;display:flex;flex-direction:column;gap:2px;position:relative;overflow:hidden;text-align:center;
+  padding:18px 20px;display:flex;flex-direction:column;gap:2px;position:relative;overflow:hidden;
 }
-.mc-kpi::before{display:none;}
-.mc-kpi-val{font-size:20px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums;}
-.mc-kpi-lbl{font-size:10px;font-weight:600;text-transform:uppercase;color:var(--dgray);}
+.mc-kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:0 2px 2px 0;}
+.mc-kpi-val{font-family:var(--font-display);font-size:28px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums;}
+.mc-kpi-lbl{font-size:11px;font-weight:600;text-transform:uppercase;color:var(--dgray);}
 .mc-kpi-sub{font-size:10px;color:var(--dgray);opacity:.65;margin-top:2px;font-weight:500;}
 
-/* Section header — flat, simple */
+/* Section header with line */
 .mc-sec-hdr{
-  display:flex;align-items:center;gap:10px;padding:10px 16px;
-  font-size:13px;font-weight:700;color:var(--blk);
+  display:flex;align-items:center;gap:10px;padding:14px 18px;
+  font-family:var(--font-display);font-size:12px;font-weight:700;
+  text-transform:uppercase;color:var(--dgray);
   border-bottom:1px solid var(--bdr);
 }
-.mc-sec-hdr svg{display:none;}
-.mc-sec-hdr .mc-sec-line{flex:1;}
-body.dark .mc-sec-hdr{color:#E4E4E7;}
+.mc-sec-hdr .mc-sec-line{flex:1;height:1px;background:var(--bdr);}
 
 /* Compact list item */
 .mc-list-item{
@@ -439,12 +440,12 @@ body.dark .mc-day-col{border-right-color:rgba(255,255,255,0.04);}
 
 /* Notification panel redesign */
 .mc-notif-panel{
-  position:fixed;top:0;right:0;bottom:0;width:380px;max-width:calc(100vw - 16px);
-  background:var(--wht);
-  z-index:998;transform:translateX(100%);
-  transition:transform .2s ease-out;
-  box-shadow:-4px 0 20px rgba(0,0,0,.1);display:flex;flex-direction:column;
-  border-left:1px solid var(--bdr);overflow:hidden;overscroll-behavior:contain;
+  position:fixed;top:8px;right:8px;bottom:8px;width:380px;max-width:calc(100vw - 16px);
+  background:var(--bg-el);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  z-index:998;transform:translateX(calc(100% + 16px));
+  transition:transform .25s ease-out;
+  box-shadow:var(--shadow-l);display:flex;flex-direction:column;
+  border-radius:16px;border:1px solid var(--bdr);overflow:hidden;overscroll-behavior:contain;
 }
 .mc-notif-panel.open{transform:translateX(0);}
 body.dark .mc-notif-panel{background:rgba(15,15,18,0.92);border-color:rgba(255,255,255,0.08);}
@@ -498,80 +499,38 @@ body.dark .mc-notif-item.unread{background:rgba(204,0,0,0.08);border-left-color:
 }
 body.dark .mc-notif-group{background:rgba(255,255,255,0.02);}
 
-/* ── CRM Dashboard ─────────────────────────────────────── */
-/* Flat, dense, HubSpot-style — no decorative gloss */
-.crm-dash{padding:0;max-width:none;}
-.crm-header-bar{
+/* Dashboard hero section */
+.dash-hero{
   display:flex;align-items:center;justify-content:space-between;
-  padding:14px 0 12px;border-bottom:1px solid var(--bdr);margin-bottom:16px;
+  margin-bottom:20px;gap:16px;
 }
-.crm-greeting{font-size:15px;font-weight:600;color:var(--blk);}
-.crm-greeting span{color:var(--dgray);font-weight:400;font-size:13px;margin-left:8px;}
-.crm-weather{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dgray);}
-.crm-weather .wx-temp{font-weight:700;color:var(--blk);font-variant-numeric:tabular-nums;}
-.crm-weather .wx-icon{font-size:16px;line-height:1;}
-.crm-weather .wx-warn{color:var(--red);font-weight:700;}
-body.dark .crm-greeting{color:#E4E4E7;}
-body.dark .crm-weather .wx-temp{color:#E4E4E7;}
-
-/* Stat strip — flat numbers, no cards */
-.crm-stats{display:flex;gap:0;margin-bottom:16px;border:1px solid var(--bdr);border-radius:8px;background:var(--wht);overflow:hidden;}
-.crm-stat{flex:1;padding:12px 16px;border-right:1px solid var(--bdr);text-align:center;}
-.crm-stat:last-child{border-right:none;}
-.crm-stat-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2;color:var(--blk);}
-.crm-stat-val.warn{color:var(--red);}
-.crm-stat-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--dgray);margin-top:2px;}
-body.dark .crm-stats{background:rgba(24,24,27,0.5);border-color:rgba(255,255,255,0.06);}
-body.dark .crm-stat{border-right-color:rgba(255,255,255,0.06);}
-body.dark .crm-stat-val{color:#E4E4E7;}
-
-/* CRM panel — flat white box */
-.crm-panel{background:var(--wht);border:1px solid var(--bdr);border-radius:8px;overflow:hidden;}
-body.dark .crm-panel{background:rgba(24,24,27,0.5);border-color:rgba(255,255,255,0.06);}
-.crm-panel-hdr{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 16px;border-bottom:1px solid var(--bdr);
+.dash-hero-text{flex:1;}
+.mc-greeting{
+  font-family:var(--font-display);font-size:24px;font-weight:800;
+  line-height:1.15;margin-bottom:2px;text-wrap:balance;
 }
-.crm-panel-title{font-size:13px;font-weight:700;color:var(--blk);}
-body.dark .crm-panel-title{color:#E4E4E7;}
-body.dark .crm-panel-hdr{border-bottom-color:rgba(255,255,255,0.06);}
-
-/* CRM row — compact list rows */
-.crm-row{
-  display:flex;align-items:center;gap:10px;padding:8px 16px;
-  border-bottom:1px solid var(--bdr);cursor:pointer;
-  font-size:13px;
+.mc-date-line{
+  font-size:12px;color:var(--dgray);font-weight:500;
+  font-family:var(--font-display);
 }
-.crm-row:last-child{border-bottom:none;}
-.crm-row:hover{background:var(--lgray);}
-body.dark .crm-row{border-bottom-color:rgba(255,255,255,0.04);}
-body.dark .crm-row:hover{background:rgba(255,255,255,0.04);}
-.crm-row-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.crm-row-main{flex:1;min-width:0;}
-.crm-row-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.crm-row-sub{font-size:11px;color:var(--dgray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.crm-row-meta{font-size:11px;color:var(--dgray);flex-shrink:0;font-variant-numeric:tabular-nums;}
-.crm-row-badge{font-size:9px;font-weight:700;text-transform:uppercase;padding:2px 6px;border-radius:3px;flex-shrink:0;}
-
-/* Day group header inside panels */
-.crm-day-hdr{
-  padding:6px 16px;font-size:10px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.4px;color:var(--dgray);background:var(--lgray);
-  border-bottom:1px solid var(--bdr);
+/* Today's ops card — visual emphasis */
+.dash-today-card{border-left:3px solid var(--red);}
+/* Pipeline snapshot row */
+.dash-pipeline-row .mc-card{padding:14px 18px;text-align:center;}
+.dash-pipeline-row .mc-card .mc-kpi-val{font-size:22px;}
+.dash-pipeline-row .mc-card .mc-kpi-lbl{font-size:10px;}
+/* Weather chip */
+.dash-weather-chip{
+  display:flex;align-items:center;gap:10px;padding:10px 18px;
+  font-size:13px;flex-shrink:0;
+  background:var(--bg-el);border:1px solid var(--bdr);border-radius:12px;
+  transition:box-shadow .2s,border-color .2s;
 }
-body.dark .crm-day-hdr{background:rgba(255,255,255,0.03);}
-
-/* Dashboard grid layout */
-.crm-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
-.crm-grid-full{grid-column:1/-1;}
-
-/* Empty state — minimal */
-.crm-empty{padding:20px 16px;text-align:center;color:var(--dgray);font-size:12px;}
-
-/* Legacy compat — keep for non-dashboard panels */
-.dash-weather-chip{display:none;}
-.mc-greeting{font-family:var(--font-display);font-size:24px;font-weight:800;line-height:1.15;margin-bottom:2px;text-wrap:balance;}
-.mc-date-line{font-size:12px;color:var(--dgray);font-weight:500;font-family:var(--font-display);}
+.dash-weather-chip:hover{box-shadow:var(--shadow-s);border-color:rgba(0,0,0,0.08);}
+body.dark .dash-weather-chip{
+  background:rgba(24,24,27,0.65);border-color:rgba(255,255,255,0.06);
+}
+body.dark .dash-weather-chip:hover{box-shadow:0 2px 8px rgba(0,0,0,.3);}
 
 /* Project card redesign */
 .mc-proj-card{
@@ -579,7 +538,7 @@ body.dark .crm-day-hdr{background:rgba(255,255,255,0.03);}
   cursor:pointer;transition:all .15s;border-bottom:1px solid var(--bdr);
 }
 .mc-proj-card:last-child{border-bottom:none;}
-.mc-proj-card:hover{background:var(--lgray);}
+.mc-proj-card:hover{background:var(--bg-sub);transform:translateX(2px);}
 body.dark .mc-proj-card:hover{background:rgba(255,255,255,0.03);}
 
 /* Stage badge */
@@ -599,7 +558,7 @@ body.dark .mc-proj-card:hover{background:rgba(255,255,255,0.03);}
   border:1px solid var(--bdr);border-radius:8px;font-size:13px;
   background:var(--bg-sub);transition:border-color .15s,box-shadow .15s;
 }
-.mc-toolbar input[type="text"]:focus{border-color:var(--dgray);box-shadow:none;}
+.mc-toolbar input[type="text"]:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-soft);}
 body.dark .mc-toolbar input[type="text"]{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.08);}
 
 /* Segmented control (improved) */
@@ -613,14 +572,20 @@ body.dark .mc-toolbar input[type="text"]{background:rgba(255,255,255,0.05);borde
   background:transparent;color:var(--dgray);font-family:var(--font);
 }
 .mc-seg-btn:hover{color:var(--blk);}
-.mc-seg-btn.on{background:var(--wht);color:var(--blk);box-shadow:0 1px 2px rgba(0,0,0,.06);}
+.mc-seg-btn.on{background:var(--bg-el);color:var(--blk);box-shadow:var(--shadow-s);}
 body.dark .mc-seg{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.06);}
 body.dark .mc-seg-btn:hover{color:#E4E4E7;}
 body.dark .mc-seg-btn.on{background:rgba(255,255,255,0.10);color:#F5F5F7;}
 
 /* Staggered panel animation */
-/* Stagger removed — instant panel loads (CRM apps don't animate content in) */
-.mc-stagger>*{}
+@keyframes mcFadeUp{from{opacity:0;transform:translateY(10px) scale(0.998);}to{opacity:1;transform:translateY(0) scale(1);}}
+.mc-stagger>*{animation:mcFadeUp .3s cubic-bezier(0.2,0.8,0.2,1) both;}
+.mc-stagger>*:nth-child(1){animation-delay:0s;}
+.mc-stagger>*:nth-child(2){animation-delay:.04s;}
+.mc-stagger>*:nth-child(3){animation-delay:.08s;}
+.mc-stagger>*:nth-child(4){animation-delay:.12s;}
+.mc-stagger>*:nth-child(5){animation-delay:.16s;}
+.mc-stagger>*:nth-child(6){animation-delay:.20s;}
 
 /* Bid calendar — refined */
 .mc-cal-cell{
@@ -711,7 +676,7 @@ body.dark .mc-queue-card:hover{border-color:rgba(204,0,0,0.3);}
 .sb:hover .sb-pin,.sb.pinned .sb-pin{opacity:1;}
 .sb.pinned .sb-pin{color:rgba(255,255,255,.6) !important;}
 .main{overflow-y:auto;background:transparent;}
-.topbar{background:var(--wht);border-bottom:1px solid var(--bdr);padding:0 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;height:var(--topbar-h);min-height:var(--topbar-h);}
+.topbar{background:rgba(232,231,236,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:none;box-shadow:0 0.5px 0 rgba(0,0,0,0.06);padding:0 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;height:var(--topbar-h);min-height:var(--topbar-h);}
 .topbar-title{font-family:var(--font-display);font-size:14px;font-weight:700;min-width:0;white-space:nowrap;display:flex;align-items:center;gap:8px;}
 /* topbar-actions removed — replaced by 3-dot actions menu */
 .topbar-bell{position:relative;background:none;border:none;color:var(--dgray);cursor:pointer;padding:6px;border-radius:8px;transition:color .15s,background .15s;display:flex;align-items:center;}
@@ -724,7 +689,7 @@ body.dark .topbar-bell .notif-dot{border-color:#09090B;}
 .topbar-more{position:relative;background:none;border:none;color:var(--dgray);cursor:pointer;padding:6px;border-radius:8px;transition:color .15s,background .15s;display:flex;align-items:center;}
 .topbar-more:hover{background:var(--bg-sub);color:var(--blk);}
 body.dark .topbar-more{color:#71717A;}body.dark .topbar-more:hover{background:rgba(255,255,255,0.06);color:#E4E4E7;}
-.actions-menu{position:absolute;top:100%;right:0;margin-top:4px;background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);min-width:200px;box-shadow:var(--shadow-m);z-index:50;overflow:hidden;display:none;animation:menuFadeIn .12s ease;}
+.actions-menu{position:absolute;top:100%;right:0;margin-top:4px;background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad);min-width:200px;box-shadow:var(--shadow-l);z-index:50;overflow:hidden;display:none;animation:menuFadeIn .12s ease;}
 .actions-menu.open{display:block;}
 .actions-menu-item{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;color:var(--blk);cursor:pointer;transition:background .1s;border:none;background:none;width:100%;text-align:left;font-family:var(--font);}
 .actions-menu-item:hover{background:var(--bg-sub);}
@@ -732,15 +697,15 @@ body.dark .topbar-more{color:#71717A;}body.dark .topbar-more:hover{background:rg
 .actions-menu-item.danger{color:var(--red);}
 .actions-menu-item.danger svg{color:var(--red);}
 .actions-menu-sep{height:1px;background:var(--bdr);margin:4px 0;}
-body.dark .actions-menu{background:#1C1C1E;border-color:rgba(255,255,255,0.08);}
+body.dark .actions-menu{background:rgba(28,28,30,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-color:rgba(255,255,255,0.08);}
 body.dark .actions-menu-item{color:#E4E4E7;}
 body.dark .actions-menu-item:hover{background:rgba(255,255,255,0.06);}
 @keyframes menuFadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
 .content{padding:24px;max-width:1400px;width:100%;}
 
 /* Panels */
-.panel{display:none;}.panel.on{display:block;width:100%;box-sizing:border-box;animation:panelIn .15s ease-out both;}
-@keyframes panelIn{from{opacity:0;}to{opacity:1;}}
+.panel{display:none;}.panel.on{display:block;width:100%;box-sizing:border-box;animation:panelIn .3s cubic-bezier(0.2,0.8,0.2,1) both;}
+@keyframes panelIn{from{opacity:0;transform:translateY(8px) scale(0.998);}to{opacity:1;transform:translateY(0) scale(1);}}
 /* Breadcrumb */
 .bc{display:flex;align-items:center;gap:6px;font-size:13px;min-width:0;}
 .bc-item{color:var(--dgray);cursor:pointer;transition:color .12s;white-space:nowrap;font-weight:500;}
@@ -788,10 +753,10 @@ body.dark .cmdk-trigger{background:rgba(255,255,255,0.04);border-color:rgba(255,
 body.dark .cmdk-trigger:hover{border-color:rgba(255,255,255,0.15);}
 body.dark .cmdk-trigger kbd{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.08);}
 /* Command Palette Modal */
-.cmdk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:none;align-items:flex-start;justify-content:center;padding-top:min(20vh,160px);}
+.cmdk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:999;display:none;align-items:flex-start;justify-content:center;padding-top:min(20vh,160px);}
 .cmdk-overlay.open{display:flex;}
-.cmdk-box{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad-l);width:560px;max-width:92vw;max-height:60vh;display:flex;flex-direction:column;box-shadow:var(--shadow-l);overflow:hidden;}
-body.dark .cmdk-box{background:#1C1C1E;border-color:rgba(255,255,255,0.10);}
+.cmdk-box{background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad-l);width:560px;max-width:92vw;max-height:60vh;display:flex;flex-direction:column;box-shadow:var(--shadow-l);overflow:hidden;}
+body.dark .cmdk-box{background:rgba(28,28,30,0.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-color:rgba(255,255,255,0.10);}
 .cmdk-input-wrap{padding:16px;border-bottom:1px solid var(--bdr);}
 .cmdk-input{width:100%;border:none;background:transparent;font-size:16px;font-family:var(--font);color:var(--blk);outline:none;padding:0;}
 .cmdk-input::placeholder{color:var(--dgray);}
@@ -807,7 +772,7 @@ body.dark .cmdk-item:hover,body.dark .cmdk-item.active{background:rgba(255,255,2
 .cmdk-empty{padding:24px;text-align:center;color:var(--dgray);font-size:13px;}
 
 /* Slide-in Detail Panel */
-.detail-panel{position:fixed;right:0;top:0;bottom:0;width:60vw;max-width:720px;background:var(--wht);border-left:1px solid var(--bdr);z-index:50;transform:translateX(100%);transition:transform 250ms cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:var(--shadow-l);overscroll-behavior:contain;}
+.detail-panel{position:fixed;right:0;top:0;bottom:0;width:60vw;max-width:720px;background:var(--bg-el);border-left:1px solid var(--bdr);z-index:50;transform:translateX(100%);transition:transform 250ms cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:var(--shadow-l);overscroll-behavior:contain;}
 .detail-panel.open{transform:translateX(0);}
 body.dark .detail-panel{background:#18181B;border-left-color:rgba(255,255,255,0.06);}
 .detail-hdr{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--bdr);min-height:var(--topbar-h);flex-shrink:0;}
@@ -832,10 +797,10 @@ body.dark .detail-hdr-btn:hover{border-color:rgba(255,255,255,0.15);color:#E4E4E
 body.dark .fab-action{background:#27272A;border-color:rgba(255,255,255,0.08);color:#E4E4E7;}
 
 /* Cards */
-.card{background:var(--wht);border:1px solid var(--bdr);border-radius:8px;margin-bottom:16px;overflow:hidden;}
-.card:hover{}
-.card-hdr{padding:10px 16px;border-bottom:1px solid var(--bdr);background:transparent;display:flex;align-items:center;justify-content:space-between;}
-.card-title{font-size:13px;font-weight:700;}
+.card{background:var(--bg-el);border:1px solid var(--bdr);border-radius:14px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.04);transition:box-shadow .2s,border-color .2s;}
+.card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.08);}
+.card-hdr{padding:12px 16px;border-bottom:1px solid var(--bdr);background:transparent;display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-family:var(--font-display);font-size:13px;font-weight:700;}
 .card-body{padding:16px;}
 
 /* Forms */
@@ -845,27 +810,28 @@ body.dark .fab-action{background:#27272A;border-color:rgba(255,255,255,0.08);col
 .fg4{grid-template-columns:1fr 1fr 1fr 1fr;}
 label{display:block;font-size:11px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
 input,select,textarea{width:100%;padding:8px 12px;border:1px solid var(--bdr);border-radius:var(--rad-s);font-size:13px;font-family:var(--font);color:var(--blk);background:var(--wht);transition:border .12s,box-shadow .12s;}
-input:focus,select:focus{outline:none;border-color:#555;box-shadow:none;}
+input:focus,select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px var(--red-soft);}
 textarea{resize:vertical;min-height:52px;}
 
 /* Buttons */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:background .12s,color .12s,opacity .12s;font-family:var(--font);}
-.btn-primary{background:var(--blk);color:var(--wht);font-weight:600;}
-.btn-red{background:var(--accent);color:#fff;font-weight:600;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:background .15s cubic-bezier(.4,0,.2,1),color .15s,box-shadow .15s,opacity .15s;font-family:var(--font);letter-spacing:-.01em;}
+.btn-primary{background:var(--blk);color:var(--wht);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.08);}
+.btn-red{background:var(--accent);color:#fff;font-weight:600;box-shadow:0 1px 3px rgba(204,0,0,0.2);}
 .btn-blue{background:#2563EB;color:#fff;font-weight:600;}
 .btn-blue:hover{background:#1D4ED8;}
-.btn-primary:hover{background:#333;}
-.btn-red:hover{background:#A30000;}
+.btn-primary:hover{opacity:1;background:#333;box-shadow:0 2px 6px rgba(0,0,0,0.12);}
+.btn-red:hover{background:#A30000;box-shadow:0 2px 8px rgba(204,0,0,0.25);}
 body.dark .btn-primary:hover{background:#D4D4D8;}
-body.dark .btn-red:hover{background:#FF3333;}
-.btn-sec{background:transparent;color:var(--blk);border:1px solid var(--bdr);}.btn-sec:hover{background:var(--lgray);}
+body.dark .btn-red{box-shadow:0 1px 3px rgba(204,0,0,0.3);}
+body.dark .btn-red:hover{background:#FF3333;box-shadow:0 2px 8px rgba(204,0,0,0.35);}
+.btn-sec{background:transparent;color:var(--blk);border:1px solid var(--bdr);}.btn-sec:hover{background:var(--bg-sub);border-color:var(--dgray);}
 .btn-dark{background:#1e1e1e;color:#fff;}.btn-dark:hover{background:#333;}
-.btn-sm{padding:4px 10px;font-size:12px;border-radius:4px;}
-.btn-ico{background:none;border:none;cursor:pointer;padding:4px;color:var(--dgray);display:flex;align-items:center;border-radius:4px;transition:color .12s,background .12s;}
-.btn-ico:hover{color:var(--blk);background:var(--lgray);}
+.btn-sm{padding:4px 10px;font-size:12px;border-radius:6px;}
+.btn-ico{background:none;border:none;cursor:pointer;padding:4px;color:var(--dgray);display:flex;align-items:center;border-radius:6px;transition:color .12s,background .12s;}
+.btn-ico:hover{color:var(--blk);background:var(--bg-sub);}
 .btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none;}
 .btn-danger{background:transparent;color:var(--red);border:1px solid rgba(204,0,0,.3);}.btn-danger:hover{background:var(--red-soft);}
-.btn:active:not(:disabled){transform:scale(.98);}
+.btn:active:not(:disabled){transform:scale(.97);}
 .btn-ghost{background:none;border:none;color:var(--dgray);padding:6px 10px;}.btn-ghost:hover{color:var(--blk);background:var(--bg-sub);}
 
 /* Metrics */
@@ -951,9 +917,9 @@ tr:nth-child(even) td{background:var(--lgray);}
 ::-webkit-scrollbar-thumb{background:var(--mgray);border-radius:4px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--dgray);}
 
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;}
 .modal-overlay.hidden{display:none;}
-.modal{background:var(--wht);border-radius:8px;width:560px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 8px 30px rgba(0,0,0,.15);border:1px solid var(--bdr);}
+.modal{background:var(--wht);border-radius:var(--rad-l);width:560px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-l);}
 .modal-hdr{padding:15px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
 .modal-hdr h3{font-size:14px;font-weight:600;margin:0;}
 .modal-body{padding:18px;overflow-y:auto;flex:1;}
@@ -970,10 +936,10 @@ tr:nth-child(even) td{background:var(--lgray);}
 .co-summary{background:var(--lgray);border:1px solid var(--bdr);border-radius:6px;padding:12px 15px;margin-top:10px;}
 .co-summary-row{display:flex;justify-content:space-between;font-size:13px;padding:2px 0;}
 .co-summary-row.total{font-weight:700;font-size:14px;border-top:1px solid var(--bdr);margin-top:4px;padding-top:6px;}
-.a-card{background:var(--wht);border:1px solid var(--bdr);border-radius:8px;padding:12px 16px;text-align:center;}
-.a-card:hover{box-shadow:none;}
-.a-card-lbl{font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;margin-bottom:2px;}
-.a-card-val{font-size:20px;font-weight:700;color:var(--blk);font-variant-numeric:tabular-nums;}
+.a-card{background:var(--bg-el);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;transition:box-shadow .15s,border-color .15s;}
+.a-card:hover{box-shadow:var(--shadow-s);border-color:rgba(204,0,0,0.1);}
+.a-card-lbl{font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;margin-bottom:6px;font-family:var(--font-display);}
+.a-card-val{font-size:24px;font-weight:700;color:var(--blk);font-family:var(--font-display);font-variant-numeric:tabular-nums;}
 .a-card-sub{font-size:11px;color:var(--dgray);margin-top:2px;}
 .m-green{color:#27500A;font-weight:600;}
 .m-yellow{color:#B25000;font-weight:600;}
@@ -1000,7 +966,7 @@ tr:nth-child(even) td{background:var(--lgray);}
   .mobile-bar {
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 14px; height: 52px;
-    background: var(--wht); border-bottom: 1px solid var(--bdr);
+    background: var(--glass); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-bottom: 1px solid var(--bdr);
     position: sticky; top: 0; z-index: 100;
   }
   .mob-menu-btn {
@@ -1065,11 +1031,12 @@ tr:nth-child(even) td{background:var(--lgray);}
   #jc-summary { padding: 10px 12px; }
 
   /* --- Dashboard mobile --- */
-  .crm-stats { flex-wrap: wrap; }
-  .crm-stat { min-width: 0; flex: 1 1 45%; }
-  .crm-weather { display: none !important; }
-  .crm-grid { grid-template-columns: 1fr !important; }
-  .crm-greeting { font-size: 14px; }
+  #dash-stats { grid-template-columns: 1fr 1fr !important; }
+  #dash-weather-mini { display: none !important; }
+  .dash-hero { margin-bottom: 16px; }
+  .mc-greeting { font-size: 20px; }
+  .dash-split { grid-template-columns: 1fr !important; }
+  #dash-pipeline-snapshot { grid-template-columns: 1fr !important; }
 
   /* --- Schedule: stack queue and calendar vertically --- */
   #sched-split { grid-template-columns: 1fr !important; }
@@ -1289,66 +1256,62 @@ tr:nth-child(even) td{background:var(--lgray);}
 
       <!-- DASHBOARD PANEL -->
       <div class="panel on" id="panel-dashboard">
-        <div class="crm-dash">
+        <div class="mc-stagger" style="padding:4px 0;max-width:none;">
 
-          <!-- Header bar: greeting + weather inline -->
-          <div class="crm-header-bar">
-            <div class="crm-greeting" id="dash-greeting">Dashboard<span id="dash-date-line"></span></div>
-            <div class="crm-weather" id="dash-weather-mini"></div>
-          </div>
-
-          <!-- Stat strip -->
-          <div id="dash-stats" data-field-hidden class="crm-stats" aria-busy="true" aria-label="Dashboard statistics">
-            <div class="crm-stat"><div class="skeleton skeleton-text" style="width:40%;margin:0 auto;"></div></div>
-            <div class="crm-stat"><div class="skeleton skeleton-text" style="width:40%;margin:0 auto;"></div></div>
-            <div class="crm-stat"><div class="skeleton skeleton-text" style="width:40%;margin:0 auto;"></div></div>
-            <div class="crm-stat"><div class="skeleton skeleton-text" style="width:40%;margin:0 auto;"></div></div>
-          </div>
-
-          <!-- Two-column: Today + This Week | Activity -->
-          <div class="crm-grid">
-            <!-- Left column: Today + This Week stacked -->
-            <div style="display:flex;flex-direction:column;gap:16px;">
-              <div class="crm-panel">
-                <div class="crm-panel-hdr">
-                  <span class="crm-panel-title" id="dash-today-label">Today</span>
-                  <button class="btn btn-sec btn-sm" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Schedule</button>
-                </div>
-                <div id="dash-today-schedule">
-                  <div class="crm-empty">No work orders today</div>
-                </div>
-              </div>
-              <div class="crm-panel">
-                <div class="crm-panel-hdr">
-                  <span class="crm-panel-title">This Week</span>
-                </div>
-                <div id="dash-upcoming-wo">
-                  <div class="crm-empty">No upcoming work orders</div>
-                </div>
-              </div>
+          <!-- Greeting Row (compact) -->
+          <div class="dash-hero">
+            <div class="dash-hero-text">
+              <h2 id="dash-greeting" class="mc-greeting">Good morning</h2>
+              <p class="mc-date-line" id="dash-date-line"></p>
             </div>
-
-            <!-- Right column: Activity + Recent Projects stacked -->
-            <div style="display:flex;flex-direction:column;gap:16px;">
-              <div class="crm-panel">
-                <div class="crm-panel-hdr">
-                  <span class="crm-panel-title">Recent Activity</span>
-                </div>
-                <div id="dash-recent-activity" style="max-height:320px;overflow-y:auto;overscroll-behavior:contain;">
-                  <div class="crm-empty">No recent activity</div>
-                </div>
-              </div>
-              <div class="crm-panel">
-                <div class="crm-panel-hdr">
-                  <span class="crm-panel-title">Recent Projects</span>
-                  <button class="btn btn-sec btn-sm" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">All Projects</button>
-                </div>
-                <div id="dash-recent-projects">
-                  <div class="crm-empty">No recent projects</div>
-                </div>
-              </div>
+            <div id="dash-weather-mini" class="dash-weather-chip">
+              <span style="color:var(--dgray);font-size:12px;">Loading weather&hellip;</span>
             </div>
           </div>
+
+          <!-- KPI Strip -->
+          <div id="dash-stats" data-field-hidden aria-busy="true" aria-label="Dashboard statistics" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+            <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:40%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
+            <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:40%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
+            <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:40%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
+            <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:40%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
+          </div>
+
+          <!-- Today's Ops (primary card, full width) -->
+          <div class="mc-card dash-today-card" style="margin-bottom:20px;">
+            <div class="mc-sec-hdr">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span id="dash-today-label">Today</span>
+              <span class="mc-sec-line"></span>
+              <button class="btn btn-sec btn-sm" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Full Schedule</button>
+            </div>
+            <div id="dash-today-schedule" style="padding:0;">
+              <div class="empty-state" style="padding:24px 18px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="empty-state-title">No work orders today</div><div class="empty-state-desc">Scheduled jobs will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Open Schedule</button></div>
+            </div>
+          </div>
+
+          <!-- This Week (60%) + Activity (40%) -->
+          <div class="dash-split" style="display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:20px;">
+            <div class="mc-card">
+              <div class="mc-sec-hdr">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span>This Week</span>
+                <span class="mc-sec-line"></span>
+              </div>
+              <div id="dash-upcoming-wo" style="padding:0;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
+            </div>
+            <div class="mc-card">
+              <div class="mc-sec-hdr">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <span>Activity</span>
+                <span class="mc-sec-line"></span>
+              </div>
+              <div id="dash-recent-activity" style="padding:0;max-height:340px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
+            </div>
+          </div>
+
+          <!-- Pipeline Snapshot (admin/estimator only) -->
+          <div id="dash-pipeline-snapshot" data-field-hidden class="dash-pipeline-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;"></div>
 
         </div>
       </div>
@@ -1627,10 +1590,12 @@ tr:nth-child(even) td{background:var(--lgray);}
       <!-- PROJECTS LIST PANEL -->
       <div class="panel" id="panel-projects"><div class="content mc-stagger" style="padding:16px;max-width:none;">
         <!-- Project stats row -->
-        <div id="proj-stats" class="crm-stats">
-          <div class="crm-stat"><div class="skeleton skeleton-text" style="width:50%;margin:0 auto;"></div><div class="skeleton skeleton-text sm" style="margin:6px auto 0;"></div></div>
-          <div class="crm-stat"><div class="skeleton skeleton-text" style="width:50%;margin:0 auto;"></div><div class="skeleton skeleton-text sm" style="margin:6px auto 0;"></div></div>
-          <div class="crm-stat"><div class="skeleton skeleton-text" style="width:50%;margin:0 auto;"></div><div class="skeleton skeleton-text sm" style="margin:6px auto 0;"></div></div>
+        <div id="proj-stats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;">
+          <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+          <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+          <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+          <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+          <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
         </div>
         <!-- Toolbar: search + view toggle + filters -->
         <div class="mc-card" style="margin-bottom:16px;">
@@ -1658,7 +1623,7 @@ tr:nth-child(even) td{background:var(--lgray);}
         </div>
         <!-- Map View (hidden by default) -->
         <div id="proj-map-view" style="display:none;">
-          <div id="proj-map" style="width:100%;height:500px;border-radius:8px;border:1px solid var(--bdr);overflow:hidden;"></div>
+          <div id="proj-map" style="width:100%;height:500px;border-radius:14px;border:1px solid var(--bdr);overflow:hidden;"></div>
         </div>
       </div></div>
 
@@ -3259,11 +3224,7 @@ function _setDashGreeting(){
   var g=h<5?'Late night':h<12?'Good morning':h<17?'Good afternoon':h<21?'Good evening':'Good night';
   if(window._userName)g+=', '+window._userName.split(' ')[0];
   var el=document.getElementById('dash-greeting');
-  if(!el)return;
-  // Preserve the date span child
-  var dateSpan=document.getElementById('dash-date-line');
-  el.textContent=g;
-  if(dateSpan){el.appendChild(document.createTextNode(' '));el.appendChild(dateSpan);}
+  if(el)el.textContent=g;
 }
 
 // ── Floating Action Button ──
@@ -4066,18 +4027,19 @@ function renderDashboard(){
   renderDashUpcomingWO();
   renderDashTodaySchedule();
   renderDashRecentActivity();
-  renderDashRecentProjects();
+  renderDashPipelineSnapshot();
   updateNavBadges();
   // Set date line
   var dl=document.getElementById('dash-date-line');
-  if(dl){var d=new Date();dl.textContent=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
-  // Set today label
+  if(dl){var d=new Date();dl.textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
+  // Set today label with day name
   var tl=document.getElementById('dash-today-label');
-  if(tl){var d2=new Date();tl.textContent='Today, '+d2.toLocaleDateString('en-US',{weekday:'long'});}
+  if(tl){var d2=new Date();tl.textContent='Today \u2014 '+d2.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});}
 }
 
 function renderDashWeatherMini(){
   var c=document.getElementById('dash-weather-mini');if(!c)return;
+  // Fetch weather data and render inline
   fetch('https://api.open-meteo.com/v1/forecast?latitude=35.4088&longitude=-80.5795&current=temperature_2m,weathercode,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=America/New_York&forecast_days=1')
   .then(function(r){return r.json();})
   .then(function(d){
@@ -4086,12 +4048,13 @@ function renderDashWeatherMini(){
     var wc=d.current.weathercode;
     var wind=Math.round(d.current.windspeed_10m);
     var precip=d.daily&&d.daily.precipitation_probability_max?d.daily.precipitation_probability_max[0]:0;
-    var icon=wc<=1?'\u2600':wc<=3?'\u26C5':wc>=61?'\uD83C\uDF27':'\u2601';
-    c.innerHTML='<span class="wx-icon">'+icon+'</span>'
-      +'<span class="wx-temp">'+t+'\u00B0F</span>'
-      +'<span>'+wind+' mph</span>'
-      +(precip>40?'<span class="wx-warn">\u26A0 '+precip+'% rain</span>':'');
-  }).catch(function(){c.innerHTML='';});
+    var icon=wc<=1?'&#9728;':wc<=3?'&#9925;':wc>=61?'&#127783;':'&#9729;';
+    var rainWarning=precip>40?'<span style="color:var(--red);font-weight:700;font-size:11px;">&#9888; '+precip+'%</span>':'';
+    c.innerHTML='<span style="font-size:22px;line-height:1;">'+icon+'</span>'
+      +'<span style="font-family:var(--font-display);font-weight:800;font-size:16px;letter-spacing:-0.02em;">'+t+'&deg;</span>'
+      +'<span style="color:var(--dgray);font-size:11px;font-weight:500;">'+wind+' mph</span>'
+      +rainWarning;
+  }).catch(function(){c.innerHTML='<span style="color:var(--dgray);font-size:11px;">Weather unavailable</span>';});
 }
 
 function renderDashTodaySchedule(){
@@ -4108,19 +4071,20 @@ function renderDashTodaySchedule(){
       }
     });
   });
-  if(!todayWOs.length){c.innerHTML='<div class="crm-empty">No work orders scheduled today</div>';return;}
-  var statusColors={pending:'#EAB308',active:'#3B82F6',complete:'#22C55E'};
+  if(!todayWOs.length){c.innerHTML='<div class="empty-state" style="padding:24px 18px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="empty-state-title">No work orders today</div><div class="empty-state-desc">Scheduled jobs will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel(\'schedule\',document.querySelector(\'[onclick*=schedule]\'))">Open Schedule</button></div>';return;}
   todayWOs.forEach(function(item){
-    var row=document.createElement('div');row.className='crm-row';
+    var row=document.createElement('div');
+    row.className='mc-list-item';
+    var statusColors={pending:'#EAB308',active:'#4A7FB5',complete:'#22C55E'};
     var color=statusColors[item.wo.status]||'#999';
-    var dot=document.createElement('span');dot.className='crm-row-dot';dot.style.background=color;
+    var dot=document.createElement('span');dot.className='mc-dot';dot.style.background=color;
     row.appendChild(dot);
-    var main=document.createElement('div');main.className='crm-row-main';
-    var name=document.createElement('div');name.className='crm-row-name';name.textContent=item.wo.name||'Work Order';
-    var sub=document.createElement('div');sub.className='crm-row-sub';sub.textContent=esc(item.project.name||'')+(item.wo.assigned_to?' \u00B7 '+item.wo.assigned_to:'');
-    main.appendChild(name);main.appendChild(sub);row.appendChild(main);
-    var badge=document.createElement('span');badge.className='crm-row-badge';
-    badge.style.background=color+'18';badge.style.color=color;
+    var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+    info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(item.wo.name||'Work Order')+'</div>'
+      +'<div style="font-size:11px;color:var(--dgray);">'+esc(item.project.name||'')+(item.wo.assigned_to?' &middot; '+esc(item.wo.assigned_to):'')+'</div>';
+    row.appendChild(info);
+    var badge=document.createElement('span');
+    badge.style.cssText='font-size:10px;font-weight:600;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:'+color+'18;color:'+color+';font-family:var(--font-display);';
     badge.textContent=item.wo.status||'pending';
     row.appendChild(badge);
     (function(pid,wid){row.addEventListener('click',function(){_currentProjectId=pid;openWorkOrderView(wid);});})(item.project.id,item.wo.id);
@@ -4146,11 +4110,12 @@ function renderDashRecentActivity(){
   });
   activities.sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
   activities=activities.slice(0,10);
-  if(!activities.length){c.innerHTML='<div class="crm-empty">No recent activity</div>';return;}
+  if(!activities.length){c.innerHTML='<div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel(\'projects\',document.querySelector(\'[onclick*=projects]\'))">View Projects</button></div>';return;}
   activities.forEach(function(a){
-    var row=document.createElement('div');row.className='crm-row';row.style.cursor='default';
-    var dotColor=a.type==='complete'?'#22C55E':'#A1A1AA';
-    var dot=document.createElement('span');dot.className='crm-row-dot';dot.style.background=dotColor;
+    var row=document.createElement('div');
+    row.className='mc-list-item';row.style.cursor='default';
+    var dotColor=a.type==='complete'?'#22C55E':'var(--dgray)';
+    var dot=document.createElement('span');dot.className='mc-act-dot';dot.style.background=dotColor;
     row.appendChild(dot);
     var ago='';
     if(a.date){
@@ -4158,11 +4123,11 @@ function renderDashRecentActivity(){
       var mins=Math.floor(diff/60000),hrs=Math.floor(diff/3600000),days=Math.floor(diff/86400000);
       ago=days>0?days+'d':hrs>0?hrs+'h':mins>0?mins+'m':'now';
     }
-    var main=document.createElement('div');main.className='crm-row-main';
-    var name=document.createElement('div');name.className='crm-row-name';name.style.fontWeight='500';name.textContent=a.text;
-    var sub=document.createElement('div');sub.className='crm-row-sub';sub.textContent=a.project;
-    main.appendChild(name);main.appendChild(sub);row.appendChild(main);
-    if(ago){var meta=document.createElement('span');meta.className='crm-row-meta';meta.textContent=ago;row.appendChild(meta);}
+    var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+    info.innerHTML='<div style="font-size:12px;">'+esc(a.text)+'</div>'
+      +'<div style="font-size:10px;color:var(--dgray);margin-top:1px;">'+esc(a.project)+'</div>';
+    row.appendChild(info);
+    if(ago){var tm=document.createElement('span');tm.style.cssText='font-size:10px;color:var(--dgray);flex-shrink:0;font-family:var(--font-display);font-weight:500;';tm.textContent=ago;row.appendChild(tm);}
     c.appendChild(row);
   });
 }
@@ -4186,28 +4151,36 @@ function renderDashUpcomingWO(){
     });
   });
   wos.sort(function(a,b){return (a.date||'9999')>(b.date||'9999')?1:-1;});
-  if(!wos.length){c.innerHTML='<div class="crm-empty">No work orders this week</div>';return;}
+  if(!wos.length){c.innerHTML='<div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel(\'projects\',document.querySelector(\'[onclick*=projects]\'))">View Projects</button></div>';return;}
+  // Group by day
   var grouped={};
-  wos.forEach(function(wo){if(!grouped[wo.date])grouped[wo.date]=[];grouped[wo.date].push(wo);});
-  var statusColors={pending:'#EAB308',active:'#3B82F6'};
+  wos.forEach(function(wo){
+    if(!grouped[wo.date])grouped[wo.date]=[];
+    grouped[wo.date].push(wo);
+  });
+  var statusColors={pending:'#EAB308',active:'#4A7FB5'};
   Object.keys(grouped).sort().forEach(function(dateKey){
+    // Day sub-header
     var dp=dateKey.split('-');
     var dayDate=new Date(parseInt(dp[0]),parseInt(dp[1])-1,parseInt(dp[2]));
-    var hdr=document.createElement('div');hdr.className='crm-day-hdr';
-    hdr.textContent=dayDate.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    var dayLabel=dayDate.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    var hdr=document.createElement('div');
+    hdr.style.cssText='padding:8px 18px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);font-family:var(--font-display);background:var(--bg-sub);border-bottom:1px solid var(--bdr);';
+    hdr.textContent=dayLabel;
     c.appendChild(hdr);
     grouped[dateKey].forEach(function(wo){
-      var row=document.createElement('div');row.className='crm-row';
+      var row=document.createElement('div');
+      row.className='mc-list-item';
       row.setAttribute('tabindex','0');row.setAttribute('role','button');
       var color=statusColors[wo.status]||'#999';
-      var dot=document.createElement('span');dot.className='crm-row-dot';dot.style.background=color;
+      var dot=document.createElement('span');dot.className='mc-dot';dot.style.background=color;
       row.appendChild(dot);
-      var main=document.createElement('div');main.className='crm-row-main';
-      var name=document.createElement('div');name.className='crm-row-name';name.textContent=wo.name;
-      var sub=document.createElement('div');sub.className='crm-row-sub';sub.textContent=wo.project+(wo.assigned?' \u00B7 '+wo.assigned:'');
-      main.appendChild(name);main.appendChild(sub);row.appendChild(main);
-      var badge=document.createElement('span');badge.className='crm-row-badge';
-      badge.style.background=color+'18';badge.style.color=color;
+      var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+      info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(wo.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--dgray);">'+esc(wo.project)+(wo.assigned?' &middot; '+esc(wo.assigned):'')+'</div>';
+      row.appendChild(info);
+      var badge=document.createElement('span');
+      badge.style.cssText='font-size:9px;font-weight:600;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:'+color+'18;color:'+color+';font-family:var(--font-display);';
       badge.textContent=wo.status;
       row.appendChild(badge);
       (function(pid,wid){row.addEventListener('click',function(){_currentProjectId=pid;openWorkOrderView(wid);});row.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();_currentProjectId=pid;openWorkOrderView(wid);}});})(wo.projId,wo.woId);
@@ -4229,25 +4202,21 @@ function renderDashRecentProjects(){
     projects.push({id:p.id,name:p.name||'',client:p.client||'',stage:p.stage||'',updated:p.updated_at||lastActivity||p.created_at||'',total:p.total||0});
   });
   projects.sort(function(a,b){return (b.updated||'')>(a.updated||'')?1:-1;});
-  projects=projects.slice(0,5);
-  if(!projects.length){c.innerHTML='<div class="crm-empty">No recent projects</div>';return;}
+  projects=projects.slice(0,6);
+  if(!projects.length){c.innerHTML='<div class="empty-state" style="padding:20px;"><div class="empty-state-desc">No recent projects</div></div>';return;}
   projects.forEach(function(p){
-    var row=document.createElement('div');row.className='crm-row';
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);cursor:pointer;';
     var ago='';
     if(p.updated){
       var diff=Date.now()-new Date(p.updated).getTime();
       var mins=Math.floor(diff/60000),hrs=Math.floor(diff/3600000),days=Math.floor(diff/86400000);
-      ago=days>0?days+'d':hrs>0?hrs+'h':mins>0?mins+'m':'now';
+      ago=days>0?days+'d ago':hrs>0?hrs+'h ago':mins>0?mins+'m ago':'just now';
     }
-    var main=document.createElement('div');main.className='crm-row-main';
-    var name=document.createElement('div');name.className='crm-row-name';name.textContent=p.name;
-    var sub=document.createElement('div');sub.className='crm-row-sub';sub.textContent=p.client+(p.stage?' \u00B7 '+p.stage:'');
-    main.appendChild(name);main.appendChild(sub);row.appendChild(main);
-    if(canSeePricing()&&p.total){
-      var amt=document.createElement('span');amt.className='crm-row-meta';amt.style.fontWeight='600';
-      amt.textContent='$'+Math.round(p.total).toLocaleString();row.appendChild(amt);
-    }
-    if(ago){var meta=document.createElement('span');meta.className='crm-row-meta';meta.textContent=ago;row.appendChild(meta);}
+    row.innerHTML='<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">'+esc(p.name)+'</div>'
+      +'<div style="font-size:11px;color:var(--dgray);">'+esc(p.client)+(p.stage?' &middot; '+esc(p.stage):'')+'</div></div>'
+      +'<div style="text-align:right;flex-shrink:0;">'+(canSeePricing()?'<div style="font-size:12px;font-weight:600;">$'+Math.round(p.total).toLocaleString()+'</div>':'')+'<div>'
+      +(ago?'<div style="font-size:10px;color:var(--dgray);">'+ago+'</div>':'')+'</div>';
     (function(id){row.addEventListener('click',function(){openProjectSummary(id);});})(p.id);
     c.appendChild(row);
   });
@@ -4287,26 +4256,76 @@ function renderDashStats(){
   var pipelineVal=calcPipelineValue();
   var decided=wonProjects+lostProjects;
   var winRate=decided>0?Math.round(wonProjects/decided*100):0;
+  // Build role-aware KPIs
   var stats=[];
+  // Unified accent: brand red for KPI bars, value text stays dark/neutral
+  var kpiAccent='var(--red)';
   if(isFieldUser()){
+    // Field/Foreman view: crew-focused
     stats=[
-      {lbl:'Crew Today',val:todayCrew},
-      {lbl:'This Week',val:scheduledThisWeek},
-      {lbl:'Active',val:activeProjects},
+      {lbl:"Today's Crew",val:todayCrew,bar:kpiAccent,sub:'assigned today'},
+      {lbl:'Scheduled This Week',val:scheduledThisWeek,bar:kpiAccent,sub:'next 7 days'},
+      {lbl:'Active Projects',val:activeProjects,bar:kpiAccent,sub:'in progress'},
     ];
   } else {
-    stats=[{lbl:'Active',val:activeProjects},{lbl:'Crew',val:todayCrew}];
-    if(canSeePricing())stats.push({lbl:'Pipeline',val:'$'+Math.round(pipelineVal).toLocaleString()});
-    stats.push({lbl:'Bids Due',val:bidsDueWeek,warn:bidsDueWeek>0});
-    if(canSeePricing()&&decided>0)stats.push({lbl:'Win Rate',val:winRate+'%'});
+    // Estimator/Admin/Director view
+    stats=[
+      {lbl:'Active Projects',val:activeProjects,bar:kpiAccent,sub:'in progress'},
+      {lbl:"Today's Crew",val:todayCrew,bar:kpiAccent,sub:assignedToday.size>0?Array.from(assignedToday).slice(0,2).join(', '):'none assigned'},
+    ];
+    if(canSeePricing())stats.push({lbl:'Pipeline Value',val:'$'+Math.round(pipelineVal).toLocaleString(),bar:kpiAccent,sub:'all active bids'});
+    stats.push({lbl:'Bids Due',val:bidsDueWeek,bar:bidsDueWeek>0?kpiAccent:'var(--dgray)',sub:'next 7 days',warn:bidsDueWeek>0});
+    if(canSeePricing()&&decided>0)stats.push({lbl:'Win Rate',val:winRate+'%',bar:kpiAccent,sub:wonProjects+'W / '+lostProjects+'L'});
   }
+  c.style.gridTemplateColumns='repeat('+stats.length+',1fr)';
   stats.forEach(function(s){
-    var div=document.createElement('div');div.className='crm-stat';
-    var val=document.createElement('div');val.className='crm-stat-val';
-    if(s.warn)val.classList.add('warn');
-    val.textContent=s.val;
-    var lbl=document.createElement('div');lbl.className='crm-stat-lbl';lbl.textContent=s.lbl;
-    div.appendChild(val);div.appendChild(lbl);c.appendChild(div);
+    var div=document.createElement('div');div.className='mc-card mc-kpi';
+    div.style.position='relative';div.style.overflow='hidden';
+    var valColor=s.warn?'var(--red)':'var(--blk)';
+    div.innerHTML='<div style="position:absolute;top:0;left:0;width:3px;height:100%;border-radius:0 2px 2px 0;background:'+(s.bar||'var(--red)')+';"></div>'
+      +'<div class="mc-kpi-lbl">'+s.lbl+'</div>'
+      +'<div class="mc-kpi-val" style="color:'+valColor+'">'+s.val+'</div>'
+      +(s.sub?'<div class="mc-kpi-sub">'+s.sub+'</div>':'');
+    c.appendChild(div);
+  });
+}
+function renderDashPipelineSnapshot(){
+  var c=document.getElementById('dash-pipeline-snapshot');if(!c)return;
+  c.innerHTML='';
+  if(isFieldUser())return;
+  var pipelineVal=calcPipelineValue();
+  var today=new Date().toISOString().split('T')[0];
+  var weekEnd=new Date();weekEnd.setDate(weekEnd.getDate()+7);
+  var weekEndStr=weekEnd.toISOString().split('T')[0];
+  var bidsDue=0;
+  Object.keys(dashBidDueDates||{}).forEach(function(dk){
+    if(dk>=today&&dk<=weekEndStr)bidsDue+=(dashBidDueDates[dk]||[]).length;
+  });
+  var wonProjects=0,lostProjects=0;
+  var closedStages={};
+  if(_pipelineStages)_pipelineStages.forEach(function(s){
+    if(s.name==='Completed'||s.name==='Won')closedStages[s.id]='won';
+    if(s.name==='Lost')closedStages[s.id]='lost';
+  });
+  (pipelineProposals||[]).forEach(function(p){
+    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    if(!snap.is_project)return;
+    if(closedStages[p.stage_id]==='won')wonProjects++;
+    else if(closedStages[p.stage_id]==='lost')lostProjects++;
+  });
+  var decided=wonProjects+lostProjects;
+  var winRate=decided>0?Math.round(wonProjects/decided*100):0;
+  var items=[];
+  if(canSeePricing())items.push({lbl:'Pipeline',val:'$'+Math.round(pipelineVal).toLocaleString()});
+  if(decided>0)items.push({lbl:'Win Rate',val:winRate+'%'});
+  items.push({lbl:'Bids Due This Week',val:bidsDue});
+  if(!items.length)return;
+  c.style.gridTemplateColumns='repeat('+items.length+',1fr)';
+  items.forEach(function(s){
+    var card=document.createElement('div');card.className='mc-card';
+    card.style.cssText='padding:14px 18px;text-align:center;';
+    card.innerHTML='<div class="mc-kpi-lbl">'+s.lbl+'</div><div class="mc-kpi-val" style="font-size:22px;">'+s.val+'</div>';
+    c.appendChild(card);
   });
 }
 function calcPipelineValue(){
@@ -4354,10 +4373,12 @@ function renderProjectStats(){
     stats.unshift({lbl:'Pipeline Value',val:'$'+Math.round(calcPipelineValue()).toLocaleString()});
     stats.push({lbl:'Revenue',val:'$'+Math.round(revenue).toLocaleString()});
   }
-  c.innerHTML='';
+  c.style.gridTemplateColumns='repeat('+stats.length+',1fr)';
   stats.forEach(function(s){
-    var div=document.createElement('div');div.className='crm-stat';
-    div.innerHTML='<div class="crm-stat-val">'+s.val+'</div><div class="crm-stat-lbl">'+s.lbl+'</div>';
+    var div=document.createElement('div');div.className='mc-card mc-kpi';
+    div.style.position='relative';div.style.overflow='hidden';
+    div.innerHTML='<div style="position:absolute;top:0;left:0;width:3px;height:100%;border-radius:0 2px 2px 0;background:var(--red);"></div>'
+      +'<div class="mc-kpi-lbl">'+s.lbl+'</div><div class="mc-kpi-val">'+s.val+'</div>';
     c.appendChild(div);
   });
 }
@@ -4506,8 +4527,8 @@ async function renderProjectsList(){
       var coCount=(snap.change_orders||[]).length;
       var noteCount=(snap.work_notes||[]).length;
       var card=document.createElement('div');
-      card.className='mc-proj-card';
-      card.style.cssText='margin-bottom:0;';
+      card.className='mc-card mc-proj-card';
+      card.style.cssText='margin-bottom:8px;border-radius:14px;';
       card.addEventListener('click',function(){openProjectSummary(p.id);});
       // Left: name + client + address
       var left=document.createElement('div');left.style.cssText='flex:1;min-width:0;';
