@@ -3154,7 +3154,8 @@ async function renderProjectsList(){
       var coCount=(snap.change_orders||[]).length;
       var noteCount=(snap.work_notes||[]).length;
       var card=document.createElement('div');
-      card.style.cssText='display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--bdr);border-radius:8px;margin-bottom:10px;cursor:pointer;transition:box-shadow .15s;background:#fff;';
+      card.className='dk-card';
+      card.style.cssText='display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:8px;margin-bottom:10px;cursor:pointer;transition:box-shadow .15s;';
       card.addEventListener('mouseenter',function(){this.style.boxShadow='0 2px 8px rgba(0,0,0,.08)';});
       card.addEventListener('mouseleave',function(){this.style.boxShadow='none';});
       card.addEventListener('click',function(){openProjectSummary(p.id);});
@@ -4098,7 +4099,8 @@ function openWorkOrderModal(editWoId){
   var modal=document.createElement('div');modal.id='wo-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
   var box=document.createElement('div');
-  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:520px;max-width:94vw;max-height:90vh;overflow-y:auto;';
+  box.className='dk-card';
+  box.style.cssText='border-radius:10px;padding:24px;width:520px;max-width:94vw;max-height:90vh;overflow-y:auto;';
   // Build proposal options
   var propOpts='<option value="">— None —</option>';
   linked.forEach(function(qid){
