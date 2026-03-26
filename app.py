@@ -560,6 +560,7 @@ def co_save():
             'line_items': data.get('line_items', []),
             'orig_contract_amount': data.get('orig_contract_amount', 0),
             'description': data.get('description', ''),
+            'project_number': data.get('project_number', ''),
         }
         payload = {
             'co_number': data.get('co_number', 1),

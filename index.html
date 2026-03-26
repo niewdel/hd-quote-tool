@@ -436,6 +436,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-grp">Manage</div>
       <div class="nav-item" data-field-hidden onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents</div>
       <div class="nav-item" data-field-hidden onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
+      <div class="nav-item" data-field-hidden onclick="showPanel('subs',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M7 7a3 3 0 100-6 3 3 0 000 6zm-4 7s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H3zm8-8a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm3 8h-1c0-1.5-.8-3-2.2-3.8.5-.1 1-.2 1.5-.2 2.8 0 4 2 4 3s-1 1-1 1h-1.3z"/></svg>Subcontractors</div>
       <div class="nav-item" onclick="showPanel('schedule',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg>Schedule<span class="nav-badge" id="nav-badge-schedule" style="display:none;"></span></div>
       <div class="nav-grp">Config</div>
       <div class="nav-item" data-field-hidden onclick="showPanel('reports',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h3v12H2zm4.5 3h3v9h-3zM11 7h3v7h-3z"/></svg>Reports</div>
@@ -846,32 +847,22 @@ tr:nth-child(even) td{background:#FAFAFA;}
       </div></div>
 
       <!-- CLIENTS PANEL -->
-      <div class="panel" id="panel-clients"><div class="content" style="padding:0;">
-          <div style="display:flex;min-height:calc(100vh - 80px);">
-            <!-- Left tab nav -->
-            <div id="clients-tab-nav" style="width:160px;border-right:1px solid var(--bdr);padding:16px 0;flex-shrink:0;background:var(--lgray);">
-              <div class="clients-tab-btn on" data-ctab="clients" onclick="showClientsTab('clients')" style="padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-left:3px solid transparent;">Clients</div>
-              <div class="clients-tab-btn" data-ctab="subs" onclick="showClientsTab('subs')" style="padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-left:3px solid transparent;">Subcontractors</div>
-            </div>
-            <!-- Tab content -->
-            <div style="flex:1;padding:16px;">
-              <div id="clients-tab-clients">
+      <div class="panel" id="panel-clients"><div class="content">
                 <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
                   <div id="clients-count" style="font-size:13px;color:var(--dgray);"></div>
                   <input id="clients-search" type="text" placeholder="Search clients..." oninput="filterClients(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
                 </div>
                 <div id="clients-list"></div>
-              </div>
-              <div id="clients-tab-subs" style="display:none;">
+        </div>
+      </div>
+
+      <div class="panel" id="panel-subs"><div class="content">
                 <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
                   <div id="subs-count" style="font-size:13px;color:var(--dgray);"></div>
                   <input id="subs-search" type="text" placeholder="Search subcontractors..." oninput="filterSubs(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
                   <button class="btn btn-red btn-sm" onclick="openSubModal()">+ Add Sub</button>
                 </div>
                 <div id="subs-list"><p style="color:var(--dgray);font-size:13px;">Loading subcontractors...</p></div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -3993,6 +3984,11 @@ async function saveCO(){
     created_by:window._userUsername||''
   };
   if(proposalId)body.proposal_id=parseInt(proposalId);
+  // Include project_number if saving from project context
+  if(window._pendingCOProjectLink){
+    var _coProj=pipelineProposals.find(function(x){return x.id===window._pendingCOProjectLink;});
+    if(_coProj){var _coSnap=typeof _coProj.snap==='string'?JSON.parse(_coProj.snap):_coProj.snap||{};body.project_number=_coSnap.project_number||'';}
+  }
   try{
     var r=await fetch('/change-orders/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     var d=await r.json();
@@ -4042,8 +4038,8 @@ async function loadCOList(){
       var div=document.createElement('div');
       div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
       var coSnap=typeof co.snap==='string'?JSON.parse(co.snap||'{}'):co.snap||{};
-      var coDocNum=coSnap.project_number?(coSnap.project_number+'-CO'+(co.co_number||1)):'';
-      var coDocLabel=coDocNum?'<span style="background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;margin-right:6px;">'+esc(coDocNum)+'</span>':'';
+      var coDocNum=coSnap.project_number?(coSnap.project_number+'-CO'+(co.co_number||1)):('CO-'+co.id);
+      var coDocLabel='<span style="background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;margin-right:6px;">'+esc(coDocNum)+'</span>';
       var createdBy=co.created_by?'<span style="background:#eee;color:var(--dgray);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase;margin-left:6px;">'+esc(co.created_by)+'</span>':'';
       var ts=co.created_at?new Date(co.created_at).toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}):'';
       var netChange=(co.add_total||0)-(co.deduct_total||0);
@@ -4285,7 +4281,7 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients','client-summary':'Client Summary',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule',reports:'Reports'}[id]||id;
+  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients',subs:'Subcontractors','client-summary':'Client Summary',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule',reports:'Reports'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved'){renderSaved();loadCOList();loadWOList();}
@@ -4300,6 +4296,7 @@ function showPanel(id,el){
   if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
   if(id==='pipeline')setTimeout(renderPipeline,50);
   if(id==='clients')setTimeout(renderClients,50);
+  if(id==='subs')setTimeout(renderSubsList,50);
   if(id==='client-summary')renderClientSummary();
   if(id==='workorder')renderWorkOrderDetail();
   if(id==='schedule')renderSchedule();
@@ -5412,6 +5409,8 @@ async function saveQuote(){
     selectedClient:selectedClient,liOverrides:liOverrides,
     sections:sections,concItems:concItems,extraItems:extraItems};
   var p=buildPayload();
+  snap.document_number=p.document_number||'';
+  snap.project_number=p.project_number||'';
   var jcData=calcJobCost();snap.jc_labor_cost=jcData.laborCost;snap.jc_overhead_pct=jcData.ovhPct;snap.jc_total_cost=jcData.totalCost;snap.jc_margin_pct=jcData.marginPct;
   if(Object.keys(evaActuals).length)snap.eva_actuals=JSON.parse(JSON.stringify(evaActuals));
   // Revision tracking: increment on update
@@ -5704,7 +5703,7 @@ async function renderSaved(){
       div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
       var sn=typeof q.snap==='string'?JSON.parse(q.snap||'{}'):q.snap||{};
       var rev=sn.revision||0;
-      var docNum=sn.document_number||sn.project_number||'';
+      var docNum=sn.document_number||sn.project_number||('P-'+q.id);
       var docNumLabel=docNum?'<span style="background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;margin-right:6px;">'+esc(docNum)+'</span>':'';
       var revLabel=rev>0?'<span style="background:#e8f0fe;color:#1a73e8;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">Rev '+String.fromCharCode(64+rev)+'</span>':'';
       var createdBy=q.created_by?'<span style="background:#eee;color:var(--dgray);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase;margin-left:6px;">'+esc(q.created_by)+'</span>':'';
@@ -6295,15 +6294,6 @@ function filterClients(q){
 }
 
 // -- Clients Tab Switcher --
-function showClientsTab(tab){
-  document.querySelectorAll('.clients-tab-btn').forEach(function(b){b.classList.toggle('on',b.dataset.ctab===tab);});
-  var cTab=document.getElementById('clients-tab-clients');
-  var sTab=document.getElementById('clients-tab-subs');
-  if(cTab)cTab.style.display=tab==='clients'?'':'none';
-  if(sTab)sTab.style.display=tab==='subs'?'':'none';
-  if(tab==='subs')renderSubsList();
-}
-
 // -- Subcontractors Management --
 var subsList=[];
 function renderSubsList(){

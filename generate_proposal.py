@@ -148,22 +148,22 @@ class CoverPage(Flowable):
         c.setLineWidth(0.75)
         c.line(mid - 2.6*inch, ah * 0.437, mid + 2.6*inch, ah * 0.437)
 
-        # ~15% more spacing below divider before subtitle
+        # Subtitle with more spacing below divider
         c.setFont('Helvetica', 18)
         c.setFillColor(DGRAY)
-        c.drawCentredString(mid, ah * 0.408, 'Proposal & Contract')
+        c.drawCentredString(mid, ah * 0.400, 'Proposal & Contract')
 
         doc_num = d.get('document_number', '')
         if doc_num:
             c.setFont('Helvetica-Bold', 12)
             c.setFillColor(RED)
-            c.drawCentredString(mid, ah * 0.384, doc_num)
+            c.drawCentredString(mid, ah * 0.370, doc_num)
 
         date_str = d.get('date', '')
         if date_str:
             c.setFont('Helvetica', 13)
             c.setFillColor(colors.HexColor('#999999'))
-            c.drawCentredString(mid, ah * (0.362 if doc_num else 0.384), date_str)
+            c.drawCentredString(mid, ah * (0.342 if doc_num else 0.370), date_str)
 
         fy = 0.55 * inch
         lx = aw * 0.18
@@ -174,31 +174,23 @@ class CoverPage(Flowable):
         c.setFillColor(BLACK)
         c.drawString(lx, fy + 0.75*inch, 'Prepared by:')
         y = fy + 0.53*inch
-        c.setFont('Helvetica-Bold', 10)
+        c.setFont('Helvetica', 10)
         c.setFillColor(DGRAY)
         c.drawString(lx, y, d.get('sender_name', '')); y -= line_h
         c.setFont('Helvetica', 9)
         if d.get('company'):
-            c.drawString(lx, y, d.get('company', 'HD Hauling & Grading')); y -= line_h
-        if d.get('sender_email'):
-            c.drawString(lx, y, d['sender_email']); y -= line_h
-        if d.get('sender_phone'):
-            c.drawString(lx, y, d['sender_phone'])
+            c.drawString(lx, y, d.get('company', 'HD Hauling & Grading'))
 
         c.setFont('Helvetica-Bold', 10)
         c.setFillColor(BLACK)
         c.drawString(rx, fy + 0.75*inch, 'Prepared for:')
         y = fy + 0.53*inch
-        c.setFont('Helvetica-Bold', 10)
+        c.setFont('Helvetica', 10)
         c.setFillColor(DGRAY)
         c.drawString(rx, y, d.get('client_name', '')); y -= line_h
         c.setFont('Helvetica', 9)
         if d.get('client_company'):
-            c.drawString(rx, y, d['client_company']); y -= line_h
-        if d.get('client_email'):
-            c.drawString(rx, y, d['client_email']); y -= line_h
-        if d.get('client_phone'):
-            c.drawString(rx, y, d['client_phone'])
+            c.drawString(rx, y, d['client_company'])
 
 def info_block(data, st):
     """Option C — single horizontal band, no boxes, subtle top/bottom lines,
@@ -207,31 +199,34 @@ def info_block(data, st):
     FW = W - inch  # full usable width
 
     title_s  = ParagraphStyle('c_t',   fontName='Helvetica-Bold', fontSize=11,
-                               textColor=BLACK, leading=14)
+                               textColor=BLACK, leading=14, alignment=TA_CENTER)
     addr_s   = ParagraphStyle('c_a',   fontName='Helvetica',      fontSize=8,
-                               textColor=DGRAY, leading=11)
+                               textColor=DGRAY, leading=11, alignment=TA_CENTER)
     date_s   = ParagraphStyle('c_d',   fontName='Helvetica-Bold', fontSize=8,
-                               textColor=RED,   leading=11)
+                               textColor=RED,   leading=11, alignment=TA_CENTER)
     sec_s    = ParagraphStyle('c_sec', fontName='Helvetica-Bold', fontSize=7,
                                textColor=RED,   leading=9,  spaceAfter=2)
-    name_s   = ParagraphStyle('c_n',   fontName='Helvetica-Bold', fontSize=9,
+    name_s   = ParagraphStyle('c_n',   fontName='Helvetica',      fontSize=9,
                                textColor=BLACK, leading=12)
     detail_s = ParagraphStyle('c_det', fontName='Helvetica',      fontSize=8,
                                textColor=DGRAY, leading=11)
 
     proj_cell = [
+        Spacer(1, 4),
         Paragraph(data.get('project_name', ''), title_s),
+        Spacer(1, 4),
         Paragraph(', '.join(filter(None, [data.get('address',''), data.get('city_state','')])), addr_s),
-        Spacer(1, 3),
+        Spacer(1, 4),
         Paragraph(data.get('date', ''), date_s),
+        Spacer(1, 4),
     ]
 
     by_cell = [
         Paragraph('PREPARED BY', sec_s),
         Paragraph(data.get('sender_name',  ''), name_s),
-        Paragraph(data.get('sender_email', ''), detail_s),
-        Paragraph(data.get('sender_phone', ''), detail_s),
     ]
+    if data.get('company'):
+        by_cell.append(Paragraph(data['company'], detail_s))
 
     for_parts = [
         Paragraph('PREPARED FOR', sec_s),
@@ -239,10 +234,6 @@ def info_block(data, st):
     ]
     if data.get('client_company'):
         for_parts.append(Paragraph(data['client_company'], detail_s))
-    if data.get('client_email'):
-        for_parts.append(Paragraph(data['client_email'], detail_s))
-    if data.get('client_phone'):
-        for_parts.append(Paragraph(data['client_phone'], detail_s))
     for_cell = for_parts
 
     cw_proj = FW * 0.42
@@ -262,7 +253,8 @@ def info_block(data, st):
         ('LINEBEFORE',    (2,0),(2,-1),  1.0, MGRAY),
         ('LINEABOVE',     (0,0),(-1,0),  1.0, BLACK),
         ('LINEBELOW',     (0,-1),(-1,-1),1.0, MGRAY),
-        ('VALIGN',        (0,0),(-1,-1), 'TOP'),
+        ('VALIGN',        (0,0),(0,-1),  'MIDDLE'),
+        ('VALIGN',        (1,0),(-1,-1), 'TOP'),
         ('BACKGROUND',    (0,0),(-1,-1), WHITE),
     ]))
     return wrapper
