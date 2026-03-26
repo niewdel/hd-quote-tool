@@ -216,6 +216,25 @@ body.dark #sched-cal-grid>div{background:#222 !important;border-color:#444 !impo
 body.dark #sched-cal-grid .dk-today{background:#2a1a1a !important;border-color:#CC0000 !important;}
 body.dark #sched-cal-grid .dk-day-hdr{background:#1e1e1e !important;}
 body.dark #sched-cal-grid .dk-today-hdr{background:var(--red) !important;}
+/* Weather animated backgrounds */
+@keyframes wx-rain{0%{transform:translateY(-100%) translateX(0);}100%{transform:translateY(200%) translateX(-20px);}}
+@keyframes wx-snow{0%{transform:translateY(-100%) rotate(0deg);}100%{transform:translateY(300%) rotate(360deg);}}
+@keyframes wx-cloud-drift{0%{transform:translateX(-10%);}50%{transform:translateX(5%);}100%{transform:translateX(-10%);}}
+@keyframes wx-cloud-drift2{0%{transform:translateX(5%);}50%{transform:translateX(-8%);}100%{transform:translateX(5%);}}
+@keyframes wx-sun-pulse{0%{opacity:.15;transform:scale(1);}50%{opacity:.25;transform:scale(1.08);}100%{opacity:.15;transform:scale(1);}}
+@keyframes wx-sun-rotate{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+@keyframes wx-fog-drift{0%{transform:translateX(-5%);opacity:.3;}50%{transform:translateX(5%);opacity:.5;}100%{transform:translateX(-5%);opacity:.3;}}
+@keyframes wx-lightning{0%,100%{opacity:0;}92%{opacity:0;}94%{opacity:.7;}96%{opacity:0;}97%{opacity:.4;}98%{opacity:0;}}
+@keyframes wx-ray{0%{opacity:.04;transform:scaleY(1);}50%{opacity:.08;transform:scaleY(1.1);}100%{opacity:.04;transform:scaleY(1);}}
+.wx-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;border-radius:inherit;}
+.wx-bg-content{position:relative;z-index:1;}
+.wx-drop{position:absolute;width:1.5px;background:linear-gradient(to bottom,transparent,rgba(150,200,255,.6));border-radius:0 0 2px 2px;animation:wx-rain linear infinite;}
+.wx-flake{position:absolute;border-radius:50%;background:rgba(255,255,255,.7);animation:wx-snow linear infinite;}
+.wx-cloud{position:absolute;border-radius:50%;filter:blur(20px);}
+.wx-sun-glow{position:absolute;border-radius:50%;animation:wx-sun-pulse 4s ease-in-out infinite;}
+.wx-sun-rays{position:absolute;animation:wx-sun-rotate 30s linear infinite;}
+.wx-fog-band{position:absolute;width:120%;height:30%;border-radius:50%;filter:blur(30px);animation:wx-fog-drift ease-in-out infinite;}
+.wx-lightning-flash{position:absolute;inset:0;background:rgba(255,255,255,.15);animation:wx-lightning 6s ease-in-out infinite;}
 /* Weather widget — dark banner is already dark, forecast cards need dark overrides */
 body.dark [data-weather-day]{background:#2a2a2a !important;border-color:#444 !important;color:#e0e0e0 !important;}
 body.dark [data-weather-day][data-weather-selected]{background:#3a1a1a !important;border-color:#CC0000 !important;}
@@ -9080,6 +9099,83 @@ function windDir(deg){
 function fmtTime12(iso){if(!iso)return '';var d=new Date(iso);var h=d.getHours();var m=d.getMinutes();var ampm=h>=12?'PM':'AM';h=h%12;if(!h)h=12;return h+':'+String(m).padStart(2,'0')+' '+ampm;}
 function uvLabel(uv){if(uv<=2)return{text:'Low',color:'#27500A'};if(uv<=5)return{text:'Moderate',color:'#F5A623'};if(uv<=7)return{text:'High',color:'#E65100'};if(uv<=10)return{text:'Very High',color:'#CC0000'};return{text:'Extreme',color:'#880088'};}
 
+function _wxBgHtml(code){
+  // Weather code -> category
+  var cat='clear';
+  if(code===0)cat='clear';
+  else if(code<=2)cat='partly';
+  else if(code===3)cat='overcast';
+  else if(code===45||code===48)cat='fog';
+  else if(code>=51&&code<=55)cat='drizzle';
+  else if(code>=61&&code<=65||code>=80&&code<=82)cat='rain';
+  else if(code>=71&&code<=75)cat='snow';
+  else if(code>=95)cat='storm';
+  var h='<div class="wx-bg">';
+  if(cat==='clear'){
+    // Golden sun glow + rotating ray pattern
+    h+='<div style="position:absolute;top:-30px;right:10%;width:140px;height:140px;background:radial-gradient(circle,rgba(255,180,50,.3) 0%,rgba(255,120,20,.1) 40%,transparent 70%);border-radius:50%;animation:wx-sun-pulse 5s ease-in-out infinite;"></div>';
+    // Sun rays as thin lines radiating out
+    for(var r=0;r<12;r++){
+      var angle=r*30;
+      h+='<div style="position:absolute;top:0;right:calc(10% + 62px);width:2px;height:60px;background:linear-gradient(to bottom,rgba(255,200,80,.12),transparent);transform-origin:bottom center;transform:rotate('+angle+'deg) translateY(-50px);animation:wx-ray '+(3+r%3)+'s ease-in-out infinite;animation-delay:'+(-r*0.4)+'s;"></div>';
+    }
+    // Warm gradient base
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,140,0,.08) 0%,rgba(255,200,50,.05) 40%,transparent 70%);"></div>';
+  } else if(cat==='partly'){
+    // Soft sun glow + drifting cloud wisps
+    h+='<div style="position:absolute;top:-20px;right:15%;width:100px;height:100px;background:radial-gradient(circle,rgba(255,180,50,.2) 0%,transparent 60%);border-radius:50%;animation:wx-sun-pulse 6s ease-in-out infinite;"></div>';
+    h+='<div class="wx-cloud" style="top:10%;left:20%;width:160px;height:50px;background:rgba(180,200,220,.15);animation:wx-cloud-drift 20s ease-in-out infinite;"></div>';
+    h+='<div class="wx-cloud" style="top:40%;left:55%;width:120px;height:40px;background:rgba(180,200,220,.1);animation:wx-cloud-drift2 25s ease-in-out infinite;"></div>';
+  } else if(cat==='overcast'){
+    // Heavy layered clouds
+    h+='<div class="wx-cloud" style="top:-10%;left:5%;width:200px;height:70px;background:rgba(150,160,175,.2);animation:wx-cloud-drift 18s ease-in-out infinite;"></div>';
+    h+='<div class="wx-cloud" style="top:20%;left:40%;width:250px;height:60px;background:rgba(140,150,165,.18);animation:wx-cloud-drift2 22s ease-in-out infinite;"></div>';
+    h+='<div class="wx-cloud" style="top:50%;left:15%;width:180px;height:50px;background:rgba(130,140,155,.15);animation:wx-cloud-drift 28s ease-in-out infinite;animation-delay:-5s;"></div>';
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(100,110,130,.08) 0%,rgba(80,90,105,.04) 100%);"></div>';
+  } else if(cat==='fog'){
+    // Drifting fog bands
+    h+='<div class="wx-fog-band" style="top:10%;left:-10%;background:rgba(180,190,200,.3);animation-duration:12s;"></div>';
+    h+='<div class="wx-fog-band" style="top:40%;left:-5%;background:rgba(170,180,195,.25);animation-duration:16s;animation-delay:-4s;"></div>';
+    h+='<div class="wx-fog-band" style="top:65%;left:-8%;background:rgba(160,170,185,.2);animation-duration:20s;animation-delay:-8s;"></div>';
+  } else if(cat==='drizzle'){
+    // Gentle thin drops + cloud layer
+    h+='<div class="wx-cloud" style="top:-5%;left:10%;width:200px;height:50px;background:rgba(140,160,180,.15);animation:wx-cloud-drift 22s ease-in-out infinite;"></div>';
+    for(var d=0;d<25;d++){
+      var x=Math.random()*100;var dur=1.5+Math.random()*1;var delay=-Math.random()*3;var ht=15+Math.random()*10;
+      h+='<div class="wx-drop" style="left:'+x+'%;height:'+ht+'px;opacity:.3;animation-duration:'+dur+'s;animation-delay:'+delay+'s;"></div>';
+    }
+  } else if(cat==='rain'){
+    // Dense rain streaks + dark clouds
+    h+='<div class="wx-cloud" style="top:-15%;left:0%;width:300px;height:60px;background:rgba(80,100,130,.2);animation:wx-cloud-drift 15s ease-in-out infinite;"></div>';
+    h+='<div class="wx-cloud" style="top:5%;left:40%;width:250px;height:50px;background:rgba(70,90,120,.15);animation:wx-cloud-drift2 20s ease-in-out infinite;"></div>';
+    for(var d=0;d<50;d++){
+      var x=Math.random()*100;var dur=0.6+Math.random()*0.8;var delay=-Math.random()*2;var ht=20+Math.random()*15;var op=0.3+Math.random()*0.3;
+      h+='<div class="wx-drop" style="left:'+x+'%;height:'+ht+'px;opacity:'+op+';animation-duration:'+dur+'s;animation-delay:'+delay+'s;"></div>';
+    }
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(40,60,90,.1) 0%,rgba(30,50,80,.06) 100%);"></div>';
+  } else if(cat==='snow'){
+    // Drifting snowflakes
+    for(var s=0;s<35;s++){
+      var x=Math.random()*100;var sz=2+Math.random()*4;var dur=4+Math.random()*6;var delay=-Math.random()*8;var op=0.4+Math.random()*0.4;
+      h+='<div class="wx-flake" style="left:'+x+'%;width:'+sz+'px;height:'+sz+'px;opacity:'+op+';animation-duration:'+dur+'s;animation-delay:'+delay+'s;"></div>';
+    }
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(200,210,230,.08) 0%,rgba(180,195,220,.04) 100%);"></div>';
+  } else if(cat==='storm'){
+    // Rain + lightning flashes + dark clouds
+    h+='<div class="wx-cloud" style="top:-15%;left:-5%;width:350px;height:80px;background:rgba(50,55,70,.25);animation:wx-cloud-drift 12s ease-in-out infinite;"></div>';
+    h+='<div class="wx-cloud" style="top:10%;left:35%;width:280px;height:60px;background:rgba(40,45,60,.2);animation:wx-cloud-drift2 16s ease-in-out infinite;"></div>';
+    for(var d=0;d<45;d++){
+      var x=Math.random()*100;var dur=0.5+Math.random()*0.6;var delay=-Math.random()*2;var ht=22+Math.random()*18;var op=0.3+Math.random()*0.35;
+      h+='<div class="wx-drop" style="left:'+x+'%;height:'+ht+'px;opacity:'+op+';animation-duration:'+dur+'s;animation-delay:'+delay+'s;"></div>';
+    }
+    h+='<div class="wx-lightning-flash" style="animation-delay:0s;"></div>';
+    h+='<div class="wx-lightning-flash" style="animation-delay:-3.5s;opacity:.7;"></div>';
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,30,50,.12) 0%,rgba(20,20,40,.08) 100%);"></div>';
+  }
+  h+='</div>';
+  return h;
+}
+
 function renderWeatherWidget(elId){
   var el=document.getElementById(elId);if(!el)return;
   fetchWeather(function(data){
@@ -9108,9 +9204,11 @@ function renderWeatherWidget(elId){
     var windWarn=windSpd>=20||windGust>=35;
 
     var h='<div class="card-body" style="padding:0;overflow:hidden;">';
-    // Top: current conditions — dark header (wrapped in data-weather-banner for day selection)
-    h+='<div data-weather-banner>';
-    h+='<div style="background:#1A1A1A;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">';
+    // Top: current conditions — dark header with animated weather background
+    h+='<div data-weather-banner data-weather-code="'+curCode+'">';
+    h+='<div style="background:#1A1A1A;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:relative;overflow:hidden;">';
+    h+=_wxBgHtml(curCode);
+    h+='<div class="wx-bg-content" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;width:100%;">';
     h+='<div style="flex-shrink:0;text-align:center;min-width:80px;">';
     h+='<div style="font-size:42px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));">'+curIcon+'</div>';
     h+='<div style="font-size:10px;color:#aaa;margin-top:4px;text-transform:uppercase;letter-spacing:.5px;">'+esc(curDesc)+'</div>';
@@ -9156,6 +9254,7 @@ function renderWeatherWidget(elId){
     h+=fmtTime12(sunset);
     h+='</div>';
     h+='</div>';
+    h+='</div>'; // close wx-bg-content
     h+='</div>';
 
     // Wind warning banner
@@ -9236,7 +9335,10 @@ function _updateWeatherBanner(el,daily,idx,dayNames){
   var dt=new Date(daily.time[idx]+'T12:00:00');
   var dayLabel=isToday?'Today':dayNames[dt.getDay()]+', '+(dt.getMonth()+1)+'/'+dt.getDate();
 
-  var h='<div style="background:#1A1A1A;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">';
+  banner.setAttribute('data-weather-code',code);
+  var h='<div style="background:#1A1A1A;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:relative;overflow:hidden;">';
+  h+=_wxBgHtml(code);
+  h+='<div class="wx-bg-content" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;width:100%;">';
   h+='<div style="flex-shrink:0;text-align:center;min-width:80px;">';
   h+='<div style="font-size:42px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));">'+icon+'</div>';
   h+='<div style="font-size:10px;color:#aaa;margin-top:4px;text-transform:uppercase;letter-spacing:.5px;">'+esc(desc)+'</div>';
@@ -9279,6 +9381,7 @@ function _updateWeatherBanner(el,daily,idx,dayNames){
   h+=fmtTime12(sunset);
   h+='</div>';
   h+='</div>';
+  h+='</div>'; // close wx-bg-content
   h+='</div>';
   // Wind warning banner
   if(windWarn){
