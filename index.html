@@ -195,13 +195,15 @@ body.dark [style*="border:2px solid var(--red)"]{border-color:#ff4444 !important
 body.dark .sb{background:#111;}
 /* Login bar stays white even in dark mode (login screen is already dark-themed) */
 body.dark .login-bar{background:#ffffff;}
-/* Schedule — queue cards and calendar day columns */
-body.dark #sched-queue [style*="background:#fff"]{background:#2a2a2a !important;border-color:#444 !important;}
+/* Dynamic elements created via JS — use .dk-card class for dark mode */
+.dk-card{background:#fff;border:1px solid var(--bdr);border-radius:8px;}
+body.dark .dk-card{background:#222 !important;border-color:#333 !important;color:#e0e0e0 !important;}
+body.dark .dk-card select{background:#2a2a2a !important;color:#e0e0e0 !important;border-color:#444 !important;}
+/* Schedule — calendar day columns */
 body.dark #sched-cal-grid>div{background:#222 !important;border-color:#444 !important;}
-body.dark #sched-cal-grid>div[style*="background:#FFF5F5"]{background:#2a1a1a !important;border-color:#CC0000 !important;}
-body.dark #sched-cal-grid>div[style*="border-color:var(--red)"]{border-color:#CC0000 !important;}
-/* Mark-day-complete and other dynamically created modals */
-body.dark [style*="background:#fff;border-radius:10px"]{background:#222 !important;color:#e0e0e0 !important;}
+body.dark #sched-cal-grid .dk-today{background:#2a1a1a !important;border-color:#CC0000 !important;}
+body.dark #sched-cal-grid .dk-day-hdr{background:#1e1e1e !important;}
+body.dark #sched-cal-grid .dk-today-hdr{background:var(--red) !important;}
 /* Weather widget — dark banner is already dark, forecast cards need dark overrides */
 body.dark [data-weather-day]{background:#2a2a2a !important;border-color:#444 !important;color:#e0e0e0 !important;}
 body.dark [data-weather-day] div{color:inherit;}
@@ -3296,12 +3298,13 @@ function _renderProjectSummaryInner(proj){
   var fin=document.getElementById('ps-financials');
   if(fin&&canSeePricing()){
     fin.innerHTML='';
-    [{lbl:'Proposal Total',val:'$'+Math.round(totals.proposalTotal).toLocaleString(),color:'#111'},
+    [{lbl:'Proposal Total',val:'$'+Math.round(totals.proposalTotal).toLocaleString(),color:'var(--blk)'},
      {lbl:'Change Orders (Net)',val:(totals.coNet>=0?'+':'')+' $'+Math.round(Math.abs(totals.coNet)).toLocaleString(),color:totals.coNet>=0?'#27500A':'var(--red)'},
      {lbl:'Project Total',val:'$'+Math.round(totals.grandTotal).toLocaleString(),color:'var(--red)'}
     ].forEach(function(s){
       var box=document.createElement('div');
-      box.style.cssText='background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:16px 20px;';
+      box.className='dk-card';
+      box.style.cssText='padding:16px 20px;';
       box.innerHTML='<div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--dgray);letter-spacing:.5px;margin-bottom:6px;">'+s.lbl+'</div>'
         +'<div style="font-size:24px;font-weight:800;color:'+s.color+';">'+s.val+'</div>';
       fin.appendChild(box);
@@ -3390,7 +3393,8 @@ function _renderProjectSummaryInner(proj){
     if(woList.length){
       woList.forEach(function(wo,idx){
         var card=document.createElement('div');
-        card.style.cssText='border:1px solid var(--bdr);border-radius:8px;padding:12px 14px;margin-bottom:10px;background:#FAFAFA;';
+        card.className='dk-card';
+        card.style.cssText='padding:12px 14px;margin-bottom:10px;';
         var statusColors={pending:'#999',active:'#2B5FA6',complete:'#27500A'};
         var statusLabels={pending:'Pending',active:'Active',complete:'Complete'};
         // Top row: name + status badge
@@ -3427,7 +3431,7 @@ function _renderProjectSummaryInner(proj){
         // Action row
         var actRow=document.createElement('div');
         actRow.style.cssText='display:flex;align-items:center;gap:8px;margin-top:6px;';
-        var statusBtn=document.createElement('select');statusBtn.style.cssText='font-size:11px;padding:3px 8px;border:1px solid var(--bdr);border-radius:4px;background:#fff;cursor:pointer;';
+        var statusBtn=document.createElement('select');statusBtn.style.cssText='font-size:11px;padding:3px 8px;border:1px solid var(--bdr);border-radius:4px;cursor:pointer;';
         ['pending','active','complete'].forEach(function(s){
           var opt=document.createElement('option');opt.value=s;opt.textContent=s.charAt(0).toUpperCase()+s.slice(1);
           if(wo.status===s)opt.selected=true;
@@ -8338,7 +8342,8 @@ function renderSchedule(){
         }
       });
       var card=document.createElement('div');
-      card.style.cssText='padding:12px 14px;margin-bottom:8px;background:#fff;border-radius:8px;border:1px solid var(--bdr);cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.06);';
+      card.className='dk-card';
+      card.style.cssText='padding:12px 14px;margin-bottom:8px;cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.06);';
       card.setAttribute('draggable','true');
       card.dataset.woId=item.wo.id;
       card.dataset.projectId=item.project.id;
@@ -8396,16 +8401,19 @@ function renderSchedule(){
     var isOtherMonth=_schedView==='month'&&dayDate.getMonth()!==currentMonth;
     var minH=_schedView==='month'?'80px':(_schedView==='day'?'400px':'180px');
     var col=document.createElement('div');
-    col.style.cssText='border:1px solid var(--bdr);border-radius:6px;min-height:'+minH+';display:flex;flex-direction:column;'+(isToday?'background:#FFF5F5;border-color:var(--red);':'')+(isOtherMonth?'opacity:.4;':'');
+    col.className=isToday?'dk-today':'';
+    col.style.cssText='border:1px solid var(--bdr);border-radius:6px;min-height:'+minH+';display:flex;flex-direction:column;background:#fff;'+(isToday?'background:#FFF5F5;border-color:var(--red);':'')+(isOtherMonth?'opacity:.4;':'');
     col.dataset.date=dateStr;
 
     // Day header
     var hdr=document.createElement('div');
     if(_schedView==='month'){
-      hdr.style.cssText='text-align:center;padding:4px 2px;border-bottom:1px solid var(--bdr);'+(isToday?'background:var(--red);border-radius:5px 5px 0 0;':'background:#FAFAFA;border-radius:5px 5px 0 0;');
+      hdr.className=isToday?'dk-today-hdr':'dk-day-hdr';
+      hdr.style.cssText='text-align:center;padding:4px 2px;border-bottom:1px solid var(--bdr);border-radius:5px 5px 0 0;'+(isToday?'background:var(--red);':'background:#FAFAFA;');
       hdr.innerHTML='<div style="font-size:13px;font-weight:700;'+(isToday?'color:#fff;':'')+'">'+dayDate.getDate()+'</div>';
     } else {
-      hdr.style.cssText='text-align:center;padding:8px 4px;border-bottom:1px solid var(--bdr);'+(isToday?'background:var(--red);border-radius:5px 5px 0 0;':'background:#FAFAFA;border-radius:5px 5px 0 0;');
+      hdr.className=isToday?'dk-today-hdr':'dk-day-hdr';
+      hdr.style.cssText='text-align:center;padding:8px 4px;border-bottom:1px solid var(--bdr);border-radius:5px 5px 0 0;'+(isToday?'background:var(--red);':'background:#FAFAFA;');
       hdr.innerHTML='<div style="font-size:10px;font-weight:700;text-transform:uppercase;'+(isToday?'color:#fff;':'color:var(--dgray);')+'">'+dayNames[dayDate.getDay()]+'</div>'
         +'<div style="font-size:16px;font-weight:800;'+(isToday?'color:#fff;':'')+'">'+dayDate.getDate()+'</div>';
     }
@@ -8503,7 +8511,8 @@ function openMarkDayCompleteModal(){
   var modal=document.createElement('div');modal.id='mark-day-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
   var box=document.createElement('div');
-  box.style.cssText='background:#fff;border-radius:10px;padding:28px;width:500px;max-width:94vw;max-height:90vh;overflow-y:auto;';
+  box.className='dk-card';
+  box.style.cssText='padding:28px;width:500px;max-width:94vw;max-height:90vh;overflow-y:auto;border-radius:10px;';
   var title=document.createElement('h3');
   title.style.cssText='margin:0 0 4px;font-size:16px;font-weight:800;';
   title.textContent='Mark Day Complete';
