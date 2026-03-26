@@ -34,6 +34,9 @@ def sb_url(table, params=''):
 def hash_pin(pin):
     return hashlib.sha256(str(pin).encode()).hexdigest()
 
+def hash_password(pw):
+    return hashlib.sha256(str(pw).encode()).hexdigest()
+
 def log_access(username, full_name, action='login', success=True):
     try:
         ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
@@ -72,7 +75,7 @@ def index():
 def login():
     data = request.get_json() or {}
     username = str(data.get('username', '')).strip().lower()
-    pin = str(data.get('pin', '')).strip()
+    password = str(data.get('password', data.get('pin', ''))).strip()
     users_ok = False
     try:
         r = http.get(sb_url('hd_users', f'?username=eq.{username}&active=eq.true&limit=1'),
@@ -80,30 +83,48 @@ def login():
         if r.status_code == 200:
             users_ok = True
             rows = r.json()
-            if rows and rows[0].get('pin_hash') == hash_pin(pin):
+            if rows:
                 user = rows[0]
-                session['authenticated'] = True
-                session['username'] = user['username']
-                session['full_name'] = user.get('full_name', username)
-                session['role'] = user.get('role', 'user')
-                session['email'] = user.get('email', '')
-                session['phone'] = user.get('phone', '')
-                session.permanent = True
-                log_access(user['username'], user.get('full_name',''), 'login', True)
-                return jsonify({'ok': True, 'role': session['role'], 'full_name': session['full_name'], 'email': session['email'], 'phone': session['phone']})
-            else:
-                log_access(username, '', 'login', False)
-                return jsonify({'error': 'Incorrect username or PIN'}), 401
+                pw_hash = hash_password(password)
+                pin_hash = hash_pin(password)
+                if user.get('password_hash') == pw_hash or user.get('pin_hash') == pin_hash:
+                    session['authenticated'] = True
+                    session['username'] = user['username']
+                    session['full_name'] = user.get('full_name', username)
+                    session['role'] = user.get('role', 'user')
+                    session['email'] = user.get('email', '')
+                    session['phone'] = user.get('phone', '')
+                    session.permanent = True
+                    log_access(user['username'], user.get('full_name',''), 'login', True)
+                    # Get last login from access log
+                    last_login = None
+                    try:
+                        lr = http.get(sb_url('hd_access_log', f'?username=eq.{user["username"]}&action=eq.login&success=eq.true&order=logged_at.desc&limit=2'),
+                                      headers=sb_headers(), timeout=3)
+                        if lr.status_code == 200:
+                            logs = lr.json()
+                            if len(logs) > 1: last_login = logs[1].get('logged_at')
+                    except Exception:
+                        pass
+                    return jsonify({'ok': True, 'role': session['role'], 'full_name': session['full_name'],
+                                    'email': session['email'], 'phone': session['phone'],
+                                    'password_hint': user.get('password_hint', ''),
+                                    'last_login': last_login})
+                else:
+                    log_access(username, '', 'login', False)
+                    # Return password hint if available
+                    hint = rows[0].get('password_hint', '') if rows else ''
+                    return jsonify({'error': 'Incorrect username or password', 'hint': hint}), 401
     except Exception:
         pass
-    if not users_ok and pin == APP_PIN:
+    if not users_ok and password == APP_PIN:
         session['authenticated'] = True
         session['username'] = 'admin'
         session['full_name'] = 'Admin'
         session['role'] = 'admin'
         session.permanent = True
         return jsonify({'ok': True, 'role': 'admin', 'full_name': 'Admin'})
-    return jsonify({'error': 'Incorrect username or PIN'}), 401
+    return jsonify({'error': 'Incorrect username or password'}), 401
 
 @app.route('/auth/logout', methods=['POST'])
 def logout():
@@ -111,6 +132,33 @@ def logout():
         log_access(session.get('username',''), session.get('full_name',''), 'logout', True)
     session.clear()
     return jsonify({'ok': True})
+
+@app.route('/auth/change-password', methods=['POST'])
+@require_auth
+def change_password():
+    data = request.get_json() or {}
+    current = str(data.get('current_password', '')).strip()
+    new_pw = str(data.get('new_password', '')).strip()
+    hint = str(data.get('hint', '')).strip()
+    if not current or not new_pw:
+        return jsonify({'ok': False, 'error': 'Current and new password required'}), 400
+    if len(new_pw) < 6:
+        return jsonify({'ok': False, 'error': 'Password must be at least 6 characters'}), 400
+    username = session.get('username', '')
+    try:
+        r = http.get(sb_url('hd_users', f'?username=eq.{username}&limit=1'), headers=sb_headers(), timeout=5)
+        if r.status_code != 200 or not r.json():
+            return jsonify({'ok': False, 'error': 'User not found'}), 404
+        user = r.json()[0]
+        pw_ok = (user.get('password_hash') == hash_password(current) or user.get('pin_hash') == hash_pin(current))
+        if not pw_ok:
+            return jsonify({'ok': False, 'error': 'Current password is incorrect'}), 401
+        update = {'password_hash': hash_password(new_pw), 'pin_hash': hash_pin(new_pw)}
+        if hint: update['password_hint'] = hint
+        http.patch(sb_url('hd_users', f'?username=eq.{username}'), headers={**sb_headers(), 'Prefer': 'return=minimal'}, json=update, timeout=5)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/auth/check')
 def auth_check():
@@ -393,7 +441,9 @@ def get_users():
     try:
         r = http.get(sb_url('hd_users', '?order=created_at.asc'), headers=sb_headers(), timeout=5)
         users = r.json() if r.status_code == 200 else []
-        for u in users: u.pop('pin_hash', None)
+        for u in users:
+            u.pop('pin_hash', None)
+            u.pop('password_hash', None)
         return jsonify({'ok': True, 'users': users})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
@@ -408,10 +458,11 @@ def create_user():
     email = str(data.get('email','')).strip()
     phone = str(data.get('phone','')).strip()
     role = data.get('role','user')
-    if not username or not pin: return jsonify({'ok':False,'error':'Username and PIN required'}), 400
+    hint = str(data.get('password_hint', data.get('hint', ''))).strip()
+    if not username or not pin: return jsonify({'ok':False,'error':'Username and password required'}), 400
     if role not in ('admin','user','field'): role = 'user'
     try:
-        r = http.post(sb_url('hd_users'), headers=sb_headers(), json={'username':username,'full_name':full_name,'email':email,'phone':phone,'pin_hash':hash_pin(pin),'role':role,'active':True,'created_by':session.get('username','admin')}, timeout=5)
+        r = http.post(sb_url('hd_users'), headers=sb_headers(), json={'username':username,'full_name':full_name,'email':email,'phone':phone,'password_hash':hash_password(pin),'pin_hash':hash_pin(pin),'role':role,'active':True,'created_by':session.get('username','admin'),'password_hint':hint}, timeout=5)
         if r.status_code in (200,201):
             user = r.json()[0] if isinstance(r.json(),list) else r.json()
             user.pop('pin_hash',None)
@@ -433,7 +484,13 @@ def update_user(uid):
         if new_un: update['username'] = new_un
     if 'role' in data and data['role'] in ('admin','user','field'): update['role'] = data['role']
     if 'active' in data: update['active'] = bool(data['active'])
-    if 'pin' in data and data['pin']: update['pin_hash'] = hash_pin(data['pin'])
+    if 'password' in data and data['password']:
+        update['password_hash'] = hash_password(data['password'])
+        update['pin_hash'] = hash_pin(data['password'])
+    elif 'pin' in data and data['pin']:
+        update['pin_hash'] = hash_pin(data['pin'])
+        update['password_hash'] = hash_password(data['pin'])
+    if 'password_hint' in data: update['password_hint'] = str(data['password_hint']).strip()
     if not update: return jsonify({'ok':False,'error':'Nothing to update'}), 400
     try:
         # If username is changing, look up the old one first
