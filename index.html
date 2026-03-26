@@ -5143,7 +5143,8 @@ function renderMatTable(){
   var tbody = document.getElementById('mat-tbody');
   if(!tbody) return;
   tbody.innerHTML = '';
-  LTYPES.forEach(function(k,idx){
+  var sorted=LTYPES.slice().sort(function(a,b){var ta=MAT_TRADE[a]||'z';var tb=MAT_TRADE[b]||'z';return ta<tb?-1:ta>tb?1:0;});
+  sorted.forEach(function(k,idx){
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid var(--bdr)';
     if(idx%2)tr.style.background='var(--lgray)';
