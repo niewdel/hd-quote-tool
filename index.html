@@ -21,27 +21,196 @@
 }
 body{font-family:var(--font);background:#EBEBEB;color:var(--blk);font-size:14px;line-height:1.5;}
 
-/* Dark Mode */
-body.dark{background:#1a1a1a;color:#e0e0e0;}
+/* Dark Mode — CSS Variable Overrides */
+body.dark{
+  --blk:#e0e0e0;--wht:#1a1a1a;--lgray:#2a2a2a;--mgray:#333;
+  --dgray:#aaa;--bdr:#444;
+  background:#1a1a1a;color:#e0e0e0;
+}
 body.dark .main{background:#1a1a1a;}
+/* Topbar */
 body.dark .topbar{background:#222;border-bottom-color:#333;}
-body.dark .card,body.dark .modal{background:#222;border-color:#333;color:#e0e0e0;}
-body.dark input,body.dark select,body.dark textarea{background:#2a2a2a;color:#e0e0e0;border-color:#444;}
-body.dark input::placeholder,body.dark textarea::placeholder{color:#666;}
-body.dark table th{background:#2a2a2a;color:#e0e0e0;}
-body.dark table td{border-color:#333;color:#e0e0e0;}
-body.dark table tr:hover{background:#2a2a2a;}
-body.dark .btn-outline{color:#e0e0e0;border-color:#555;}
-body.dark .btn-outline:hover{background:#333;}
+body.dark .topbar-title{color:#e0e0e0;}
+/* Cards & modals */
+body.dark .card{background:#222;border-color:#333;color:#e0e0e0;}
+body.dark .card-hdr{background:#1e1e1e !important;border-bottom-color:#333;}
+body.dark .modal{background:#222;border-color:#333;color:#e0e0e0;}
 body.dark .modal-overlay{background:rgba(0,0,0,.75);}
 body.dark .modal-hdr{border-bottom-color:#333;}
-body.dark .topbar-title{color:#e0e0e0;}
-body.dark .kanban-col{background:#222;border-color:#333;}
-body.dark .kanban-card{background:#2a2a2a;border-color:#444;color:#e0e0e0;}
-body.dark .stat-card{background:#222;border-color:#333;color:#e0e0e0;}
+body.dark .modal-foot{border-top-color:#333;}
+body.dark .modal-body input,body.dark .modal-body textarea{background:#2a2a2a;color:#e0e0e0;border-color:#444;}
+/* Forms */
+body.dark input,body.dark select,body.dark textarea{background:#2a2a2a;color:#e0e0e0;border-color:#444;}
+body.dark input::placeholder,body.dark textarea::placeholder{color:#666;}
+body.dark input:focus,body.dark select:focus,body.dark textarea:focus{border-color:#777;}
+/* Buttons */
+body.dark .btn-sec{background:#2a2a2a;color:#e0e0e0;border-color:#444;}
+body.dark .btn-sec:hover{background:#333;}
+body.dark .btn-outline{color:#e0e0e0;border-color:#555;}
+body.dark .btn-outline:hover{background:#333;}
+body.dark .btn-ico{color:#aaa;}
+body.dark .btn-ico:hover{color:#ff4444;}
+/* Tables */
+body.dark table th{background:#2a2a2a;color:#ccc;}
+body.dark table td{border-color:#333;color:#e0e0e0;}
+body.dark table tr:hover{background:#2a2a2a;}
+body.dark tr:nth-child(even) td{background:#262626 !important;}
+body.dark .admin-table th{background:#2a2a2a;color:#aaa;border-bottom-color:#444;}
+body.dark .admin-table tr:hover td{background:#2a2a2a;}
+/* Sections (proposal builder) */
+body.dark .sec{background:#222;border-color:#333;}
+body.dark .sec-hdr{background:#1e1e1e !important;border-bottom-color:#333;}
+body.dark .sec-foot{background:#1e1e1e !important;border-top-color:#333;}
+body.dark .sec-foot-item .sf-val{color:#e0e0e0;}
+body.dark .lyr-row{border-bottom-color:#333;}
+body.dark .lyr-row:hover{background:#262626;}
+body.dark .lyr-result{background:#1e1e1e !important;color:#aaa;}
+body.dark .lyr-result b{color:#e0e0e0;}
+body.dark .lyr-desc{color:#aaa;}
+body.dark .lyr-top input[type="text"]{color:#e0e0e0;}
+/* Chips & presets */
+body.dark .chip{background:#2a2a2a;border-color:#444;color:#e0e0e0;}
+body.dark .chip:hover{border-color:var(--red);color:#ff4444;}
+/* Metrics */
+body.dark .metric{background:#222;border-color:#333;}
+body.dark .metric-val{color:#e0e0e0;}
+body.dark .metric-lbl{color:#aaa;}
+/* Analytics cards */
+body.dark .a-card{background:#222;border-color:#333;}
+body.dark .a-card-val{color:#e0e0e0;}
+body.dark .a-card-lbl{color:#aaa;}
+body.dark .a-card-sub{color:#888;}
+/* Pipeline / Kanban */
+body.dark .kb-col{background:#1e1e1e;}
+body.dark .kb-card{background:#2a2a2a;border-color:#444;color:#e0e0e0;}
+body.dark .kb-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.3);}
+body.dark .kb-stat{background:#222;border-color:#333;}
+body.dark .kb-stat-val{color:#e0e0e0;}
+body.dark .kb-stat-lbl{color:#aaa;}
+body.dark .kb-move-btn{border-color:#444;color:#aaa;}
+body.dark .kb-move-btn:hover{background:#333;color:#e0e0e0;}
+body.dark .kb-add-btn{border-color:#444;color:#888;}
+body.dark .kb-add-btn:hover{border-color:#666;background:#2a2a2a;}
+body.dark .kb-stage-select{background:#2a2a2a;color:#e0e0e0;border-color:#444;}
+/* Client cards */
+body.dark .client-card{background:#222;border-color:#333;}
+body.dark .sub-card{background:#222;border-color:#333;}
+body.dark .clients-tab-btn{color:#aaa;}
+body.dark .clients-tab-btn.on{background:#222;color:#ff4444;}
+body.dark .clients-tab-btn:hover{background:rgba(255,255,255,.05);}
+/* Phase tabs */
+body.dark .phase-tab{background:#2a2a2a;border-color:#444;color:#aaa;}
+body.dark .phase-tab.on{background:#e0e0e0;color:#1a1a1a;border-color:#e0e0e0;}
+body.dark .phase-tab:hover:not(.on){border-color:#666;color:#e0e0e0;}
+/* Change orders */
+body.dark .co-summary{background:#1e1e1e !important;border-color:#333;}
+/* Mat indicator */
+body.dark .mat-indicator{background:#2a2a2a;border-color:#444;color:#aaa;}
+body.dark .mat-indicator:hover{border-color:#666;}
+/* Settings tabs */
+body.dark .stab{color:#aaa;}
+body.dark .stab:hover{color:#e0e0e0;}
+body.dark .stab.on{color:#ff4444;border-bottom-color:#ff4444;}
+body.dark .settings-tab-bar{border-bottom-color:#333;}
+/* Badges — boost contrast in dark mode */
+body.dark .b-asphalt{background:#333;color:#ccc;}
+body.dark .b-stone{background:#3a2e1c;color:#d4b07a;}
+body.dark .b-concrete{background:#2a2650;color:#b0a8e8;}
+body.dark .b-grading{background:#3a3018;color:#d4b870;}
+body.dark .b-storm-drain{background:#102e4a;color:#6db0e0;}
+body.dark .b-sewer{background:#1a3a12;color:#80c060;}
+body.dark .b-water{background:#0c3a4a;color:#5cc0e0;}
+body.dark .b-erosion{background:#3a2e10;color:#d4b050;}
+body.dark .b-striping{background:#3a2400;color:#e0a050;}
+body.dark .b-clearing{background:#1a3010;color:#80b860;}
+body.dark .b-landscape{background:#103a20;color:#50d080;}
+body.dark .b-general{background:#333;color:#ccc;}
+body.dark .b-misc{background:#332c20;color:#d0b880;}
+body.dark .mubadge.p{background:#1a3010;color:#80c060;}
+body.dark .mubadge.n{background:#3a1414;color:#e06060;}
+body.dark .role-user{background:#333;color:#aaa;}
+body.dark .role-admin{background:#3a1a1a;color:#ff6666;}
+body.dark .role-field{background:#1a3010;color:#80c060;}
+/* Reports */
+body.dark .rpt-stat{background:#222;border-color:#333;}
+body.dark .rpt-stat-val{color:#e0e0e0;}
+body.dark .rpt-stat-lbl{color:#aaa;}
+body.dark .rpt-stat-sub{color:#888;}
+body.dark .rpt-tbl th{background:#2a2a2a;border-bottom-color:#444;color:#ccc;}
+body.dark .rpt-tbl td{border-bottom-color:#333;color:#e0e0e0;}
+body.dark .rpt-tbl tr:hover{background:#2a2a2a;}
+body.dark .rpt-nav-item{color:#e0e0e0;}
+body.dark .rpt-nav-item:hover{background:#2a2a2a;}
+body.dark .rpt-nav-active{background:rgba(204,0,0,.15);color:#ff4444;}
+body.dark #rpt-sidebar{background:#222;border-color:#333;}
+/* Schedule views */
+body.dark .sched-view-btn{background:#2a2a2a;color:#aaa;border-color:#444;}
+body.dark .sched-view-btn:hover{background:#333;}
+/* Sidebar (does not use variables so override explicitly) */
+body.dark .sb-foot button:not(.dark-toggle){color:rgba(255,255,255,.35);}
+/* Labels & misc text */
+body.dark label{color:#aaa;}
 body.dark hr{border-color:#333;}
-body.dark label{color:#ccc;}
-.dark-toggle{background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;padding:4px 8px;transition:color .15s;display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:11px;letter-spacing:.5px;}
+body.dark .stat-card{background:#222;border-color:#333;color:#e0e0e0;}
+/* Inline style overrides — backgrounds that use inline style and can't be variable-swapped */
+body.dark [style*="background:#FAFAFA"]{background:#1e1e1e !important;}
+body.dark [style*="background:#F8F8F8"]{background:#1e1e1e !important;}
+body.dark [style*="background:#F5F5F5"]{background:#1e1e1e !important;}
+body.dark [style*="background:#F4F4F4"]{background:#1e1e1e !important;}
+body.dark [style*="background:#F0F0F0"]{background:#1e1e1e !important;}
+body.dark [style*="background:#FCFCFC"]{background:#222 !important;}
+body.dark [style*="background:#fff"]{background:#222 !important;}
+body.dark [style*="background:#FFF"]{background:#222 !important;}
+body.dark [style*="background:white"]{background:#222 !important;}
+body.dark [style*="background:#EFEFEF"]{background:#333 !important;}
+body.dark [style*="background:#eee"]{background:#333 !important;}
+body.dark [style*="background:#FFF5F5"]{background:#2a1a1a !important;}
+body.dark [style*="background:#FFF8F0"]{background:#2a2210 !important;}
+body.dark [style*="background:#FFF0E0"]{background:#2a2210 !important;}
+body.dark [style*="background:#FFF3E0"]{background:#2a2210 !important;}
+body.dark [style*="background:#FFF8E6"]{background:#2a2210 !important;}
+body.dark [style*="background:#FEE"]{background:#2a1a1a !important;}
+body.dark [style*="background:#fef3f2"]{background:#2a1a1a !important;}
+body.dark [style*="background:#F8F0F0"]{background:#2a1a1a !important;}
+body.dark [style*="background:#FFF0F0"]{background:#2a1a1a !important;}
+body.dark [style*="background:#E8F0E8"]{background:#1a2a1a !important;}
+body.dark [style*="background:#EAF3DE"]{background:#1a2a1a !important;}
+body.dark [style*="background:#E6F1FB"]{background:#1a2030 !important;}
+/* Inline text color overrides for dark mode readability */
+body.dark [style*="color:var(--blk)"]{color:#e0e0e0 !important;}
+body.dark [style*="color:#111"]{color:#e0e0e0 !important;}
+body.dark [style*="color:#1A1A1A"]{color:#e0e0e0 !important;}
+body.dark [style*="color:#1a1a1a"]{color:#e0e0e0 !important;}
+body.dark [style*="color:#333"]{color:#ccc !important;}
+body.dark [style*="color:#555"]{color:#aaa !important;}
+body.dark [style*="color:var(--dgray)"]{color:#aaa !important;}
+/* Inline border overrides */
+body.dark [style*="border-bottom:1px solid #eee"]{border-bottom-color:#333 !important;}
+body.dark [style*="border-bottom:1px solid #f0f0f0"]{border-bottom-color:#333 !important;}
+body.dark [style*="border-bottom:1px solid #F0F0F0"]{border-bottom-color:#333 !important;}
+body.dark [style*="border:1px solid #EBEBEB"]{border-color:#444 !important;}
+body.dark [style*="border:1px solid var(--bdr)"]{border-color:#444 !important;}
+body.dark [style*="border:2px solid var(--red)"]{border-color:#ff4444 !important;}
+/* Login bar stays white even in dark mode (login screen is already dark-themed) */
+body.dark .login-bar{background:#ffffff;}
+/* Weather widget — dark banner is already dark, forecast cards need dark overrides */
+body.dark [data-weather-day]{background:#2a2a2a !important;border-color:#444 !important;color:#e0e0e0 !important;}
+body.dark [data-weather-day] div{color:inherit;}
+body.dark [data-weather-banner]{background:#1a1a1a;}
+/* Scrollbar styling in dark mode */
+body.dark ::-webkit-scrollbar{background:#1a1a1a;}
+body.dark ::-webkit-scrollbar-thumb{background:#444;border-radius:4px;}
+body.dark ::-webkit-scrollbar-thumb:hover{background:#555;}
+/* Dark toggle in settings */
+.dark-mode-card{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;}
+.dark-switch{position:relative;width:44px;height:24px;cursor:pointer;}
+.dark-switch input{opacity:0;width:0;height:0;}
+.dark-switch .slider{position:absolute;inset:0;background:#ccc;border-radius:24px;transition:.2s;}
+.dark-switch .slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+.dark-switch input:checked+.slider{background:var(--red);}
+.dark-switch input:checked+.slider:before{transform:translateX(20px);}
+/* Legacy sidebar toggle (keep for backwards compat) */
+.dark-toggle{background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;padding:4px 8px;transition:color .15s;display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:11px;letter-spacing:.5px;display:none;}
 .dark-toggle:hover{color:rgba(255,255,255,.6);}
 
 /* Login */
@@ -98,20 +267,15 @@ body.dark label{color:#ccc;}
 .rpt-nav-item{padding:8px 14px;font-size:12px;color:var(--blk);cursor:pointer;border-left:2px solid transparent;transition:all .12s;}
 .rpt-nav-item:hover{background:#F5F5F5;}
 .rpt-nav-active{background:rgba(204,0,0,.06);border-left-color:var(--red);font-weight:600;color:var(--red);}
-body.dark .rpt-nav-item{color:#e0e0e0;}body.dark .rpt-nav-item:hover{background:#2a2a2a;}
-body.dark .rpt-nav-active{background:rgba(204,0,0,.15);color:#ff4444;}
-body.dark #rpt-sidebar{background:#222;border-color:#333;}
-body.dark #rpt-sidebar>div[style*="background:#FAFAFA"]{background:#1a1a1a !important;}
 .rpt-stat{display:flex;flex-direction:column;align-items:center;padding:14px 10px;background:#fff;border:1px solid var(--bdr);border-radius:8px;text-align:center;}
 .rpt-stat-val{font-size:22px;font-weight:700;color:var(--blk);line-height:1.2;}
 .rpt-stat-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);margin-top:2px;}
 .rpt-stat-sub{font-size:11px;color:var(--dgray);margin-top:2px;}
-body.dark .rpt-stat{background:#222;border-color:#333;}.rpt-bar{height:18px;border-radius:3px;min-width:2px;transition:width .3s;}
+.rpt-bar{height:18px;border-radius:3px;min-width:2px;transition:width .3s;}
 .rpt-tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .rpt-tbl th{padding:8px 12px;text-align:left;font-weight:600;background:#FAFAFA;border-bottom:1px solid var(--bdr);}
 .rpt-tbl td{padding:7px 12px;border-bottom:1px solid #eee;}
 .rpt-tbl tr:hover{background:#F9F9F9;}
-body.dark .rpt-tbl th{background:#2a2a2a;}body.dark .rpt-tbl tr:hover{background:#2a2a2a;}
 
 /* Schedule View Toggle */
 .sched-view-btn{background:#fff;border:none;border-right:1px solid var(--bdr);padding:4px 10px;font-size:11px;font-weight:600;color:var(--dgray);cursor:pointer;font-family:var(--font);transition:all .12s;}
@@ -453,7 +617,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
         Admin
       </div>
     </nav>
-    <div class="sb-foot"><button class="dark-toggle" id="dark-toggle" onclick="toggleDarkMode()"><span id="dark-icon">&#9789;</span> Dark</button> <button onclick="doLogout()">Sign out</button></div>
+    <div class="sb-foot"><button onclick="doLogout()">Sign out</button></div>
   </aside>
 
   <div class="main">
@@ -1016,6 +1180,16 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
         <!-- General Tab -->
         <div id="stab-content-general">
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Appearance</span></div>
+            <div class="card-body dark-mode-card">
+              <div>
+                <div style="font-weight:600;font-size:13px;">Dark Mode</div>
+                <div style="font-size:11px;color:var(--dgray);margin-top:2px;">Switch to a dark color scheme for reduced eye strain</div>
+              </div>
+              <label class="dark-switch"><input type="checkbox" id="dark-switch-cb" onchange="toggleDarkMode()"><span class="slider"></span></label>
+            </div>
+          </div>
           <div class="card">
             <div class="card-hdr"><span class="card-title">Account Information</span></div>
             <div class="card-body">
@@ -8513,20 +8687,24 @@ function copyCalFeedUrl(){
 
 /* --- Dark Mode Toggle --- */
 function toggleDarkMode(){
-  var on=document.body.classList.toggle('dark');
+  var cb=document.getElementById('dark-switch-cb');
+  var isChecked=cb?cb.checked:false;
+  // If called from the checkbox, use its state; otherwise toggle
+  var on;
+  if(cb&&document.activeElement===cb){
+    on=isChecked;
+    if(on)document.body.classList.add('dark');else document.body.classList.remove('dark');
+  } else {
+    on=document.body.classList.toggle('dark');
+    if(cb)cb.checked=on;
+  }
   localStorage.setItem('hd_dark_mode',on?'1':'0');
-  var ico=document.getElementById('dark-icon');
-  var btn=document.getElementById('dark-toggle');
-  if(ico) ico.innerHTML=on?'&#9788;':'&#9789;';
-  if(btn) btn.lastChild.textContent=on?' Light':' Dark';
 }
 (function(){
   if(localStorage.getItem('hd_dark_mode')==='1'){
     document.body.classList.add('dark');
-    var ico=document.getElementById('dark-icon');
-    var btn=document.getElementById('dark-toggle');
-    if(ico) ico.innerHTML='&#9788;';
-    if(btn) btn.lastChild.textContent=' Light';
+    var cb=document.getElementById('dark-switch-cb');
+    if(cb)cb.checked=true;
   }
 })();
 
