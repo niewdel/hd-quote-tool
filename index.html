@@ -692,13 +692,15 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-grp">Config</div>
       <div class="nav-item" data-field-hidden onclick="showPanel('reports',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h3v12H2zm4.5 3h3v9h-3zM11 7h3v7h-3z"/></svg>Reports</div>
       <div class="nav-item" onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
+      <div class="nav-item" onclick="showPanel('bugs',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1C5.8 1 4 2.8 4 5v1H2.5a.5.5 0 00-.5.5V8c0 3.6 2.5 6.6 6 7 3.5-.4 6-3.4 6-7V6.5a.5.5 0 00-.5-.5H12V5c0-2.2-1.8-4-4-4zM6 5a2 2 0 114 0v1H6V5zm-3 3h10c-.2 2.8-2.3 5.2-5 5.5C5.3 13.2 3.2 10.8 3 8z"/></svg>Bug Report</div>
+      <div class="nav-item admin-only" data-admin-hidden onclick="showPanel('roadmap',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v3a.5.5 0 01-.5.5h-3a.5.5 0 01-.5-.5v-3zm0 5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v3a.5.5 0 01-.5.5h-3a.5.5 0 01-.5-.5v-3zm0 5a.5.5 0 01.5-.5h3a.5.5 0 010 1h-3a.5.5 0 01-.5-.5zM7 3h7v1H7zm0 5h7v1H7zm0 5h7v1H7z"/></svg>Roadmap</div>
       <div class="nav-item admin-only" id="nav-admin" data-admin-hidden onclick="showPanel('admin',this);loadUsers();showAdminTab('company');">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg>
         Admin
       </div>
     </nav>
     <div class="sb-foot" style="display:flex;align-items:center;justify-content:space-between;">
-      <button onclick="doLogout()">Sign out</button>
+      <div style="display:flex;align-items:center;gap:8px;"><button onclick="doLogout()">Sign out</button><span id="app-version-badge" style="font-size:8px;color:rgba(255,255,255,.25);letter-spacing:.3px;line-height:1.1;"></span></div>
       <button class="notif-bell" onclick="toggleNotifPanel()" title="Notifications">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span class="notif-dot" id="notif-dot"></span>
@@ -1714,6 +1716,83 @@ tr:nth-child(even) td{background:#FAFAFA;}
     </div>
   </div>
 </div>
+
+<!-- Bug Report Panel -->
+<div class="panel" id="panel-bugs"><div class="content" style="max-width:900px;">
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-hdr"><span class="card-title">Report a Bug</span></div>
+    <div class="card-body" style="padding:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Title</label><input type="text" id="bug-title" class="inp" placeholder="Brief summary of the issue" style="width:100%;"/></div>
+        <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Severity</label><select id="bug-severity" class="inp" style="width:100%;"><option>Minor</option><option>Major</option><option>Critical</option><option>Cosmetic</option></select></div>
+        <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Panel / Area</label><select id="bug-panel" class="inp" style="width:100%;"><option value="">General</option><option>Dashboard</option><option>Projects</option><option>Build Proposal</option><option>Change Orders</option><option>Saved Documents</option><option>Clients</option><option>Subcontractors</option><option>Pipeline</option><option>Schedule</option><option>Settings</option><option>Reports</option><option>Admin</option><option>Other</option></select></div>
+      </div>
+      <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Description</label>
+      <textarea id="bug-desc" rows="4" class="inp" placeholder="What happened? What did you expect? Steps to reproduce..." style="width:100%;margin-bottom:12px;"></textarea>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="btn btn-red btn-sm" onclick="submitBug()">Submit Bug Report</button>
+        <span id="bug-submit-msg" style="font-size:11px;color:var(--dgray);"></span>
+      </div>
+    </div>
+  </div>
+  <div data-admin-hidden>
+    <div class="card">
+      <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span class="card-title">All Bug Reports</span>
+        <select id="bug-filter-status" onchange="renderBugList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Statuses</option><option>Open</option><option>Acknowledged</option><option>In Progress</option><option>Fixed</option><option>Closed</option></select>
+        <select id="bug-filter-severity" onchange="renderBugList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Severities</option><option>Critical</option><option>Major</option><option>Minor</option><option>Cosmetic</option></select>
+        <button class="btn btn-sec btn-sm" onclick="loadBugList()" style="font-size:11px;">Refresh</button>
+      </div>
+      <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>#</th><th>Title</th><th>Severity</th><th>Panel</th><th>Status</th><th>By</th><th>Date</th><th></th></tr></thead><tbody id="bugs-tbody"></tbody></table></div></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- Bug Detail Modal -->
+<div class="modal-overlay hidden" id="bug-detail-modal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-hdr"><h3 id="bug-detail-title">Bug Details</h3><button class="btn-ico" onclick="document.getElementById('bug-detail-modal').classList.add('hidden')" style="font-size:18px;">&#10005;</button></div>
+    <div class="modal-body" id="bug-detail-body"></div>
+    <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="document.getElementById('bug-detail-modal').classList.add('hidden')">Close</button><button class="btn btn-red btn-sm" id="bug-detail-save" onclick="saveBugUpdate()">Save Changes</button></div>
+  </div>
+</div>
+
+<!-- Roadmap Panel -->
+<div class="panel" id="panel-roadmap"><div class="content" style="max-width:1100px;">
+  <div class="card">
+    <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span class="card-title">Roadmap & Feature Requests</span>
+      <button class="btn btn-red btn-sm" onclick="openRoadmapModal()">+ Add Item</button>
+      <select id="rm-filter-status" onchange="renderRoadmapList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Statuses</option><option>Planned</option><option>In Progress</option><option>Done</option></select>
+      <select id="rm-filter-priority" onchange="renderRoadmapList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Priorities</option><option>High</option><option>Medium</option><option>Low</option><option>Wish List</option></select>
+      <select id="rm-filter-cat" onchange="renderRoadmapList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Categories</option><option>Feature</option><option>Enhancement</option><option>Fix</option><option>Cleanup</option></select>
+    </div>
+    <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Title</th><th>Category</th><th>Priority</th><th>Effort</th><th>Status</th><th>Version</th><th style="width:90px;"></th></tr></thead><tbody id="roadmap-tbody"></tbody></table></div></div>
+  </div>
+</div></div>
+
+<!-- Roadmap Add/Edit Modal -->
+<div class="modal-overlay hidden" id="roadmap-modal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-hdr"><h3 id="roadmap-modal-title">Add Item</h3><button class="btn-ico" onclick="document.getElementById('roadmap-modal').classList.add('hidden')" style="font-size:18px;">&#10005;</button></div>
+    <div class="modal-body">
+      <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Title</label>
+      <input type="text" id="rm-title" class="inp" style="width:100%;margin-bottom:10px;" placeholder="Feature or request name"/>
+      <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Description</label>
+      <textarea id="rm-desc" rows="3" class="inp" style="width:100%;margin-bottom:10px;" placeholder="Details, motivation, notes..."></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Category</label><select id="rm-category" class="inp" style="width:100%;"><option>Feature</option><option>Enhancement</option><option>Fix</option><option>Cleanup</option></select></div>
+        <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Priority</label><select id="rm-priority" class="inp" style="width:100%;"><option>High</option><option selected>Medium</option><option>Low</option><option>Wish List</option></select></div>
+        <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Effort</label><select id="rm-effort" class="inp" style="width:100%;"><option>Quick</option><option selected>Medium</option><option>Large</option></select></div>
+        <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Status</label><select id="rm-status" class="inp" style="width:100%;"><option>Planned</option><option>In Progress</option><option>Done</option></select></div>
+      </div>
+      <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Target Version</label>
+      <input type="text" id="rm-version" class="inp" style="width:100%;" placeholder="e.g. v1.1, v2.0, Backlog"/>
+    </div>
+    <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="document.getElementById('roadmap-modal').classList.add('hidden')">Cancel</button><button class="btn btn-red btn-sm" onclick="saveRoadmapItem()">Save</button></div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="user-modal">
   <div class="modal" style="max-width:420px;">
     <div class="modal-hdr"><h3 id="user-modal-title">Add User</h3><button class="btn-ico" onclick="closeUserModal()" style="font-size:18px;">&#10005;</button></div>
@@ -5560,7 +5639,7 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients',subs:'Subcontractors','client-summary':'Client Summary',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule',reports:'Reports'}[id]||id;
+  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients',subs:'Subcontractors','client-summary':'Client Summary',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule',reports:'Reports',bugs:'Bug Report',roadmap:'Roadmap'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved'){renderSaved();loadCOList();loadWOList();}
@@ -5581,6 +5660,8 @@ function showPanel(id,el){
   if(id==='workorder')renderWorkOrderDetail();
   if(id==='schedule')renderSchedule();
   if(id==='reports')initReports();
+  if(id==='bugs'&&window._userRole==='admin')loadBugList();
+  if(id==='roadmap')loadRoadmapList();
   if(typeof isMobile!=='undefined'&&isMobile)closeMobileNav();
 }
 
@@ -11643,6 +11724,289 @@ document.addEventListener('keydown',function(e){
     modals.forEach(function(m){m.classList.add('hidden');});
   }
 });
+
+// ── Version Badge ──────────────────────────────────────
+var APP_VERSION='v1.0.0-beta';
+var BUILD_ID=(function(){var m=document.documentElement.outerHTML.match(/build:(\d+)/);return m?'HD-'+m[1]:'HD-dev';})();
+(function(){var el=document.getElementById('app-version-badge');if(el)el.textContent=APP_VERSION;})();
+
+// ── Bug Reports ────────────────────────────────────────
+var _bugReports=[];
+var _editingBugId=null;
+
+function submitBug(){
+  var title=document.getElementById('bug-title').value.trim();
+  var desc=document.getElementById('bug-desc').value.trim();
+  var severity=document.getElementById('bug-severity').value;
+  var panel=document.getElementById('bug-panel').value;
+  var msg=document.getElementById('bug-submit-msg');
+  if(!title){msg.textContent='Please enter a title.';msg.style.color='var(--red)';return;}
+  if(!desc){msg.textContent='Please enter a description.';msg.style.color='var(--red)';return;}
+  msg.textContent='Submitting...';msg.style.color='var(--dgray)';
+  fetch('/bugs/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    title:title,description:desc,severity:severity,panel:panel,
+    browser_info:navigator.userAgent,screen_info:screen.width+'x'+screen.height
+  })}).then(function(r){return r.json();}).then(function(d){
+    if(d.ok){
+      msg.textContent='Bug report submitted. Thank you!';msg.style.color='#2E7D32';
+      document.getElementById('bug-title').value='';
+      document.getElementById('bug-desc').value='';
+      document.getElementById('bug-severity').value='Minor';
+      document.getElementById('bug-panel').value='';
+      if(typeof toast==='function')toast('Bug report submitted','ok');
+      setTimeout(function(){msg.textContent='';},4000);
+    } else {
+      msg.textContent=d.error||'Failed to submit.';msg.style.color='var(--red)';
+    }
+  }).catch(function(){msg.textContent='Network error.';msg.style.color='var(--red)';});
+}
+
+function loadBugList(){
+  fetch('/bugs/list').then(function(r){return r.json();}).then(function(data){
+    _bugReports=Array.isArray(data)?data:[];
+    renderBugList();
+  }).catch(function(){_bugReports=[];renderBugList();});
+}
+
+function renderBugList(){
+  var tbody=document.getElementById('bugs-tbody');if(!tbody)return;
+  tbody.innerHTML='';
+  var fs=document.getElementById('bug-filter-status');
+  var fv=document.getElementById('bug-filter-severity');
+  var statusF=fs?fs.value:'';
+  var sevF=fv?fv.value:'';
+  var filtered=_bugReports.filter(function(b){
+    if(statusF&&b.status!==statusF)return false;
+    if(sevF&&b.severity!==sevF)return false;
+    return true;
+  });
+  if(!filtered.length){
+    var tr=document.createElement('tr');
+    var td=document.createElement('td');td.colSpan=8;td.style.cssText='text-align:center;padding:20px;color:var(--dgray);font-size:12px;';
+    td.textContent='No bug reports found.';tr.appendChild(td);tbody.appendChild(tr);return;
+  }
+  var sevColors={Critical:'#CC0000',Major:'#E65100',Minor:'#666',Cosmetic:'#1565C0'};
+  var sevBg={Critical:'#FEE',Major:'#FFF3E0',Minor:'#F5F5F5',Cosmetic:'#E6F1FB'};
+  var stColors={Open:'#CC0000',Acknowledged:'#E65100','In Progress':'#1565C0',Fixed:'#2E7D32',Closed:'#666'};
+  var stBg={Open:'#FEE',Acknowledged:'#FFF3E0','In Progress':'#E6F1FB',Fixed:'#EAF3DE',Closed:'#F5F5F5'};
+  filtered.forEach(function(b){
+    var tr=document.createElement('tr');tr.style.cursor='pointer';
+    tr.addEventListener('click',function(){openBugDetail(b.id);});
+    var cells=[
+      b.id,
+      b.title,
+      b.severity,
+      b.panel||'General',
+      b.status,
+      b.submitted_by,
+      b.submitted_at?new Date(b.submitted_at).toLocaleDateString():'',
+      ''
+    ];
+    cells.forEach(function(val,i){
+      var td=document.createElement('td');td.style.fontSize='12px';td.style.padding='8px 10px';
+      if(i===2){
+        var badge=document.createElement('span');
+        badge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
+        badge.style.background=sevBg[val]||'#F5F5F5';badge.style.color=sevColors[val]||'#666';
+        badge.textContent=val;td.appendChild(badge);
+      } else if(i===4){
+        var badge=document.createElement('span');
+        badge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
+        badge.style.background=stBg[val]||'#F5F5F5';badge.style.color=stColors[val]||'#666';
+        badge.textContent=val;td.appendChild(badge);
+      } else if(i===7){
+        var btn=document.createElement('button');btn.className='btn btn-sec btn-sm';btn.style.fontSize='10px';
+        btn.textContent='View';btn.addEventListener('click',function(e){e.stopPropagation();openBugDetail(b.id);});
+        td.appendChild(btn);
+      } else {
+        td.textContent=val;
+      }
+      if(i===1){td.style.fontWeight='600';td.style.maxWidth='200px';td.style.overflow='hidden';td.style.textOverflow='ellipsis';td.style.whiteSpace='nowrap';}
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function openBugDetail(id){
+  var b=_bugReports.find(function(x){return x.id===id;});if(!b)return;
+  _editingBugId=id;
+  document.getElementById('bug-detail-title').textContent='Bug #'+b.id+': '+b.title;
+  var body=document.getElementById('bug-detail-body');
+  body.innerHTML='';
+  var html='<div style="font-size:12px;margin-bottom:12px;">';
+  html+='<div style="margin-bottom:6px;"><strong>Submitted by:</strong> '+esc(b.submitted_by)+' on '+(b.submitted_at?new Date(b.submitted_at).toLocaleString():'')+'</div>';
+  html+='<div style="margin-bottom:6px;"><strong>Severity:</strong> '+esc(b.severity)+' &nbsp; <strong>Panel:</strong> '+esc(b.panel||'General')+'</div>';
+  if(b.browser_info)html+='<div style="margin-bottom:6px;color:var(--dgray);font-size:10px;"><strong>Browser:</strong> '+esc(b.browser_info)+'</div>';
+  if(b.screen_info)html+='<div style="margin-bottom:6px;color:var(--dgray);font-size:10px;"><strong>Screen:</strong> '+esc(b.screen_info)+'</div>';
+  html+='<div style="margin-bottom:10px;padding:10px;background:var(--lgray);border-radius:6px;white-space:pre-wrap;">'+esc(b.description)+'</div>';
+  html+='</div>';
+  html+='<label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Status</label>';
+  html+='<select id="bug-edit-status" class="inp" style="width:100%;margin-bottom:10px;">';
+  ['Open','Acknowledged','In Progress','Fixed','Closed'].forEach(function(s){
+    html+='<option'+(b.status===s?' selected':'')+'>'+s+'</option>';
+  });
+  html+='</select>';
+  html+='<label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Admin Notes</label>';
+  html+='<textarea id="bug-edit-notes" rows="3" class="inp" style="width:100%;" placeholder="Internal notes...">'+esc(b.admin_notes||'')+'</textarea>';
+  body.innerHTML=html;
+  document.getElementById('bug-detail-modal').classList.remove('hidden');
+}
+
+function saveBugUpdate(){
+  if(!_editingBugId)return;
+  var status=document.getElementById('bug-edit-status').value;
+  var notes=document.getElementById('bug-edit-notes').value;
+  fetch('/bugs/'+_editingBugId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:status,admin_notes:notes})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d.ok){
+      document.getElementById('bug-detail-modal').classList.add('hidden');
+      if(typeof toast==='function')toast('Bug updated','ok');
+      loadBugList();
+    }
+  });
+}
+
+// ── Roadmap ────────────────────────────────────────────
+var _roadmapItems=[];
+var _editingRoadmapId=null;
+
+function loadRoadmapList(){
+  fetch('/roadmap/list').then(function(r){return r.json();}).then(function(data){
+    _roadmapItems=Array.isArray(data)?data:[];
+    renderRoadmapList();
+  }).catch(function(){_roadmapItems=[];renderRoadmapList();});
+}
+
+function renderRoadmapList(){
+  var tbody=document.getElementById('roadmap-tbody');if(!tbody)return;
+  tbody.innerHTML='';
+  var fs=document.getElementById('rm-filter-status');
+  var fp=document.getElementById('rm-filter-priority');
+  var fc=document.getElementById('rm-filter-cat');
+  var statusF=fs?fs.value:'';
+  var prioF=fp?fp.value:'';
+  var catF=fc?fc.value:'';
+  var filtered=_roadmapItems.filter(function(r){
+    if(statusF&&r.status!==statusF)return false;
+    if(prioF&&r.priority!==prioF)return false;
+    if(catF&&r.category!==catF)return false;
+    return true;
+  });
+  if(!filtered.length){
+    var tr=document.createElement('tr');
+    var td=document.createElement('td');td.colSpan=7;td.style.cssText='text-align:center;padding:20px;color:var(--dgray);font-size:12px;';
+    td.textContent='No roadmap items found.';tr.appendChild(td);tbody.appendChild(tr);return;
+  }
+  var prioColors={High:'#CC0000',Medium:'#E65100',Low:'#1565C0','Wish List':'#666'};
+  var prioBg={High:'#FEE',Medium:'#FFF3E0',Low:'#E6F1FB','Wish List':'#F5F5F5'};
+  var catColors={Feature:'#1565C0',Enhancement:'#6A1B9A',Fix:'#CC0000',Cleanup:'#666'};
+  var catBg={Feature:'#E6F1FB',Enhancement:'#F3E5F5',Fix:'#FEE',Cleanup:'#F5F5F5'};
+  var stColors={Planned:'#E65100','In Progress':'#1565C0',Done:'#2E7D32'};
+  var stBg={Planned:'#FFF3E0','In Progress':'#E6F1FB',Done:'#EAF3DE'};
+  var effortColors={Quick:'#2E7D32',Medium:'#E65100',Large:'#CC0000'};
+  var effortBg={Quick:'#EAF3DE',Medium:'#FFF3E0',Large:'#FEE'};
+  filtered.forEach(function(item){
+    var tr=document.createElement('tr');
+    // Title + description tooltip
+    var tdTitle=document.createElement('td');tdTitle.style.cssText='font-size:12px;padding:8px 10px;font-weight:600;max-width:250px;';
+    tdTitle.textContent=item.title;
+    if(item.description){tdTitle.title=item.description;tdTitle.style.cursor='help';}
+    tr.appendChild(tdTitle);
+    // Category badge
+    var tdCat=document.createElement('td');tdCat.style.cssText='font-size:12px;padding:8px 10px;';
+    var catBadge=document.createElement('span');catBadge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
+    catBadge.style.background=catBg[item.category]||'#F5F5F5';catBadge.style.color=catColors[item.category]||'#666';
+    catBadge.textContent=item.category;tdCat.appendChild(catBadge);tr.appendChild(tdCat);
+    // Priority badge
+    var tdPrio=document.createElement('td');tdPrio.style.cssText='font-size:12px;padding:8px 10px;';
+    var prioBadge=document.createElement('span');prioBadge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
+    prioBadge.style.background=prioBg[item.priority]||'#F5F5F5';prioBadge.style.color=prioColors[item.priority]||'#666';
+    prioBadge.textContent=item.priority;tdPrio.appendChild(prioBadge);tr.appendChild(tdPrio);
+    // Effort badge
+    var tdEff=document.createElement('td');tdEff.style.cssText='font-size:12px;padding:8px 10px;';
+    var effBadge=document.createElement('span');effBadge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
+    effBadge.style.background=effortBg[item.effort]||'#F5F5F5';effBadge.style.color=effortColors[item.effort]||'#666';
+    effBadge.textContent=item.effort;tdEff.appendChild(effBadge);tr.appendChild(tdEff);
+    // Status badge
+    var tdSt=document.createElement('td');tdSt.style.cssText='font-size:12px;padding:8px 10px;';
+    var stBadge=document.createElement('span');stBadge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
+    stBadge.style.background=stBg[item.status]||'#F5F5F5';stBadge.style.color=stColors[item.status]||'#666';
+    stBadge.textContent=item.status;tdSt.appendChild(stBadge);tr.appendChild(tdSt);
+    // Version
+    var tdVer=document.createElement('td');tdVer.style.cssText='font-size:11px;padding:8px 10px;color:var(--dgray);';
+    tdVer.textContent=item.target_version||'—';tr.appendChild(tdVer);
+    // Actions
+    var tdAct=document.createElement('td');tdAct.style.cssText='padding:8px 10px;white-space:nowrap;';
+    var editBtn=document.createElement('button');editBtn.className='btn btn-sec btn-sm';editBtn.style.fontSize='10px';editBtn.style.marginRight='4px';
+    editBtn.textContent='Edit';editBtn.addEventListener('click',function(){openRoadmapModal(item.id);});
+    var delBtn=document.createElement('button');delBtn.className='btn btn-sec btn-sm';delBtn.style.cssText='font-size:10px;color:var(--red);';
+    delBtn.textContent='Del';delBtn.addEventListener('click',function(){deleteRoadmapItem(item.id);});
+    tdAct.appendChild(editBtn);tdAct.appendChild(delBtn);tr.appendChild(tdAct);
+    tbody.appendChild(tr);
+  });
+}
+
+function openRoadmapModal(id){
+  _editingRoadmapId=id||null;
+  var modal=document.getElementById('roadmap-modal');
+  document.getElementById('roadmap-modal-title').textContent=id?'Edit Item':'Add Item';
+  if(id){
+    var item=_roadmapItems.find(function(r){return r.id===id;});
+    if(item){
+      document.getElementById('rm-title').value=item.title||'';
+      document.getElementById('rm-desc').value=item.description||'';
+      document.getElementById('rm-category').value=item.category||'Feature';
+      document.getElementById('rm-priority').value=item.priority||'Medium';
+      document.getElementById('rm-effort').value=item.effort||'Medium';
+      document.getElementById('rm-status').value=item.status||'Planned';
+      document.getElementById('rm-version').value=item.target_version||'';
+    }
+  } else {
+    document.getElementById('rm-title').value='';
+    document.getElementById('rm-desc').value='';
+    document.getElementById('rm-category').value='Feature';
+    document.getElementById('rm-priority').value='Medium';
+    document.getElementById('rm-effort').value='Medium';
+    document.getElementById('rm-status').value='Planned';
+    document.getElementById('rm-version').value='';
+  }
+  modal.classList.remove('hidden');
+  document.getElementById('rm-title').focus();
+}
+
+function saveRoadmapItem(){
+  var title=document.getElementById('rm-title').value.trim();
+  if(!title){if(typeof toast==='function')toast('Title is required','err');return;}
+  var payload={
+    title:title,
+    description:document.getElementById('rm-desc').value.trim(),
+    category:document.getElementById('rm-category').value,
+    priority:document.getElementById('rm-priority').value,
+    effort:document.getElementById('rm-effort').value,
+    status:document.getElementById('rm-status').value,
+    target_version:document.getElementById('rm-version').value.trim()
+  };
+  var url=_editingRoadmapId?'/roadmap/'+_editingRoadmapId:'/roadmap/save';
+  var method=_editingRoadmapId?'PATCH':'POST';
+  fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d.ok){
+      document.getElementById('roadmap-modal').classList.add('hidden');
+      if(typeof toast==='function')toast(_editingRoadmapId?'Item updated':'Item added','ok');
+      loadRoadmapList();
+    } else {
+      if(typeof toast==='function')toast(d.error||'Failed to save','err');
+    }
+  });
+}
+
+function deleteRoadmapItem(id){
+  if(!confirm('Delete this roadmap item?'))return;
+  fetch('/roadmap/'+id,{method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
+    if(d.ok){if(typeof toast==='function')toast('Item deleted','ok');loadRoadmapList();}
+  });
+}
 </script>
 
 <!-- Client Modal -->

@@ -1408,5 +1408,110 @@ def schedule_ics_feed():
         headers={'Content-Disposition': 'inline; filename="hd_schedule.ics"'}
     )
 
+# ── Bug Reports ──────────────────────────────────────────
+@app.route('/bugs/submit', methods=['POST'])
+@require_auth
+def submit_bug():
+    try:
+        d = request.json or {}
+        row = {
+            'title': d.get('title', '').strip(),
+            'description': d.get('description', '').strip(),
+            'severity': d.get('severity', 'Minor'),
+            'panel': d.get('panel', ''),
+            'status': 'Open',
+            'submitted_by': session.get('username', 'unknown'),
+            'browser_info': d.get('browser_info', ''),
+            'screen_info': d.get('screen_info', '')
+        }
+        if not row['title']:
+            return jsonify({'ok': False, 'error': 'Title is required'}), 400
+        r = http.post(f"{SUPABASE_URL}/rest/v1/hd_bug_reports", json=row, headers=sb_headers(), timeout=10)
+        return jsonify({'ok': r.status_code < 300})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/bugs/list')
+@require_admin
+def list_bugs():
+    try:
+        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_bug_reports?select=*&order=submitted_at.desc", headers=sb_headers(), timeout=10)
+        return jsonify(r.json())
+    except Exception as e:
+        return jsonify([])
+
+@app.route('/bugs/<int:bug_id>', methods=['PATCH'])
+@require_admin
+def update_bug(bug_id):
+    try:
+        d = request.json or {}
+        updates = {}
+        if 'status' in d:
+            updates['status'] = d['status']
+            if d['status'] in ('Fixed', 'Closed'):
+                updates['resolved_at'] = datetime.utcnow().isoformat()
+        if 'admin_notes' in d:
+            updates['admin_notes'] = d['admin_notes']
+        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_bug_reports?id=eq.{bug_id}", json=updates, headers=sb_headers(), timeout=10)
+        return jsonify({'ok': r.status_code < 300})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ── Roadmap ──────────────────────────────────────────────
+@app.route('/roadmap/list')
+@require_admin
+def list_roadmap():
+    try:
+        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_roadmap?select=*&order=sort_order.asc,created_at.desc", headers=sb_headers(), timeout=10)
+        return jsonify(r.json())
+    except Exception as e:
+        return jsonify([])
+
+@app.route('/roadmap/save', methods=['POST'])
+@require_admin
+def save_roadmap():
+    try:
+        d = request.json or {}
+        row = {
+            'title': d.get('title', '').strip(),
+            'description': d.get('description', '').strip(),
+            'category': d.get('category', 'Feature'),
+            'priority': d.get('priority', 'Medium'),
+            'effort': d.get('effort', 'Medium'),
+            'status': d.get('status', 'Planned'),
+            'target_version': d.get('target_version', ''),
+            'sort_order': d.get('sort_order', 0)
+        }
+        if not row['title']:
+            return jsonify({'ok': False, 'error': 'Title is required'}), 400
+        r = http.post(f"{SUPABASE_URL}/rest/v1/hd_roadmap", json=row, headers=sb_headers(), timeout=10)
+        return jsonify({'ok': r.status_code < 300})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/roadmap/<int:item_id>', methods=['PATCH'])
+@require_admin
+def update_roadmap(item_id):
+    try:
+        d = request.json or {}
+        updates = {}
+        for k in ('title', 'description', 'category', 'priority', 'effort', 'status', 'target_version', 'sort_order'):
+            if k in d:
+                updates[k] = d[k]
+        updates['updated_at'] = datetime.utcnow().isoformat()
+        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_roadmap?id=eq.{item_id}", json=updates, headers=sb_headers(), timeout=10)
+        return jsonify({'ok': r.status_code < 300})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/roadmap/<int:item_id>', methods=['DELETE'])
+@require_admin
+def delete_roadmap(item_id):
+    try:
+        r = http.delete(f"{SUPABASE_URL}/rest/v1/hd_roadmap?id=eq.{item_id}", headers=sb_headers(), timeout=10)
+        return jsonify({'ok': r.status_code < 300})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
