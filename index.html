@@ -622,7 +622,6 @@ body.dark .dash-section-title{color:#A1A1AA;}
 .ops-page-copy{display:flex;flex-direction:column;gap:6px;max-width:760px;}
 .ops-page-eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--dgray);}
 .ops-page-title{font-family:var(--font-display);font-size:28px;font-weight:800;line-height:1.05;color:var(--blk);}
-.ops-page-sub{font-size:13px;color:var(--dgray);max-width:68ch;line-height:1.55;}
 .ops-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .ops-grid-dashboard-top{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(320px,1fr);gap:18px;margin-bottom:18px;}
 .ops-grid-dashboard-bottom{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(280px,.85fr);gap:18px;}
@@ -642,7 +641,6 @@ body.dark .ops-cal-title{color:#E4E4E7;}
 body.dark .ops-utility-card{background:rgba(24,24,27,0.65);border-color:rgba(255,255,255,0.06);}
 .ops-utility-title{font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:6px;color:var(--blk);}
 body.dark .ops-utility-title{color:#E4E4E7;}
-.ops-utility-copy{font-size:12px;color:var(--dgray);line-height:1.55;}
 .ops-note-list{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
 .ops-note-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--bdr);}
 .ops-note-row:first-child{border-top:none;padding-top:0;}
@@ -653,6 +651,10 @@ body.dark .ops-utility-title{color:#E4E4E7;}
 .ops-schedule-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,.8fr);gap:18px;align-items:start;}
 .ops-schedule-main{display:flex;flex-direction:column;gap:14px;min-width:0;}
 .ops-schedule-sidebar{display:flex;flex-direction:column;gap:14px;}
+#panel-projects .ops-project-layout,
+#panel-contacts .ops-project-layout,
+#panel-reports .ops-project-layout,
+#panel-schedule .ops-schedule-grid{grid-template-columns:minmax(0,1fr);}
 
 /* Project card redesign */
 .mc-proj-card{
@@ -853,7 +855,6 @@ body.dark .profile-menu{background:rgba(18,18,20,0.96);backdrop-filter:blur(22px
 body.dark .profile-photo-row{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.06);}
 .profile-photo-copy{flex:1;min-width:180px;}
 .profile-photo-title{font-size:13px;font-weight:700;}
-.profile-photo-sub{font-size:11px;color:var(--dgray);margin-top:4px;line-height:1.5;}
 .profile-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;}
 .profile-meta-chip{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border:1px solid var(--bdr);border-radius:12px;background:rgba(255,255,255,.4);}
 body.dark .profile-meta-chip{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.06);}
@@ -1488,7 +1489,6 @@ tr:nth-child(even) td{background:var(--lgray);}
                   <p class="mc-date-line" id="dash-date-line"></p>
                 </div>
               </div>
-              <div class="ops-page-sub">Start with field risk, active work, and bid pressure. This view is the daily control room for crews, jobs, and near-term pipeline movement.</div>
             </div>
             <div class="ops-head-actions">
               <button class="btn btn-sec btn-sm" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">Open Projects</button>
@@ -1574,7 +1574,6 @@ tr:nth-child(even) td{background:var(--lgray);}
 
             <div class="ops-utility-card">
               <div class="ops-utility-title">Recent Projects</div>
-              <div class="ops-utility-copy">Use this rail to jump back into jobs that recently moved, changed, or need follow-up.</div>
               <div id="dash-recent-projects" class="ops-note-list">
                 <div class="ops-note-row">
                   <div class="ops-note-kicker">Recent</div>
@@ -1861,7 +1860,6 @@ tr:nth-child(even) td{background:var(--lgray);}
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Projects Workspace</div>
             <div class="ops-page-title">Pipeline, list, and map in one place.</div>
-            <div class="ops-page-sub">Track active jobs, move projects through stages, and switch between planning views without leaving the operational workspace.</div>
           </div>
           <div class="ops-head-actions">
             <button class="btn btn-sec btn-sm" onclick="showPanel('saved',null)">Saved Documents</button>
@@ -1905,24 +1903,6 @@ tr:nth-child(even) td{background:var(--lgray);}
             </div>
           </div>
 
-          <div class="ops-utility-card">
-            <div class="ops-utility-title">How To Use This View</div>
-            <div class="ops-utility-copy">Use pipeline for stage movement, list for fast scanning, and map for regional planning. Filters stay at the top so you can narrow the workspace before switching modes.</div>
-            <div class="ops-note-list">
-              <div class="ops-note-row">
-                <div class="ops-note-kicker">Pipeline</div>
-                <div class="ops-note-body">Best for moving deals and spotting bottlenecks by stage.</div>
-              </div>
-              <div class="ops-note-row">
-                <div class="ops-note-kicker">List</div>
-                <div class="ops-note-body">Best for scanning totals, clients, due dates, and linked docs quickly.</div>
-              </div>
-              <div class="ops-note-row">
-                <div class="ops-note-kicker">Map</div>
-                <div class="ops-note-body">Best for route planning, regional workload, and geographic clustering.</div>
-              </div>
-            </div>
-          </div>
         </div>
       </div></div>
 
@@ -1932,7 +1912,6 @@ tr:nth-child(even) td{background:var(--lgray);}
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Contacts Workspace</div>
             <div class="ops-page-title">Clients and subcontractors, cleaned up into one relationship hub.</div>
-            <div class="ops-page-sub">Use this page to manage the people and companies tied to work, without bouncing between duplicate client and subcontractor entry points.</div>
           </div>
           <div class="ops-head-actions">
             <button class="btn btn-sec btn-sm" onclick="openClientModal()">Add Client</button>
@@ -1960,20 +1939,6 @@ tr:nth-child(even) td{background:var(--lgray);}
                   <button class="btn btn-red btn-sm" onclick="openSubModal()">+ Add Sub</button>
                 </div>
                 <div id="contacts-subs-list"></div>
-              </div>
-            </div>
-          </div>
-          <div class="ops-utility-card">
-            <div class="ops-utility-title">What Lives Here</div>
-            <div class="ops-utility-copy">Clients are your customer records and project relationships. Subcontractors are delivery partners, specialty trades, and outside crews tied to project execution.</div>
-            <div class="ops-note-list">
-              <div class="ops-note-row">
-                <div class="ops-note-kicker">Clients</div>
-                <div class="ops-note-body">Use for customer details, linked projects, and follow-up context.</div>
-              </div>
-              <div class="ops-note-row">
-                <div class="ops-note-kicker">Subs</div>
-                <div class="ops-note-body">Use for outside vendors, trade partners, and quote or status tracking.</div>
               </div>
             </div>
           </div>
@@ -2133,7 +2098,6 @@ tr:nth-child(even) td{background:var(--lgray);}
                 <div class="card" style="margin-top:14px;">
                   <div class="card-hdr">
                     <span class="card-title">Proposal Line Items</span>
-                    <span style="font-size:11px;color:var(--dgray);margin-left:8px;">Edit names, descriptions, units &amp; rates before exporting PDF</span>
                   </div>
                   <div id="li-table-wrap" style="overflow-x:auto;"></div>
                   <div style="margin-top:12px;display:flex;gap:8px;">
@@ -2149,7 +2113,6 @@ tr:nth-child(even) td{background:var(--lgray);}
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Settings</div>
             <div class="ops-page-title">Profile preferences, estimating defaults, and operational configuration.</div>
-            <div class="ops-page-sub">User-level preferences and company configuration live together here, but the redesigned header makes account and system settings easier to scan.</div>
           </div>
         </div>
         <div class="settings-tab-bar">
@@ -2168,12 +2131,10 @@ tr:nth-child(even) td{background:var(--lgray);}
           <div class="card">
             <div class="card-hdr"><span class="card-title">My Profile</span></div>
             <div class="card-body">
-              <p style="font-size:11px;color:var(--dgray);margin-bottom:12px;">These details power your account menu and identity across the app.</p>
               <div class="profile-photo-row">
                 <span class="avatar-shell lg" id="profile-avatar-preview"><span>HD</span></span>
                 <div class="profile-photo-copy">
                   <div class="profile-photo-title">Contact Photo</div>
-                  <div class="profile-photo-sub">Upload a square-friendly image for your top-right account menu and profile identity.</div>
                 </div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
                   <button class="btn btn-sec btn-sm" onclick="triggerProfilePhotoInput()">Upload Photo</button>
@@ -2205,7 +2166,6 @@ tr:nth-child(even) td{background:var(--lgray);}
           <div class="card">
             <div class="card-hdr"><span class="card-title">Proposal Sender Defaults</span></div>
             <div class="card-body">
-              <p style="font-size:11px;color:var(--dgray);margin-bottom:10px;">These values prefill new proposals and exports. Keep them synced to your profile or customize them for estimating.</p>
               <div class="fg fg3">
                 <div><label>Name on Proposals</label><input id="sender-name" type="text" placeholder="Full name"/></div>
                 <div><label>Email on Proposals</label><input id="sender-email" type="text" placeholder="email@hdgrading.com"/></div>
@@ -2223,7 +2183,6 @@ tr:nth-child(even) td{background:var(--lgray);}
             <div class="card-body dark-mode-card">
               <div>
                 <div style="font-weight:600;font-size:13px;">Dark Mode</div>
-                <div style="font-size:11px;color:var(--dgray);margin-top:2px;">Dark theme is enabled by default for optimal viewing</div>
               </div>
               <label class="dark-switch"><input type="checkbox" id="dark-switch-cb" onchange="toggleDarkMode()"><span class="slider"></span></label>
             </div>
@@ -2267,8 +2226,6 @@ tr:nth-child(even) td{background:var(--lgray);}
           <div class="card" id="notif-prefs-card">
             <div class="card-hdr"><span class="card-title">Notifications</span></div>
             <div class="card-body" style="padding:16px;">
-              <p style="font-size:12px;color:var(--dgray);margin-bottom:14px;">Choose which notifications you receive in-app and by email.</p>
-
               <div style="font-weight:600;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);">In-App Notifications</div>
               <div id="notif-toggles-inapp" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
                 <div class="notif-toggle-row"><span class="notif-toggle-label">@Mentions<span class="notif-toggle-desc">When someone tags you in a note</span></span><label class="dark-switch"><input type="checkbox" data-notif-key="mention" checked onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
@@ -2279,7 +2236,6 @@ tr:nth-child(even) td{background:var(--lgray);}
               </div>
 
               <div style="font-weight:600;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);">Email Alerts</div>
-              <p style="font-size:11px;color:var(--dgray);margin-bottom:8px;">Get emailed for important events — requires an email on your account.</p>
               <div id="notif-toggles-email" style="display:flex;flex-direction:column;gap:6px;">
                 <div class="notif-toggle-row"><span class="notif-toggle-label">Jobs Won<span class="notif-toggle-desc">When a project moves to Approved stage</span></span><label class="dark-switch"><input type="checkbox" data-email-key="jobs_won" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
                 <div class="notif-toggle-row"><span class="notif-toggle-label">New Assignments<span class="notif-toggle-desc">When you're assigned to a project</span></span><label class="dark-switch"><input type="checkbox" data-email-key="assignment" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
@@ -2297,7 +2253,6 @@ tr:nth-child(even) td{background:var(--lgray);}
               <span class="card-title">Material Prices</span>
             </div>
             <div class="card-body">
-              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Raw material costs used for job costing and margin calculations. Each bid library item is linked to a material.</p>
               <div style="overflow-x:auto;">
                 <table style="width:100%;border-collapse:collapse;font-size:12px;" id="mat-table">
                   <thead>
@@ -2344,7 +2299,6 @@ tr:nth-child(even) td{background:var(--lgray);}
               <button class="btn btn-sec btn-sm" onclick="addBadge()">+ Add Badge</button>
             </div>
             <div class="card-body">
-              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Badge colors and labels apply live to all layers in the proposal builder.</p>
               <div id="badge-list"></div>
               <div style="margin-top:12px;">
                 <button class="btn btn-primary btn-sm" onclick="saveBadges()">Save Badges</button>
@@ -2361,7 +2315,6 @@ tr:nth-child(even) td{background:var(--lgray);}
               <button class="btn btn-sec btn-sm" onclick="openPresetModal()">+ Add Preset</button>
             </div>
             <div class="card-body">
-              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Presets appear as quick-add buttons in the proposal builder. Click any preset to instantly add a pre-configured section.</p>
               <div id="preset-mgr"></div>
             </div>
           </div>
@@ -2378,7 +2331,6 @@ tr:nth-child(even) td{background:var(--lgray);}
               </div>
             </div>
             <div class="card-body">
-              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Standard line items with names, descriptions, units, and rates organized by division. Insert into proposals from the Additional Items section.</p>
               <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
                 <label style="font-size:11px;font-weight:600;color:var(--dgray);">Filter:</label>
                 <select id="lib-cat-filter" onchange="renderLibraryList()" style="font-size:12px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;">
@@ -2401,7 +2353,6 @@ tr:nth-child(even) td{background:var(--lgray);}
               <button class="btn btn-sec btn-sm" onclick="addCrew()">+ Add Crew</button>
             </div>
             <div class="card-body">
-              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Define your crews and their daily rates. These are used in job costing calculations.</p>
               <div id="crews-list"></div>
             </div>
           </div>
@@ -2414,7 +2365,6 @@ tr:nth-child(even) td{background:var(--lgray);}
               <button class="btn btn-sec btn-sm" onclick="addEquipment()">+ Add Equipment</button>
             </div>
             <div class="card-body">
-              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Equipment daily rates used for job costing. Set your fleet rates here and reference them when estimating grading, utilities, and other self-performed work.</p>
               <div id="equipment-list"></div>
               <div style="margin-top:12px;"><button class="btn btn-primary btn-sm" onclick="saveEquipment()">Save Equipment</button></div>
             </div>
@@ -2508,7 +2458,6 @@ tr:nth-child(even) td{background:var(--lgray);}
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Dispatch Board</div>
             <div class="ops-page-title">Weather, queue, and crew timing in one view.</div>
-            <div class="ops-page-sub">Use this workspace to schedule unslotted work, read weather risk early, and keep the week moving without jumping between modules.</div>
           </div>
           <div class="ops-head-actions">
             <button class="btn btn-sec btn-sm" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">Open Projects</button>
@@ -2581,26 +2530,6 @@ tr:nth-child(even) td{background:var(--lgray);}
             </div>
           </div>
 
-          <div class="ops-schedule-sidebar">
-            <div class="ops-utility-card">
-              <div class="ops-utility-title">Planning Priorities</div>
-              <div class="ops-utility-copy">Work from the queue first, then confirm the week view. Overdue work should be pulled forward before new low-priority jobs are slotted.</div>
-              <div class="ops-note-list">
-                <div class="ops-note-row">
-                  <div class="ops-note-kicker">Queue</div>
-                  <div class="ops-note-body">Drag unscheduled work onto the calendar once the crew and date are clear.</div>
-                </div>
-                <div class="ops-note-row">
-                  <div class="ops-note-kicker">Weather</div>
-                  <div class="ops-note-body">Use the top forecast strip before locking in outdoor-heavy scopes.</div>
-                </div>
-                <div class="ops-note-row">
-                  <div class="ops-note-kicker">Overdue</div>
-                  <div class="ops-note-body">The overdue KPI is the first warning sign that dispatch attention is needed.</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div></div>
 
@@ -2610,7 +2539,6 @@ tr:nth-child(even) td{background:var(--lgray);}
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Reporting Center</div>
             <div class="ops-page-title">Operational reporting, executive rollups, and export-ready views.</div>
-            <div class="ops-page-sub">Choose a report type, narrow the dataset, and generate decision-ready summaries without leaving the app.</div>
           </div>
           <div class="ops-head-actions">
             <button class="btn btn-primary btn-sm" onclick="exportReportPDF()">Export Current Report</button>
@@ -2661,24 +2589,6 @@ tr:nth-child(even) td{background:var(--lgray);}
               </div>
             </div>
           </div>
-          <div class="ops-utility-card">
-            <div class="ops-utility-title">Reporting Notes</div>
-            <div class="ops-utility-copy">The left rail is the report library. The filters above the output change the current report, not the navigation itself.</div>
-            <div class="ops-note-list">
-              <div class="ops-note-row">
-                <div class="ops-note-kicker">Estimate</div>
-                <div class="ops-note-body">Use for pipeline health, client mix, and win/loss performance.</div>
-              </div>
-              <div class="ops-note-row">
-                <div class="ops-note-kicker">Job</div>
-                <div class="ops-note-body">Use for backlog, schedule pressure, material load, and trucking trends.</div>
-              </div>
-              <div class="ops-note-row">
-                <div class="ops-note-kicker">Executive</div>
-                <div class="ops-note-body">Use for faster owner-level rollups and export-ready summaries.</div>
-              </div>
-            </div>
-          </div>
         </div>
       </div></div>
 
@@ -2687,7 +2597,6 @@ tr:nth-child(even) td{background:var(--lgray);}
     <div class="ops-page-copy">
       <div class="ops-page-eyebrow">Admin Control Center</div>
       <div class="ops-page-title">Company settings, users, audit activity, and archived records.</div>
-      <div class="ops-page-sub">This area handles company-wide controls and should feel separate from everyday operations work.</div>
     </div>
     <div class="ops-head-actions">
       <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">Add User</button>
@@ -2706,7 +2615,6 @@ tr:nth-child(even) td{background:var(--lgray);}
     <div class="card">
       <div class="card-hdr"><span class="card-title">Company Information</span></div>
       <div class="card-body" style="padding:16px;">
-        <p style="font-size:11px;color:var(--dgray);margin-bottom:12px;">This information appears on all proposals, PDFs, and documents generated by the app.</p>
         <div class="fg fg2" style="gap:10px;margin-bottom:10px;">
           <div><label>Company Name</label><input type="text" id="co-name" class="inp" placeholder="HD Hauling & Grading" style="width:100%;"/></div>
           <div><label>License / Contractor #</label><input type="text" id="co-license" class="inp" placeholder="e.g. NC-12345" style="width:100%;"/></div>
