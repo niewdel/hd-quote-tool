@@ -117,7 +117,7 @@ def login():
             return jsonify({'error': 'Incorrect username or password'}), 401
         user = rows[0]
         pw_hash = hash_password(password)
-        if user.get('password_hash') == pw_hash:
+        if user.get('pin_hash') == pw_hash:
             apply_user_session(user)
             log_access(user['username'], user.get('full_name',''), 'login', True)
             # Get last login from access log
