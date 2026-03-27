@@ -27,6 +27,14 @@ html{scroll-behavior:smooth;color-scheme:light dark;}
   --accent:#CC0000;
   --blk:#1A1A1A;--wht:#fff;--lgray:#EEEDF2;--mgray:#E0DFE5;--dgray:#71717A;--bdr:#D8D8DE;
   --bg-base:#E8E7EC;--bg-el:rgba(255,255,255,0.72);--bg-sub:#DDDCE2;
+  --tbl-alt:#FAFAFA;--tbl-accent:#FFF5F5;
+  --badge-ok-bg:#E8F0E8;--badge-ok:#27500A;
+  --badge-warn-bg:#FFF3E0;--badge-warn:#B25000;
+  --badge-err-bg:#FFF0F0;--badge-err:#A32D2D;
+  --badge-info-bg:#e8f0fe;--badge-info:#1a73e8;
+  --badge-muted-bg:#F0F0F0;--badge-muted:#555;
+  --txt-secondary:#555;--txt-muted:#999;--dot-sep:#ddd;
+  --info-bg:#FFF8E1;--info-border:#FFD54F;--info-text:#F57F17;
   --rad:10px;--rad-s:6px;--rad-l:14px;
   --font:'DM Sans','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   --font-display:'Outfit','DM Sans',sans-serif;
@@ -36,6 +44,7 @@ html{scroll-behavior:smooth;color-scheme:light dark;}
   --glass:rgba(255,255,255,0.65);--glass-blur:blur(20px);
   --rail-w:56px;--sidebar-w:240px;--topbar-h:52px;
   --transition:200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --card-gap:14px;
 }
 body{font-family:var(--font);background:var(--bg-base);color:var(--blk);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 
@@ -48,10 +57,10 @@ body{font-family:var(--font);background:var(--bg-base);color:var(--blk);font-siz
 body.dark .skeleton{background:linear-gradient(90deg,#27272A 25%,#3F3F46 50%,#27272A 75%);background-size:200% 100%;}
 
 /* Empty state — unified */
-.empty-state{text-align:center;padding:32px 20px;color:var(--dgray);}
-.empty-state svg{opacity:.25;margin-bottom:10px;}
-.empty-state-title{font-family:var(--font-display);font-size:14px;font-weight:600;margin-bottom:4px;}
-.empty-state-desc{font-size:12px;line-height:1.5;}
+.empty-state{text-align:center;padding:24px 16px;color:var(--dgray);}
+.empty-state svg{opacity:.2;margin-bottom:8px;}
+.empty-state-title{font-family:var(--font-display);font-size:13px;font-weight:600;margin-bottom:2px;color:var(--blk);}
+.empty-state-desc{font-size:12px;line-height:1.5;opacity:.7;}
 
 /* Sidebar separator */
 .nav-sep{height:1px;background:rgba(255,255,255,.06);margin:8px 12px;}
@@ -77,6 +86,14 @@ body.dark{
   --shadow-l:0 12px 40px rgba(0,0,0,.6);
   --glass:rgba(24,24,27,0.80);--glass-blur:blur(24px);
   --red-h:#FF4444;--red-soft:rgba(204,0,0,0.15);
+  --tbl-alt:rgba(255,255,255,0.02);--tbl-accent:rgba(204,0,0,0.08);
+  --badge-ok-bg:#1C2C1D;--badge-ok:#84C464;
+  --badge-warn-bg:#2C2414;--badge-warn:#E6A800;
+  --badge-err-bg:#2C1B1D;--badge-err:#FF6961;
+  --badge-info-bg:#1C2234;--badge-info:#6BABF7;
+  --badge-muted-bg:#3A3A3C;--badge-muted:#A1A1AA;
+  --txt-secondary:#A1A1AA;--txt-muted:#71717A;--dot-sep:rgba(255,255,255,0.15);
+  --info-bg:#2C2414;--info-border:#8B6914;--info-text:#E6A800;
   background:#09090B;color:#E4E4E7;
 }
 body.dark .main{background:transparent;}
@@ -349,16 +366,18 @@ body.dark .mention-dropdown{background:#1C1C1E;border-color:#48484A;}
 /* Glass card — unified card style for redesigned panels */
 .mc-card{
   background:var(--bg-el);
-  border:1px solid var(--bdr);border-radius:14px;overflow:hidden;
+  border:1px solid var(--bdr);border-radius:12px;overflow:hidden;
   transition:box-shadow .2s,border-color .2s;
 }
-.mc-card:hover{box-shadow:var(--shadow-m);border-color:rgba(204,0,0,0.12);}
+.mc-card:hover{box-shadow:0 2px 12px rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.10);}
 body.dark .mc-card,
 body.dark #panel-settings .card,
 body.dark #panel-admin .card,
 body.dark #panel-jobcost .card,
-body.dark #panel-bugs .card{background:rgba(24,24,27,0.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(255,255,255,0.06);}
-body.dark .mc-card:hover{border-color:rgba(204,0,0,0.25);box-shadow:0 4px 20px rgba(0,0,0,.4);}
+body.dark #panel-bugs .card,
+body.dark #panel-project .card{background:rgba(24,24,27,0.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(255,255,255,0.06);}
+body.dark .mc-card:hover,
+body.dark .card:hover{border-color:rgba(255,255,255,0.10);box-shadow:0 4px 16px rgba(0,0,0,.3);}
 
 /* KPI Stat Tile */
 .mc-kpi{
@@ -621,12 +640,13 @@ body.dark .dash-section{background:rgba(24,24,27,0.65);border-color:rgba(255,255
 }
 body.dark .dash-section-title{color:#A1A1AA;}
 .ops-page-head{
-  display:flex;align-items:flex-end;justify-content:space-between;gap:18px;
-  margin-bottom:18px;flex-wrap:wrap;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  margin-bottom:16px;flex-wrap:wrap;min-height:36px;
 }
-.ops-page-copy{display:flex;flex-direction:column;gap:6px;max-width:760px;}
-.ops-page-eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--dgray);}
-.ops-page-title{font-family:var(--font-display);font-size:28px;font-weight:800;line-height:1.05;color:var(--blk);}
+.ops-page-copy{display:flex;flex-direction:column;gap:2px;max-width:760px;}
+.ops-page-eyebrow{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--blk);letter-spacing:-0.02em;}
+.ops-page-title{font-size:12px;color:var(--dgray);line-height:1.4;}
+.ops-page-title:empty{display:none;}
 .ops-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .ops-grid-dashboard-top{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(320px,1fr);gap:18px;margin-bottom:18px;}
 .ops-grid-dashboard-bottom{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(280px,.85fr);gap:18px;}
@@ -968,26 +988,26 @@ body.dark .detail-hdr-btn:hover{border-color:rgba(255,255,255,0.15);color:#E4E4E
 body.dark .fab-action{background:#27272A;border-color:rgba(255,255,255,0.08);color:#E4E4E7;}
 
 /* Cards */
-.card{background:var(--bg-el);border:1px solid var(--bdr);border-radius:14px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.04);transition:box-shadow .2s,border-color .2s;}
+.card{background:var(--bg-el);border:1px solid var(--bdr);border-radius:12px;margin-bottom:var(--card-gap);overflow:hidden;box-shadow:none;transition:box-shadow .2s,border-color .2s;}
 .card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.08);}
-.card-hdr{padding:12px 16px;border-bottom:1px solid var(--bdr);background:transparent;display:flex;align-items:center;justify-content:space-between;}
-.card-title{font-family:var(--font-display);font-size:13px;font-weight:700;}
-.card-body{padding:16px;}
+.card-hdr{padding:10px 16px;border-bottom:1px solid var(--bdr);background:transparent;display:flex;align-items:center;justify-content:space-between;min-height:42px;}
+.card-title{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:-0.01em;}
+.card-body{padding:14px 16px;}
 
 /* Forms */
 .fg{display:grid;gap:11px;}
 .fg2{grid-template-columns:1fr 1fr;}
 .fg3{grid-template-columns:1fr 1fr 1fr;}
 .fg4{grid-template-columns:1fr 1fr 1fr 1fr;}
-label{display:block;font-size:11px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
-input,select,textarea{width:100%;padding:8px 12px;border:1px solid var(--bdr);border-radius:var(--rad-s);font-size:13px;font-family:var(--font);color:var(--blk);background:var(--wht);transition:border .12s,box-shadow .12s;}
-input:focus,select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px var(--red-soft);}
+label{display:block;font-size:11px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}
+input,select,textarea{width:100%;padding:7px 10px;border:1px solid var(--bdr);border-radius:var(--rad-s);font-size:13px;font-family:var(--font);color:var(--blk);background:var(--wht);transition:border .12s,box-shadow .12s;}
+input:focus,select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 2px var(--red-soft);}
 textarea{resize:vertical;min-height:52px;}
 
 /* Buttons */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:background .15s cubic-bezier(.4,0,.2,1),color .15s,box-shadow .15s,opacity .15s;font-family:var(--font);letter-spacing:-.01em;}
-.btn-primary{background:var(--blk);color:var(--wht);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.08);}
-.btn-red{background:var(--accent);color:#fff;font-weight:600;box-shadow:0 1px 3px rgba(204,0,0,0.2);}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:background .15s cubic-bezier(.4,0,.2,1),color .15s,box-shadow .15s,opacity .15s;font-family:var(--font);letter-spacing:-.01em;}
+.btn-primary{background:var(--blk);color:var(--wht);font-weight:600;box-shadow:none;}
+.btn-red{background:var(--accent);color:#fff;font-weight:600;box-shadow:none;}
 .btn-blue{background:#2563EB;color:#fff;font-weight:600;}
 .btn-blue:hover{background:#1D4ED8;}
 .btn-primary:hover{opacity:1;background:#333;box-shadow:0 2px 6px rgba(0,0,0,0.12);}
@@ -1007,21 +1027,21 @@ body.dark .btn-red:hover{background:#FF3333;box-shadow:0 2px 8px rgba(204,0,0,0.
 
 /* Metrics */
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;}
-.metric{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);padding:14px 16px;box-shadow:var(--shadow-s);transition:box-shadow .2s,transform .2s;}
-.metric:hover{box-shadow:var(--shadow-m);transform:translateY(-1px);}
+.metric{background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad);padding:12px 14px;box-shadow:none;transition:box-shadow .2s;}
+.metric:hover{box-shadow:0 2px 8px rgba(0,0,0,0.06);}
 .metric.hl{border-color:var(--red);}
-.metric-lbl{font-size:10px;color:var(--dgray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;font-weight:600;}
-.metric-val{font-size:19px;font-weight:700;}
+.metric-lbl{font-size:10px;color:var(--dgray);margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em;font-weight:600;}
+.metric-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;}
 .metric.hl .metric-val{color:var(--red);}
 .metric-sub{font-size:10px;color:var(--dgray);margin-top:1px;}
 
 /* Table */
-.tbl-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:12px;}
-th{text-align:left;padding:6px 9px;border-bottom:2px solid var(--bdr);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--dgray);font-weight:600;white-space:nowrap;}
-td{padding:6px 9px;border-bottom:1px solid var(--mgray);vertical-align:middle;transition:background .12s;}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--bdr);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--dgray);font-weight:600;white-space:nowrap;}
+td{padding:8px 10px;border-bottom:1px solid var(--bdr);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
-tr:nth-child(even) td{background:var(--lgray);}
+tr:hover td{background:var(--tbl-alt);}
 .badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;}
 .b-asphalt{background:#F0F0F0;color:#333;}
 .b-stone{background:#F3EDE5;color:#6B4F2E;}
@@ -1278,12 +1298,23 @@ tr:nth-child(even) td{background:var(--lgray);}
 .client-name{font-weight:600;font-size:13px;}
 .client-sub{font-size:11px;color:var(--dgray);margin-top:2px;}
 .kb-stage-select{font-size:11px;padding:2px 5px;border:1px solid var(--bdr);border-radius:4px;background:var(--wht);cursor:pointer;max-width:130px;}
-.admin-table{width:100%;border-collapse:collapse;font-size:13px;}.admin-table th{background:var(--lgray);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--dgray);border-bottom:2px solid var(--bdr);letter-spacing:.5px;text-transform:uppercase;}.admin-table td{padding:9px 12px;border-bottom:1px solid var(--bdr);vertical-align:middle;}.admin-table tr:hover td{background:var(--lgray);}.role-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}.role-admin{background:#2d1a1a;color:var(--red);}.role-user{background:#f0f0f0;color:#555;}.role-field{background:#E8F0E8;color:#27500A;}.status-active{color:#27500A;font-weight:600;font-size:11px;}.status-inactive{color:#999;font-size:11px;}.log-row-fail td{color:#cc4444;}.log-ip{font-family:monospace;font-size:11px;color:var(--dgray);}
+.admin-table{width:100%;border-collapse:collapse;font-size:13px;}
+.admin-table th{background:var(--tbl-alt);padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--dgray);border-bottom:1px solid var(--bdr);letter-spacing:.5px;text-transform:uppercase;}
+.admin-table td{padding:8px 12px;border-bottom:1px solid var(--bdr);vertical-align:middle;}
+.admin-table tr:hover td{background:var(--tbl-alt);}
+.role-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.role-admin{background:var(--badge-err-bg);color:var(--red);}
+.role-user{background:var(--badge-muted-bg);color:var(--badge-muted);}
+.role-field{background:var(--badge-ok-bg);color:var(--badge-ok);}
+.status-active{color:var(--badge-ok);font-weight:600;font-size:11px;}
+.status-inactive{color:var(--txt-muted);font-size:11px;}
+.log-row-fail td{color:#cc4444;}
+.log-ip{font-family:monospace;font-size:11px;color:var(--dgray);}
 [data-admin-hidden]{display:none}
 [data-field-hidden]{display:none}
 .role-price-hidden .role-price{display:none !important;}
-.settings-tab-bar{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--bdr);padding-bottom:0;}
-.stab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--dgray);cursor:pointer;transition:color .12s,border-color .12s;}
+.settings-tab-bar{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--bdr);padding-bottom:0;}
+.stab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:8px 14px;font-size:12px;font-weight:500;color:var(--dgray);cursor:pointer;transition:color .12s,border-color .12s;}
 .stab:hover{color:var(--blk);}
 .stab.on{color:var(--red);border-bottom-color:var(--red);font-weight:600;}
 @media (prefers-reduced-motion:reduce){
@@ -1765,22 +1796,22 @@ tr:nth-child(even) td{background:var(--lgray);}
             <div class="tbl-wrap">
               <table style="width:100%;border-collapse:collapse;font-size:12px;">
                 <thead>
-                  <tr style="background:#FAFAFA;border-bottom:2px solid var(--bdr);">
+                  <tr style="background:var(--tbl-alt);border-bottom:2px solid var(--bdr);">
                     <th style="padding:8px;text-align:left;" rowspan="2">Line Item</th>
                     <th style="padding:8px;text-align:center;border-left:1px solid var(--bdr);" colspan="5">Estimated</th>
-                    <th style="padding:8px;text-align:center;border-left:2px solid var(--red);background:#FFF5F5;" colspan="4">Actual</th>
+                    <th style="padding:8px;text-align:center;border-left:2px solid var(--red);background:var(--tbl-accent);" colspan="4">Actual</th>
                     <th style="padding:8px;text-align:center;border-left:1px solid var(--bdr);" colspan="2">Variance</th>
                   </tr>
-                  <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);font-size:10px;text-transform:uppercase;">
+                  <tr style="background:var(--tbl-alt);border-bottom:1px solid var(--bdr);font-size:10px;text-transform:uppercase;">
                     <th style="padding:4px 8px;border-left:1px solid var(--bdr);">Qty</th>
                     <th style="padding:4px 8px;">Unit</th>
                     <th style="padding:4px 8px;">Material</th>
                     <th style="padding:4px 8px;">Labor</th>
                     <th style="padding:4px 8px;">Trucking</th>
-                    <th style="padding:4px 8px;border-left:2px solid var(--red);background:#FFF5F5;">Qty</th>
-                    <th style="padding:4px 8px;background:#FFF5F5;">Material</th>
-                    <th style="padding:4px 8px;background:#FFF5F5;">Labor ($)</th>
-                    <th style="padding:4px 8px;background:#FFF5F5;">Trucking ($)</th>
+                    <th style="padding:4px 8px;border-left:2px solid var(--red);background:var(--tbl-accent);">Qty</th>
+                    <th style="padding:4px 8px;background:var(--tbl-accent);">Material</th>
+                    <th style="padding:4px 8px;background:var(--tbl-accent);">Labor ($)</th>
+                    <th style="padding:4px 8px;background:var(--tbl-accent);">Trucking ($)</th>
                     <th style="padding:4px 8px;border-left:1px solid var(--bdr);">Qty +/-</th>
                     <th style="padding:4px 8px;">Cost +/-</th>
                   </tr>
@@ -1794,7 +1825,7 @@ tr:nth-child(even) td{background:var(--lgray);}
         <div class="card" style="margin-top:14px;">
           <div class="card-hdr"><span class="card-title">Actual Job Summary</span></div>
           <div class="card-body">
-            <div id="eva-summary" style="background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;padding:12px 15px;">
+            <div id="eva-summary" style="background:var(--bg-sub);border:1px solid var(--bdr);border-radius:6px;padding:12px 15px;">
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Actual Material Cost</span><span id="eva-actual-mat">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Actual Labor Cost</span><span id="eva-actual-labor">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Actual Trucking Cost</span><span id="eva-actual-truck">-</span></div>
@@ -1854,51 +1885,50 @@ tr:nth-child(even) td{background:var(--lgray);}
         <!-- Financial summary strip -->
         <div id="ps-financials" data-field-hidden style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;"></div>
         <!-- Main content: 2 columns -->
-        <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;">
-          <!-- Left column -->
+        <div style="display:grid;grid-template-columns:3fr 2fr;gap:var(--card-gap);">
           <div>
-            <div class="card" data-field-hidden style="margin-bottom:14px;">
+            <div class="mc-card" data-field-hidden style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Proposals</span></div>
-              <div class="card-body" id="ps-proposals"><p style="color:var(--dgray);font-size:12px;">No proposals linked.</p></div>
+              <div class="card-body" id="ps-proposals"><div class="empty-state"><div class="empty-state-desc">No proposals linked.</div></div></div>
             </div>
-            <div class="card" data-field-hidden style="margin-bottom:14px;">
+            <div class="mc-card" data-field-hidden style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Change Orders</span></div>
-              <div class="card-body" id="ps-change-orders"><p style="color:var(--dgray);font-size:12px;">No change orders.</p></div>
+              <div class="card-body" id="ps-change-orders"><div class="empty-state"><div class="empty-state-desc">No change orders.</div></div></div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Phases</span></div>
-              <div class="card-body" id="ps-phases"><p style="color:var(--dgray);font-size:12px;">No phases defined.</p></div>
+              <div class="card-body" id="ps-phases"><div class="empty-state"><div class="empty-state-desc">No phases defined.</div></div></div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Work Orders</span></div>
-              <div class="card-body" id="ps-work-orders-list"><p style="color:var(--dgray);font-size:12px;">No work orders yet.</p></div>
+              <div class="card-body" id="ps-work-orders-list"><div class="empty-state"><div class="empty-state-desc">No work orders yet.</div></div></div>
             </div>
-            <!-- Material tracking moved to work orders -->
-            <div class="card" data-field-hidden style="margin-bottom:14px;">
+            <div class="mc-card" data-field-hidden style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Invoices</span></div>
-              <div class="card-body" id="ps-invoices"><p style="color:var(--dgray);font-size:12px;">No invoices yet.</p></div>
+              <div class="card-body" id="ps-invoices"><div class="empty-state"><div class="empty-state-desc">No invoices yet.</div></div></div>
             </div>
           </div>
-          <!-- Right column -->
           <div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Site Plan</span></div>
               <div class="card-body" id="ps-site-plan">
-                <p style="color:var(--dgray);font-size:12px;">No site plan uploaded.</p>
-                <label class="btn btn-sec btn-sm" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Upload Site Plan</label>
+                <div class="empty-state">
+                  <div class="empty-state-desc">No site plan uploaded.</div>
+                  <label class="btn btn-sec btn-sm" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Upload Site Plan</label>
+                </div>
               </div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Files</span></div>
-              <div class="card-body" id="ps-files"><p style="color:var(--dgray);font-size:12px;">No files attached.</p></div>
+              <div class="card-body" id="ps-files"><div class="empty-state"><div class="empty-state-desc">No files attached.</div></div></div>
             </div>
-            <div class="card" data-field-hidden style="margin-bottom:14px;">
+            <div class="mc-card" data-field-hidden style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Job Costing</span></div>
-              <div class="card-body" id="ps-job-costing"><p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p></div>
+              <div class="card-body" id="ps-job-costing"><div class="empty-state"><div class="empty-state-desc">Attach a proposal to view job costing.</div></div></div>
             </div>
-            <div class="card" data-field-hidden style="margin-bottom:14px;">
+            <div class="mc-card" data-field-hidden style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Activity</span></div>
-              <div class="card-body" id="ps-activity" style="max-height:360px;overflow-y:auto;"><p style="color:var(--dgray);font-size:12px;">No activity yet.</p></div>
+              <div class="card-body" id="ps-activity" style="max-height:360px;overflow-y:auto;"><div class="empty-state"><div class="empty-state-desc">No activity yet.</div></div></div>
             </div>
           </div>
         </div>
@@ -2092,12 +2122,12 @@ tr:nth-child(even) td{background:var(--lgray);}
                   <div class="card-body" style="padding:0;">
                     <table style="width:100%;border-collapse:collapse;font-size:13px;">
                       <thead>
-                        <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);">
+                        <tr style="background:var(--tbl-alt);border-bottom:1px solid var(--bdr);">
                           <th style="padding:8px 12px;text-align:left;font-weight:600;width:70px;">Type</th>
-                          <th style="padding:8px 8px;text-align:left;font-weight:600;">Description</th>
-                          <th style="padding:8px 8px;text-align:right;font-weight:600;width:80px;">Qty</th>
-                          <th style="padding:8px 8px;text-align:left;font-weight:600;width:70px;">Unit</th>
-                          <th style="padding:8px 8px;text-align:right;font-weight:600;width:100px;">Unit Price</th>
+                          <th style="padding:8px;text-align:left;font-weight:600;">Description</th>
+                          <th style="padding:8px;text-align:right;font-weight:600;width:80px;">Qty</th>
+                          <th style="padding:8px;text-align:left;font-weight:600;width:70px;">Unit</th>
+                          <th style="padding:8px;text-align:right;font-weight:600;width:100px;">Unit Price</th>
                           <th style="padding:8px 12px;text-align:right;font-weight:600;width:100px;">Subtotal</th>
                           <th style="padding:8px 6px;width:30px;"></th>
                         </tr>
@@ -2161,9 +2191,9 @@ tr:nth-child(even) td{background:var(--lgray);}
           </div>
         </div>
         <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px;">
-          <span class="badge" style="background:#E8F0E8;color:#27500A;">30%+ margin</span>
-          <span class="badge" style="background:#FFF3E0;color:#B25000;">15-30% margin</span>
-          <span class="badge" style="background:#FFF0F0;color:#A32D2D;">Under 15%</span>
+          <span class="badge" style="background:var(--badge-ok-bg);color:var(--badge-ok);">30%+ margin</span>
+          <span class="badge" style="background:var(--badge-warn-bg);color:var(--badge-warn);">15-30% margin</span>
+          <span class="badge" style="background:var(--badge-err-bg);color:var(--badge-err);">Under 15%</span>
         </div>
         <div class="mc-card">
           <div class="card-hdr">
@@ -5219,7 +5249,7 @@ function _renderProjectSummaryInner(proj){
           var topRow=document.createElement('div');
           topRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;';
           var nameEl=document.createElement('div');nameEl.style.cssText='font-weight:700;font-size:14px;flex:1;min-width:0;';
-          var pLabel=document.createElement('span');pLabel.style.cssText='display:inline-block;background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;';
+          var pLabel=document.createElement('span');pLabel.style.cssText='display:inline-block;background:var(--red-soft);color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;';
           pLabel.textContent='P'+(idx+1);
           nameEl.appendChild(pLabel);
           nameEl.appendChild(document.createTextNode(q.name||'Untitled'));
@@ -5285,7 +5315,7 @@ function _renderProjectSummaryInner(proj){
         var topRow=document.createElement('div');
         topRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;';
         var nameEl=document.createElement('div');nameEl.style.cssText='font-weight:700;font-size:14px;flex:1;min-width:0;';
-        var coLabel=document.createElement('span');coLabel.style.cssText='display:inline-block;background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;';
+        var coLabel=document.createElement('span');coLabel.style.cssText='display:inline-block;background:var(--red-soft);color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;';
         coLabel.textContent='CO'+(co.co_number||idx+1);
         nameEl.appendChild(coLabel);
         nameEl.appendChild(document.createTextNode(co.name||'Change Order'));
@@ -5350,7 +5380,7 @@ function _renderProjectSummaryInner(proj){
         var topRow=document.createElement('div');
         topRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;';
         var nameEl=document.createElement('div');nameEl.style.cssText='font-weight:700;font-size:14px;flex:1;min-width:0;';
-        var woLabel=document.createElement('span');woLabel.style.cssText='display:inline-block;background:#fef3f2;color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;';
+        var woLabel=document.createElement('span');woLabel.style.cssText='display:inline-block;background:var(--red-soft);color:var(--red);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:.5px;margin-right:6px;vertical-align:middle;';
         woLabel.textContent='WO'+(idx+1);
         nameEl.appendChild(woLabel);
         var woNameTxt=document.createTextNode(wo.name||'Work Order');
@@ -6084,7 +6114,7 @@ function renderProjectPhases(snap,proj){
     var unalloc=totalMats.filter(function(m){return m.qty-(alloc[m.key]||0)>0;});
     if(unalloc.length){
       var uDiv=document.createElement('div');
-      uDiv.style.cssText='background:#FFF8E1;border:1px solid #FFD54F;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;';
+      uDiv.style.cssText='background:var(--info-bg);border:1px solid var(--info-border);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;';
       var uTitle=document.createElement('div');uTitle.style.cssText='font-weight:700;margin-bottom:4px;color:#F57F17;';
       uTitle.textContent='Unallocated Materials';uDiv.appendChild(uTitle);
       unalloc.forEach(function(m){
@@ -7596,7 +7626,7 @@ function updateLyrResult(sid2,lid2){
 }
 
 function buildLyrResHTML(t,sy,matC,laborC,truckC,costC,bidC){
-  var d='<span style="margin:0 3px;color:#ddd;">&middot;</span>';
+  var d='<span style="margin:0 3px;color:var(--dot-sep);">&middot;</span>';
   return '<span><b>'+sy.toLocaleString()+'</b> SY</span>'+d
     +'<span><b>'+Math.round(t).toLocaleString()+'</b> tons</span>'+d
     +'<span>Mat <b>$'+fi(matC)+'</b></span>'+d
@@ -7686,7 +7716,7 @@ function updateConcResult(id){
   var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];
   var cy=calcConcCY(item);var matC=concMatCost(item);var labC=concLaborCost(item);var bidC=concBidTotal(item);var bR=concBidPerUnit(item);
   var costC=matC+labC;var mp=costC>0?((bidC-costC)/costC*100):0;
-  var d='<span style="margin:0 3px;color:#ddd;">&middot;</span>';
+  var d='<span style="margin:0 3px;color:var(--dot-sep);">&middot;</span>';
   var resEl=document.querySelector('.lres[data-conc="'+id+'"]');
   var muEl=document.querySelector('.mubadge[data-conc="'+id+'"]');
   var bidPerCY=cy>0?bidC/cy:0;
@@ -7704,7 +7734,7 @@ function renderConc(){
     var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];
     var cy=calcConcCY(item);var matC=concMatCost(item);var labC=concLaborCost(item);var bidC=concBidTotal(item);var bR=concBidPerUnit(item);
     var costC=matC+labC;var mp=costC>0?((bidC-costC)/costC*100):0;
-    var d='<span style="margin:0 3px;color:#ddd;">&middot;</span>';
+    var d='<span style="margin:0 3px;color:var(--dot-sep);">&middot;</span>';
     var bidPerCY=cy>0?bidC/cy:0;
     var resHTML=item.qty>0&&item.sub>0
       ?('<b>'+item.qty.toLocaleString()+'</b> '+ct.unit+d+'<b>'+cy.toFixed(2)+'</b> CY'+d+'Mat <b>$'+fi(matC)+'</b>'+d+'Labor <b>$'+fi(labC)+'</b>'+d+'Cost <b>$'+fi(costC)+'</b>'+d+'Total <b style="color:var(--red);">$'+fi(bidC)+'</b>'+(bidPerCY>0?d+'<b style="color:var(--red);">$'+Math.round(bidPerCY).toLocaleString()+'/CY</b>':''))
@@ -9715,7 +9745,7 @@ function renderSubsList(){
     card.dataset.name=(sub.name||'').toLowerCase();
     card.dataset.trade=(sub.trade||'').toLowerCase();
     var initials=(sub.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
-    var projLabel=item.projName?'<span style="background:#e8f0fe;color:#1a73e8;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">'+esc(item.projName)+'</span>':'<span style="background:#eee;color:var(--dgray);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">Standalone</span>';
+    var projLabel=item.projName?'<span style="background:var(--badge-info-bg);color:var(--badge-info);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">'+esc(item.projName)+'</span>':'<span style="background:var(--badge-muted-bg);color:var(--badge-muted);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">Standalone</span>';
     var statusBadge='<span style="font-size:10px;font-weight:700;color:#fff;background:'+(statusColors[sub.status]||'#999')+';padding:1px 8px;border-radius:3px;text-transform:uppercase;margin-left:6px;">'+esc((sub.status||'pending'))+'</span>';
     card.innerHTML='<div style="width:36px;height:36px;border-radius:50%;background:#6B4FA6;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+initials+'</div>'
       +'<div style="flex:1;">'
