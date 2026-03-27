@@ -13615,13 +13615,15 @@ function openBugDetail(id){
   html+='<div style="margin-bottom:10px;padding:10px;background:var(--lgray);border-radius:6px;white-space:pre-wrap;">'+esc(b.description)+'</div>';
   html+='</div>';
   html+='<label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Status</label>';
-  html+='<select id="bug-edit-status" class="inp" style="width:100%;margin-bottom:10px;">';
+  html+='<select id="bug-edit-status" class="inp" style="width:100%;margin-bottom:10px;" onchange="var nl=document.getElementById(\'bug-notes-label\');if(this.value===\'Fixed\'||this.value===\'Closed\'){nl.textContent=\'Resolution Notes\';nl.style.color=\'var(--red)\';}else{nl.textContent=\'Admin Notes\';nl.style.color=\'\';}">';
   ['Open','Acknowledged','In Progress','Fixed','Closed'].forEach(function(s){
     html+='<option'+(b.status===s?' selected':'')+'>'+s+'</option>';
   });
   html+='</select>';
-  html+='<label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Admin Notes</label>';
-  html+='<textarea id="bug-edit-notes" rows="3" class="inp" style="width:100%;" placeholder="Internal notes...">'+esc(b.admin_notes||'')+'</textarea>';
+  var isResolved=b.status==='Fixed'||b.status==='Closed';
+  html+='<label id="bug-notes-label" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;'+(isResolved?'color:var(--red);':'')+'\">'+(isResolved?'Resolution Notes':'Admin Notes')+'</label>';
+  html+='<textarea id="bug-edit-notes" rows="3" class="inp" style="width:100%;" placeholder="'+(isResolved?'Describe what was fixed and why...':'Internal notes, root cause, context...')+'">'+esc(b.admin_notes||'')+'</textarea>';
+  if(b.resolved_at)html+='<div style="font-size:10px;color:var(--dgray);margin-top:6px;">Resolved: '+new Date(b.resolved_at).toLocaleString()+'</div>';
   body.innerHTML=html;
   document.getElementById('bug-detail-modal').classList.remove('hidden');
 }
@@ -13630,7 +13632,10 @@ function saveBugUpdate(){
   if(!_editingBugId)return;
   var status=document.getElementById('bug-edit-status').value;
   var notes=document.getElementById('bug-edit-notes').value;
-  fetch('/bugs/'+_editingBugId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:status,admin_notes:notes})})
+  var payload={status:status,admin_notes:notes};
+  if(status==='Fixed'||status==='Closed')payload.resolved_at=new Date().toISOString();
+  else payload.resolved_at=null;
+  fetch('/bugs/'+_editingBugId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
   .then(function(r){return r.json();}).then(function(d){
     if(d.ok){
       document.getElementById('bug-detail-modal').classList.add('hidden');

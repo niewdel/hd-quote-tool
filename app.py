@@ -1548,6 +1548,8 @@ def update_bug(bug_id):
             updates['status'] = d['status']
             if d['status'] in ('Fixed', 'Closed'):
                 updates['resolved_at'] = datetime.utcnow().isoformat()
+            else:
+                updates['resolved_at'] = None
         if 'admin_notes' in d:
             updates['admin_notes'] = d['admin_notes']
         r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_bug_reports?id=eq.{bug_id}", json=updates, headers=sb_admin_headers(), timeout=10)
