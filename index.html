@@ -13447,7 +13447,11 @@ function submitBug(){
 
 var _bugReportsError='';
 function loadBugList(){
-  fetch('/bugs/list').then(function(r){return r.json();}).then(function(data){
+  fetch('/bugs/list').then(function(r){
+    if(!r.ok)console.warn('[bugs/list] HTTP '+r.status);
+    return r.json();
+  }).then(function(data){
+    console.log('[bugs/list] response:',JSON.stringify(data).slice(0,200));
     _bugReportsError='';
     if(data&&data.ok===false){
       _bugReports=[];
@@ -13471,66 +13475,68 @@ function renderBugList(){
     var errTr=document.createElement('tr');
     var errTd=document.createElement('td');errTd.colSpan=8;errTd.style.cssText='text-align:center;padding:20px;color:var(--red);font-size:12px;';
     errTd.textContent='Error loading bug reports: '+_bugReportsError;errTr.appendChild(errTd);tbody.appendChild(errTr);
-    var sErrTbody=document.getElementById('settings-bugs-tbody');
-    if(sErrTbody)sErrTbody.innerHTML=tbody.innerHTML;
-    return;
-  }
-  var fs=document.getElementById('bug-filter-status');
-  var fv=document.getElementById('bug-filter-severity');
-  var statusF=fs?fs.value:'';
-  var sevF=fv?fv.value:'';
-  var filtered=_bugReports.filter(function(b){
-    if(statusF&&b.status!==statusF)return false;
-    if(sevF&&b.severity!==sevF)return false;
-    return true;
-  });
-  if(!filtered.length){
-    var tr=document.createElement('tr');
-    var td=document.createElement('td');td.colSpan=8;td.style.cssText='text-align:center;padding:20px;color:var(--dgray);font-size:12px;';
-    td.textContent='No bug reports found.';tr.appendChild(td);tbody.appendChild(tr);return;
-  }
-  var sevColors={Critical:'#CC0000',Major:'#E65100',Minor:'#666',Cosmetic:'#1565C0'};
-  var sevBg={Critical:'#FEE',Major:'#FFF3E0',Minor:'#F5F5F5',Cosmetic:'#E6F1FB'};
-  var stColors={Open:'#CC0000',Acknowledged:'#E65100','In Progress':'#1565C0',Fixed:'#2E7D32',Closed:'#666'};
-  var stBg={Open:'#FEE',Acknowledged:'#FFF3E0','In Progress':'#E6F1FB',Fixed:'#EAF3DE',Closed:'#F5F5F5'};
-  filtered.forEach(function(b){
-    var tr=document.createElement('tr');tr.style.cursor='pointer';
-    tr.addEventListener('click',function(){openBugDetail(b.id);});
-    var cells=[
-      b.id,
-      b.title,
-      b.severity,
-      b.panel||'General',
-      b.status,
-      b.submitted_by,
-      b.submitted_at?new Date(b.submitted_at).toLocaleDateString():'',
-      ''
-    ];
-    cells.forEach(function(val,i){
-      var td=document.createElement('td');td.style.fontSize='12px';td.style.padding='8px 10px';
-      if(i===2){
-        var badge=document.createElement('span');
-        badge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
-        badge.style.background=sevBg[val]||'#F5F5F5';badge.style.color=sevColors[val]||'#666';
-        badge.textContent=val;td.appendChild(badge);
-      } else if(i===4){
-        var badge=document.createElement('span');
-        badge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
-        badge.style.background=stBg[val]||'#F5F5F5';badge.style.color=stColors[val]||'#666';
-        badge.textContent=val;td.appendChild(badge);
-      } else if(i===7){
-        var btn=document.createElement('button');btn.className='btn btn-sec btn-sm';btn.style.fontSize='10px';
-        btn.textContent='View';btn.addEventListener('click',function(e){e.stopPropagation();openBugDetail(b.id);});
-        td.appendChild(btn);
-      } else {
-        td.textContent=val;
-      }
-      if(i===1){td.style.fontWeight='600';td.style.maxWidth='200px';td.style.overflow='hidden';td.style.textOverflow='ellipsis';td.style.whiteSpace='nowrap';}
-      tr.appendChild(td);
+  } else {
+    // Read filters from both locations (panel-bugs and settings tab)
+    var fs=document.getElementById('bug-filter-status');
+    var fs2=document.getElementById('settings-bug-filter-status');
+    var fv=document.getElementById('bug-filter-severity');
+    var fv2=document.getElementById('settings-bug-filter-severity');
+    var statusF=(fs?fs.value:'') || (fs2?fs2.value:'');
+    var sevF=(fv?fv.value:'') || (fv2?fv2.value:'');
+    var filtered=_bugReports.filter(function(b){
+      if(statusF&&b.status!==statusF)return false;
+      if(sevF&&b.severity!==sevF)return false;
+      return true;
     });
-    tbody.appendChild(tr);
-  });
-  // Mirror into Settings > Bug Report tab
+    if(!filtered.length){
+      var tr=document.createElement('tr');
+      var td=document.createElement('td');td.colSpan=8;td.style.cssText='text-align:center;padding:20px;color:var(--dgray);font-size:12px;';
+      td.textContent=_bugReports.length?'No bug reports match the current filters.':'No bug reports found.';tr.appendChild(td);tbody.appendChild(tr);
+    } else {
+      var sevColors={Critical:'#CC0000',Major:'#E65100',Minor:'#666',Cosmetic:'#1565C0'};
+      var sevBg={Critical:'#FEE',Major:'#FFF3E0',Minor:'#F5F5F5',Cosmetic:'#E6F1FB'};
+      var stColors={Open:'#CC0000',Acknowledged:'#E65100','In Progress':'#1565C0',Fixed:'#2E7D32',Closed:'#666'};
+      var stBg={Open:'#FEE',Acknowledged:'#FFF3E0','In Progress':'#E6F1FB',Fixed:'#EAF3DE',Closed:'#F5F5F5'};
+      filtered.forEach(function(b){
+        var tr=document.createElement('tr');tr.style.cursor='pointer';
+        tr.addEventListener('click',function(){openBugDetail(b.id);});
+        var cells=[
+          b.id,
+          b.title,
+          b.severity,
+          b.panel||'General',
+          b.status,
+          b.submitted_by,
+          b.submitted_at?new Date(b.submitted_at).toLocaleDateString():'',
+          ''
+        ];
+        cells.forEach(function(val,i){
+          var td=document.createElement('td');td.style.fontSize='12px';td.style.padding='8px 10px';
+          if(i===2){
+            var badge=document.createElement('span');
+            badge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
+            badge.style.background=sevBg[val]||'#F5F5F5';badge.style.color=sevColors[val]||'#666';
+            badge.textContent=val;td.appendChild(badge);
+          } else if(i===4){
+            var badge=document.createElement('span');
+            badge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
+            badge.style.background=stBg[val]||'#F5F5F5';badge.style.color=stColors[val]||'#666';
+            badge.textContent=val;td.appendChild(badge);
+          } else if(i===7){
+            var btn=document.createElement('button');btn.className='btn btn-sec btn-sm';btn.style.fontSize='10px';
+            btn.textContent='View';btn.addEventListener('click',function(e){e.stopPropagation();openBugDetail(b.id);});
+            td.appendChild(btn);
+          } else {
+            td.textContent=val;
+          }
+          if(i===1){td.style.fontWeight='600';td.style.maxWidth='200px';td.style.overflow='hidden';td.style.textOverflow='ellipsis';td.style.whiteSpace='nowrap';}
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+  }
+  // Always mirror into Settings > Bug Report tab
   var sTbody=document.getElementById('settings-bugs-tbody');
   if(sTbody)sTbody.innerHTML=tbody.innerHTML;
 }
@@ -13611,7 +13617,11 @@ var _editingRoadmapId=null;
 var _roadmapItemsError='';
 
 function loadRoadmapList(){
-  fetch('/roadmap/list').then(function(r){return r.json();}).then(function(data){
+  fetch('/roadmap/list').then(function(r){
+    if(!r.ok)console.warn('[roadmap/list] HTTP '+r.status);
+    return r.json();
+  }).then(function(data){
+    console.log('[roadmap/list] response:',JSON.stringify(data).slice(0,200));
     _roadmapItemsError='';
     if(data&&data.ok===false){
       _roadmapItems=[];
@@ -13635,75 +13645,78 @@ function renderRoadmapList(){
     var errTr=document.createElement('tr');
     var errTd=document.createElement('td');errTd.colSpan=7;errTd.style.cssText='text-align:center;padding:20px;color:var(--red);font-size:12px;';
     errTd.textContent='Error loading roadmap items: '+_roadmapItemsError;errTr.appendChild(errTd);tbody.appendChild(errTr);
-    var aErrTbody=document.getElementById('admin-roadmap-tbody');
-    if(aErrTbody)aErrTbody.innerHTML=tbody.innerHTML;
-    return;
+  } else {
+    // Read filters from both locations (panel-roadmap and admin tab)
+    var fs=document.getElementById('rm-filter-status');
+    var fs2=document.getElementById('admin-rm-filter-status');
+    var fp=document.getElementById('rm-filter-priority');
+    var fp2=document.getElementById('admin-rm-filter-priority');
+    var fc=document.getElementById('rm-filter-cat');
+    var fc2=document.getElementById('admin-rm-filter-cat');
+    var statusF=(fs?fs.value:'') || (fs2?fs2.value:'');
+    var prioF=(fp?fp.value:'') || (fp2?fp2.value:'');
+    var catF=(fc?fc.value:'') || (fc2?fc2.value:'');
+    var filtered=_roadmapItems.filter(function(r){
+      if(statusF&&r.status!==statusF)return false;
+      if(prioF&&r.priority!==prioF)return false;
+      if(catF&&r.category!==catF)return false;
+      return true;
+    });
+    if(!filtered.length){
+      var tr=document.createElement('tr');
+      var td=document.createElement('td');td.colSpan=7;td.style.cssText='text-align:center;padding:20px;color:var(--dgray);font-size:12px;';
+      td.textContent=_roadmapItems.length?'No roadmap items match the current filters.':'No roadmap items found.';tr.appendChild(td);tbody.appendChild(tr);
+    } else {
+      var prioColors={High:'#CC0000',Medium:'#E65100',Low:'#1565C0','Wish List':'#666'};
+      var prioBg={High:'#FEE',Medium:'#FFF3E0',Low:'#E6F1FB','Wish List':'#F5F5F5'};
+      var catColors={Feature:'#1565C0',Enhancement:'#6A1B9A',Fix:'#CC0000',Cleanup:'#666'};
+      var catBg={Feature:'#E6F1FB',Enhancement:'#F3E5F5',Fix:'#FEE',Cleanup:'#F5F5F5'};
+      var stColors={Planned:'#E65100','In Progress':'#1565C0',Done:'#2E7D32'};
+      var stBg={Planned:'#FFF3E0','In Progress':'#E6F1FB',Done:'#EAF3DE'};
+      var effortColors={Quick:'#2E7D32',Medium:'#E65100',Large:'#CC0000'};
+      var effortBg={Quick:'#EAF3DE',Medium:'#FFF3E0',Large:'#FEE'};
+      filtered.forEach(function(item){
+        var tr=document.createElement('tr');
+        // Title + description tooltip
+        var tdTitle=document.createElement('td');tdTitle.style.cssText='font-size:12px;padding:8px 10px;font-weight:600;max-width:250px;';
+        tdTitle.textContent=item.title;
+        if(item.description){tdTitle.title=item.description;tdTitle.style.cursor='help';}
+        tr.appendChild(tdTitle);
+        // Category badge
+        var tdCat=document.createElement('td');tdCat.style.cssText='font-size:12px;padding:8px 10px;';
+        var catBadge=document.createElement('span');catBadge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
+        catBadge.style.background=catBg[item.category]||'#F5F5F5';catBadge.style.color=catColors[item.category]||'#666';
+        catBadge.textContent=item.category;tdCat.appendChild(catBadge);tr.appendChild(tdCat);
+        // Priority badge
+        var tdPrio=document.createElement('td');tdPrio.style.cssText='font-size:12px;padding:8px 10px;';
+        var prioBadge=document.createElement('span');prioBadge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
+        prioBadge.style.background=prioBg[item.priority]||'#F5F5F5';prioBadge.style.color=prioColors[item.priority]||'#666';
+        prioBadge.textContent=item.priority;tdPrio.appendChild(prioBadge);tr.appendChild(tdPrio);
+        // Effort badge
+        var tdEff=document.createElement('td');tdEff.style.cssText='font-size:12px;padding:8px 10px;';
+        var effBadge=document.createElement('span');effBadge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
+        effBadge.style.background=effortBg[item.effort]||'#F5F5F5';effBadge.style.color=effortColors[item.effort]||'#666';
+        effBadge.textContent=item.effort;tdEff.appendChild(effBadge);tr.appendChild(tdEff);
+        // Status badge
+        var tdSt=document.createElement('td');tdSt.style.cssText='font-size:12px;padding:8px 10px;';
+        var stBadge=document.createElement('span');stBadge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
+        stBadge.style.background=stBg[item.status]||'#F5F5F5';stBadge.style.color=stColors[item.status]||'#666';
+        stBadge.textContent=item.status;tdSt.appendChild(stBadge);tr.appendChild(tdSt);
+        // Version
+        var tdVer=document.createElement('td');tdVer.style.cssText='font-size:11px;padding:8px 10px;color:var(--dgray);';
+        tdVer.textContent=item.target_version||'—';tr.appendChild(tdVer);
+        // Actions
+        var tdAct=document.createElement('td');tdAct.style.cssText='padding:8px 10px;white-space:nowrap;';
+        var editBtn=document.createElement('button');editBtn.className='btn btn-sec btn-sm';editBtn.style.fontSize='10px';editBtn.style.marginRight='4px';
+        editBtn.textContent='Edit';editBtn.addEventListener('click',function(){openRoadmapModal(item.id);});
+        var delBtn=document.createElement('button');delBtn.className='btn btn-sec btn-sm';delBtn.style.cssText='font-size:10px;color:var(--red);';
+        delBtn.textContent='Del';delBtn.addEventListener('click',function(){deleteRoadmapItem(item.id);});
+        tdAct.appendChild(editBtn);tdAct.appendChild(delBtn);tr.appendChild(tdAct);
+        tbody.appendChild(tr);
+      });
+    }
   }
-  var fs=document.getElementById('rm-filter-status');
-  var fp=document.getElementById('rm-filter-priority');
-  var fc=document.getElementById('rm-filter-cat');
-  var statusF=fs?fs.value:'';
-  var prioF=fp?fp.value:'';
-  var catF=fc?fc.value:'';
-  var filtered=_roadmapItems.filter(function(r){
-    if(statusF&&r.status!==statusF)return false;
-    if(prioF&&r.priority!==prioF)return false;
-    if(catF&&r.category!==catF)return false;
-    return true;
-  });
-  if(!filtered.length){
-    var tr=document.createElement('tr');
-    var td=document.createElement('td');td.colSpan=7;td.style.cssText='text-align:center;padding:20px;color:var(--dgray);font-size:12px;';
-    td.textContent='No roadmap items found.';tr.appendChild(td);tbody.appendChild(tr);return;
-  }
-  var prioColors={High:'#CC0000',Medium:'#E65100',Low:'#1565C0','Wish List':'#666'};
-  var prioBg={High:'#FEE',Medium:'#FFF3E0',Low:'#E6F1FB','Wish List':'#F5F5F5'};
-  var catColors={Feature:'#1565C0',Enhancement:'#6A1B9A',Fix:'#CC0000',Cleanup:'#666'};
-  var catBg={Feature:'#E6F1FB',Enhancement:'#F3E5F5',Fix:'#FEE',Cleanup:'#F5F5F5'};
-  var stColors={Planned:'#E65100','In Progress':'#1565C0',Done:'#2E7D32'};
-  var stBg={Planned:'#FFF3E0','In Progress':'#E6F1FB',Done:'#EAF3DE'};
-  var effortColors={Quick:'#2E7D32',Medium:'#E65100',Large:'#CC0000'};
-  var effortBg={Quick:'#EAF3DE',Medium:'#FFF3E0',Large:'#FEE'};
-  filtered.forEach(function(item){
-    var tr=document.createElement('tr');
-    // Title + description tooltip
-    var tdTitle=document.createElement('td');tdTitle.style.cssText='font-size:12px;padding:8px 10px;font-weight:600;max-width:250px;';
-    tdTitle.textContent=item.title;
-    if(item.description){tdTitle.title=item.description;tdTitle.style.cursor='help';}
-    tr.appendChild(tdTitle);
-    // Category badge
-    var tdCat=document.createElement('td');tdCat.style.cssText='font-size:12px;padding:8px 10px;';
-    var catBadge=document.createElement('span');catBadge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
-    catBadge.style.background=catBg[item.category]||'#F5F5F5';catBadge.style.color=catColors[item.category]||'#666';
-    catBadge.textContent=item.category;tdCat.appendChild(catBadge);tr.appendChild(tdCat);
-    // Priority badge
-    var tdPrio=document.createElement('td');tdPrio.style.cssText='font-size:12px;padding:8px 10px;';
-    var prioBadge=document.createElement('span');prioBadge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
-    prioBadge.style.background=prioBg[item.priority]||'#F5F5F5';prioBadge.style.color=prioColors[item.priority]||'#666';
-    prioBadge.textContent=item.priority;tdPrio.appendChild(prioBadge);tr.appendChild(tdPrio);
-    // Effort badge
-    var tdEff=document.createElement('td');tdEff.style.cssText='font-size:12px;padding:8px 10px;';
-    var effBadge=document.createElement('span');effBadge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
-    effBadge.style.background=effortBg[item.effort]||'#F5F5F5';effBadge.style.color=effortColors[item.effort]||'#666';
-    effBadge.textContent=item.effort;tdEff.appendChild(effBadge);tr.appendChild(tdEff);
-    // Status badge
-    var tdSt=document.createElement('td');tdSt.style.cssText='font-size:12px;padding:8px 10px;';
-    var stBadge=document.createElement('span');stBadge.style.cssText='display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;';
-    stBadge.style.background=stBg[item.status]||'#F5F5F5';stBadge.style.color=stColors[item.status]||'#666';
-    stBadge.textContent=item.status;tdSt.appendChild(stBadge);tr.appendChild(tdSt);
-    // Version
-    var tdVer=document.createElement('td');tdVer.style.cssText='font-size:11px;padding:8px 10px;color:var(--dgray);';
-    tdVer.textContent=item.target_version||'—';tr.appendChild(tdVer);
-    // Actions
-    var tdAct=document.createElement('td');tdAct.style.cssText='padding:8px 10px;white-space:nowrap;';
-    var editBtn=document.createElement('button');editBtn.className='btn btn-sec btn-sm';editBtn.style.fontSize='10px';editBtn.style.marginRight='4px';
-    editBtn.textContent='Edit';editBtn.addEventListener('click',function(){openRoadmapModal(item.id);});
-    var delBtn=document.createElement('button');delBtn.className='btn btn-sec btn-sm';delBtn.style.cssText='font-size:10px;color:var(--red);';
-    delBtn.textContent='Del';delBtn.addEventListener('click',function(){deleteRoadmapItem(item.id);});
-    tdAct.appendChild(editBtn);tdAct.appendChild(delBtn);tr.appendChild(tdAct);
-    tbody.appendChild(tr);
-  });
-  // Mirror into Admin > Roadmap tab
+  // Always mirror into Admin > Roadmap tab
   var aTbody=document.getElementById('admin-roadmap-tbody');
   if(aTbody)aTbody.innerHTML=tbody.innerHTML;
 }
