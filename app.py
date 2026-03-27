@@ -107,55 +107,44 @@ def login():
     data = request.get_json() or {}
     username = str(data.get('username', '')).strip().lower()
     password = str(data.get('password', data.get('pin', ''))).strip()
-    users_ok = False
     try:
         r = http.get(sb_url('hd_users', f'?username=eq.{username}&active=eq.true&limit=1'),
                      headers=sb_headers(), timeout=5)
-        if r.status_code == 200:
-            users_ok = True
-            rows = r.json()
-            if rows:
-                user = rows[0]
-                pw_hash = hash_password(password)
-                pin_hash = hash_pin(password)
-                if user.get('password_hash') == pw_hash or user.get('pin_hash') == pin_hash:
-                    apply_user_session(user)
-                    log_access(user['username'], user.get('full_name',''), 'login', True)
-                    # Get last login from access log
-                    last_login = None
-                    try:
-                        lr = http.get(sb_url('hd_access_log', f'?username=eq.{user["username"]}&action=eq.login&success=eq.true&order=logged_at.desc&limit=2'),
-                                      headers=sb_headers(), timeout=3)
-                        if lr.status_code == 200:
-                            logs = lr.json()
-                            if len(logs) > 1: last_login = logs[1].get('logged_at')
-                    except Exception:
-                        pass
-                    return jsonify({'ok': True, 'role': session['role'], 'username': session['username'],
-                                    'full_name': session['full_name'],
-                                    'email': session['email'], 'phone': session['phone'],
-                                    'avatar_data': session.get('avatar_data', ''),
-                                    'password_hint': user.get('password_hint', ''),
-                                    'last_login': last_login})
-                else:
-                    log_access(username, '', 'login', False)
-                    # Return password hint if available
-                    hint = rows[0].get('password_hint', '') if rows else ''
-                    return jsonify({'error': 'Incorrect username or password', 'hint': hint}), 401
-    except Exception:
-        pass
-    if not users_ok and password == APP_PIN:
-        session['authenticated'] = True
-        session['username'] = 'admin'
-        session['full_name'] = 'Admin'
-        session['role'] = 'admin'
-        session['email'] = ''
-        session['phone'] = ''
-        session['avatar_data'] = ''
-        session.permanent = True
-        return jsonify({'ok': True, 'role': 'admin', 'username': 'admin', 'full_name': 'Admin',
-                        'email': '', 'phone': '', 'avatar_data': ''})
-    return jsonify({'error': 'Incorrect username or password'}), 401
+        if r.status_code != 200:
+            return jsonify({'error': 'Database connection error. Please try again.'}), 503
+        rows = r.json()
+        if not rows:
+            return jsonify({'error': 'Incorrect username or password'}), 401
+        user = rows[0]
+        pw_hash = hash_password(password)
+        pin_hash = hash_pin(password)
+        if user.get('password_hash') == pw_hash or user.get('pin_hash') == pin_hash:
+            apply_user_session(user)
+            log_access(user['username'], user.get('full_name',''), 'login', True)
+            # Get last login from access log
+            last_login = None
+            try:
+                lr = http.get(sb_url('hd_access_log', f'?username=eq.{user["username"]}&action=eq.login&success=eq.true&order=logged_at.desc&limit=2'),
+                              headers=sb_headers(), timeout=3)
+                if lr.status_code == 200:
+                    logs = lr.json()
+                    if len(logs) > 1: last_login = logs[1].get('logged_at')
+            except Exception:
+                pass
+            return jsonify({'ok': True, 'role': session['role'], 'username': session['username'],
+                            'full_name': session['full_name'],
+                            'email': session['email'], 'phone': session['phone'],
+                            'avatar_data': session.get('avatar_data', ''),
+                            'password_hint': user.get('password_hint', ''),
+                            'last_login': last_login})
+        else:
+            log_access(username, '', 'login', False)
+            hint = user.get('password_hint', '')
+            return jsonify({'error': 'Incorrect username or password', 'hint': hint}), 401
+    except http.exceptions.ConnectionError:
+        return jsonify({'error': 'Cannot reach database. Check your connection.'}), 503
+    except Exception as e:
+        return jsonify({'error': f'Login error: {str(e)}'}), 500
 
 @app.route('/auth/logout', methods=['POST'])
 def logout():
