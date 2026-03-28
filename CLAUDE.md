@@ -1,11 +1,19 @@
-# HD Hauling & Grading — Proposal Generator
-## CLAUDE.md — Project Context for Cursor / Claude Code
+# HD Hauling & Grading — Operations Platform
+## CLAUDE.md — Project Context for Claude Code
+
+**IMPORTANT: This file MUST be updated at the end of every session.** When a session ends or the user says they're done, update this file with any new routes, tables, features, conventions, or bug fixes before committing. This prevents knowledge loss between sessions.
+
+### End-of-Session Checklist
+1. **Update CLAUDE.md** — Add any new routes, tables, files, features, or conventions
+2. **Update memory files** — Save any user preferences, feedback, or project context to memory
+3. **Mark fixed bugs** — Every bug fixed must be marked as "Fixed" in `hd_bug_reports` table via Supabase API
+4. **Commit CLAUDE.md** — Include in the final commit so it's available in the next session
 
 ---
 
 ## Project Overview
 
-A single-page internal web app for HD Hauling & Grading to generate proposals, manage clients, track pipeline stages, and manage users. Built with a Flask backend and a fully self-contained single-file frontend (`index.html`). Deployed on Railway, source on GitHub, database on Supabase.
+An all-in-one internal web app for HD Hauling & Grading (paving contractor) — proposals, CRM, pipeline, scheduling, work orders, job costing, reporting, admin. Built with a Flask backend and a fully self-contained single-file frontend (`index.html`). Deployed on Railway, source on GitHub, database on Supabase.
 
 ---
 
@@ -14,20 +22,19 @@ A single-page internal web app for HD Hauling & Grading to generate proposals, m
 | Resource | Value |
 |---|---|
 | **Live URL** | https://web-production-e19b3.up.railway.app |
-| **GitHub Repo** | https://github.com/niewdel/hd-quote-tool |
-| **Railway Project ID** | (set in Railway dashboard — do not commit) |
-| **Railway Service ID** | (set in Railway dashboard — do not commit) |
-| **Supabase URL** | (set via SUPABASE_URL env var — do not commit) |
-| **Supabase Anon Key** | (set via SUPABASE_KEY env var — do not commit) |
+| **GitHub Repo** | https://github.com/niewdel/hd-app |
+| **Supabase Project** | azznfkboiwayifhhcguz |
+| **Supabase URL** | https://azznfkboiwayifhhcguz.supabase.co |
+| **Railway** | Auto-deploys from GitHub `main` branch |
 
-### Railway Environment Variables
+### Supabase Direct Access
+Bug reports and other DB tables can be queried directly via the Supabase REST API. The service role key is stored in the memory file `reference_supabase_access.md`. Use it like:
+```bash
+curl -s "https://azznfkboiwayifhhcguz.supabase.co/rest/v1/TABLE_NAME?select=*" \
+  -H "apikey: SERVICE_ROLE_KEY" \
+  -H "Authorization: Bearer SERVICE_ROLE_KEY"
 ```
-APP_PIN=2025
-SECRET_KEY=hd-hauling-secret-2025-xK9mP3
-SUPABASE_URL=<set in Railway>
-SUPABASE_KEY=<set in Railway>
-SUPABASE_SERVICE_KEY=<set in Railway>
-```
+To update a record: `PATCH` to `...rest/v1/TABLE_NAME?id=eq.ID` with JSON body.
 
 ### Deployment
 - Push to GitHub `main` branch → Railway auto-deploys (~60 seconds)
@@ -40,12 +47,15 @@ SUPABASE_SERVICE_KEY=<set in Railway>
 
 ```
 /
-├── index.html          # Entire frontend — single self-contained file (~159KB)
-├── app.py              # Flask backend (~19KB, 25 routes)
-├── generate_proposal.py    # PDF generator (ReportLab)
+├── index.html              # Entire frontend SPA — single self-contained file (~170KB+)
+├── app.py                  # Flask backend (40+ routes)
+├── generate_proposal.py    # PDF generator (ReportLab) — includes pricing options table
 ├── generate_change_order.py
 ├── generate_job_cost.py
 ├── generate_docx.py        # Word doc generator
+├── generate_report.py      # Report PDF generator
+├── proposal_view.html      # PUBLIC page — shareable proposal view + client approval
+├── lead_form.html          # PUBLIC page — lead intake form for potential clients
 ├── hd_logo_cropped.png     # Logo for PDF cover page
 ├── hd_logo.png             # Logo for login bar (has extra padding)
 ├── requirements.txt
@@ -56,90 +66,128 @@ SUPABASE_SERVICE_KEY=<set in Railway>
 
 ## Database Schema (Supabase / PostgreSQL)
 
-### `hd_users`
-| Column | Type | Notes |
-|---|---|---|
-| id | int | PK, auto |
-| username | text | lowercase, unique |
-| full_name | text | |
-| pin_hash | text | SHA256 of PIN |
-| role | text | `admin` or `user` |
-| active | bool | |
-| created_at | timestamptz | |
-| created_by | text | username of creator |
+**All tables have RLS DISABLED.**
 
-**RLS: DISABLED**
+### `hd_users`
+id, username (unique), full_name, email, phone, pin_hash (SHA256), role (`admin`/`user`/`field`), active, created_at, created_by. **Note**: `password_hint` column does NOT exist — do not include it in inserts/updates.
 
 ### `hd_access_log`
-| Column | Type | Notes |
-|---|---|---|
-| id | int | PK |
-| username | text | |
-| full_name | text | |
-| action | text | `login` or `logout` |
-| success | bool | |
-| ip_address | text | |
-| user_agent | text | |
-| logged_at | timestamptz | |
+id, username, full_name, action (`login`/`logout`), success, ip_address, user_agent, logged_at.
 
-**RLS: DISABLED**
-
-### `proposals` (quotes)
-Stores saved proposal snapshots with JSON `snap` field containing all line items, sections, etc.
+### `proposals` (quotes/projects)
+id, name, client, total, stage_id (FK to pipeline_stages), snap (JSONB — full proposal snapshot), share_token (unique, for public sharing), created_by, created_at, archived, archived_at, project_number.
 
 ### `clients`
-Client address book — name, company, phone, email, address, city_state, notes.
+id, name, company, phone, email, address, city_state, notes.
 
 ### `pipeline_stages`
-9 stages: New Lead, Estimate Sent, Follow Up, Under Review, Approved, Scheduled, In Progress, Completed, Lost. Each has color, sort_order, counts_in_ratio.
+id, name, color, position, counts_in_ratio, is_closed.
+9 stages: New Lead, Estimate Sent, Follow Up, Under Review, Approved, Scheduled, In Progress, Completed, Lost.
+
+### `hd_bug_reports`
+id, title, description, severity (Minor/Major/Critical), panel, status (Open/In Progress/Fixed/Closed), submitted_by, submitted_at, browser_info, screen_info, admin_notes, resolved_at.
+
+### `hd_reminders`
+id, type (general/project/client), ref_id, ref_name, note, due_date, assigned_to, created_by, completed, completed_at, created_at.
+
+### `hd_leads`
+id, name, company, email, phone, address, description, source, status (new/accepted/rejected), matched_client_id, created_proposal_id, submitted_at.
+
+### `hd_roadmap`
+id, title, description, category, status, priority, version, created_at.
+
+### `hd_notifications`
+id, recipient, type, title, body, project_id, project_name, link, read, created_at.
 
 ---
 
 ## Backend (`app.py`) — API Routes
 
 ### Auth
-| Method | Route | Description |
-|---|---|---|
-| POST | `/auth/login` | Username + PIN login. Checks `hd_users` table, falls back to `APP_PIN` env var |
-| POST | `/auth/logout` | Clears session, logs to `hd_access_log` |
-| GET | `/auth/check` | Returns `{authenticated, role, username, full_name}` |
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| POST | `/auth/login` | none | Username + password login |
+| POST | `/auth/logout` | yes | Clears session |
+| GET | `/auth/check` | none | Returns auth status |
 
 ### Proposals/Quotes
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| POST | `/quotes/save` | yes | Save proposal snapshot |
+| GET | `/quotes/list` | yes | List all saved proposals |
+| PATCH | `/quotes/update/<id>` | yes | Update existing proposal |
+| DELETE | `/quotes/delete/<id>` | yes | Archive a proposal |
+
+### Public Proposal Sharing (NO AUTH)
 | Method | Route | Description |
 |---|---|---|
-| POST | `/quotes/save` | Save a proposal snapshot |
-| GET | `/quotes/list` | List all saved proposals |
-| DELETE | `/quotes/delete/<id>` | Delete a proposal |
+| POST | `/proposal/share/<id>` | Generate share token (requires auth) |
+| GET | `/proposal/view/<token>` | Public JSON data for shared proposal |
+| POST | `/proposal/approve/<token>` | Client approves proposal (public) |
+| GET | `/p/<token>` | Serves public proposal view page |
+
+### Lead Intake (NO AUTH for submit)
+| Method | Route | Description |
+|---|---|---|
+| GET | `/lead-form` | Serves public lead intake form |
+| POST | `/leads/submit` | Public lead submission with auto client dedup |
+| GET | `/leads/list` | List leads (requires auth) |
+| PATCH | `/leads/<id>` | Update lead status (requires auth) |
+| POST | `/leads/<id>/convert` | Convert lead to project + client (requires auth) |
+
+### Reminders
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/reminders/list` | yes | List reminders (?filter=due/upcoming/completed) |
+| POST | `/reminders/save` | yes | Create reminder |
+| PATCH | `/reminders/<id>` | yes | Update/complete reminder |
+| DELETE | `/reminders/<id>` | yes | Delete reminder |
 
 ### PDF/Word Generation
 | Method | Route | Description |
 |---|---|---|
-| POST | `/generate-pdf` | Generate proposal PDF (ReportLab) |
+| POST | `/generate-pdf` | Generate proposal PDF (supports pricing_options) |
 | POST | `/generate-docx` | Generate proposal Word doc |
-| POST | `/generate-change-order` | Generate change order PDF |
+| POST | `/generate-co-pdf` | Generate change order PDF |
 | POST | `/generate-job-cost` | Generate job cost sheet |
 
-### Pipeline
+### Pipeline & Projects
 | Method | Route | Description |
 |---|---|---|
-| GET | `/pipeline/list` | List all proposals with pipeline stage |
+| GET | `/pipeline/list` | List all proposals with stage info |
 | GET | `/pipeline/stages` | List pipeline stages |
-| POST | `/pipeline/move` | Move proposal to new stage |
+| PATCH | `/pipeline/move/<id>` | Move proposal to new stage |
+| POST | `/projects/create` | Create new project |
+| PATCH | `/projects/update/<id>` | Update project |
 
-### Clients
+### Clients & Subcontractors
 | Method | Route | Description |
 |---|---|---|
 | GET | `/clients/list` | List all clients |
 | POST | `/clients/save` | Save/update a client |
 | DELETE | `/clients/delete/<id>` | Delete a client |
+| GET/POST/DELETE | `/subs/*` | Same CRUD for subcontractors |
 
-### Admin (require admin role)
+### Bug Reports
 | Method | Route | Description |
 |---|---|---|
-| GET | `/admin/users` | List all users (pins stripped) |
-| POST | `/admin/users` | Create new user |
-| PATCH | `/admin/users/<id>` | Update user (name, role, pin, active) |
-| GET | `/admin/logs` | Activity log with optional `?username=` filter |
+| POST | `/bugs/submit` | Submit bug report (requires auth) |
+| GET | `/bugs/list` | List all bug reports (admin only) |
+| PATCH | `/bugs/<id>` | Update bug status/notes (admin only) |
+
+### Admin
+| Method | Route | Description |
+|---|---|---|
+| GET | `/admin/users` | List all users |
+| POST | `/admin/users` | Create user (requires: full_name, username, password) |
+| PATCH | `/admin/users/<id>` | Update user |
+| GET | `/admin/logs` | Activity log |
+
+### Other Routes
+- `/roadmap/*` — Roadmap CRUD (admin)
+- `/notifications/*` — Notification system
+- `/schedule/feed.ics` — ICS calendar feed
+- `/settings/get`, `/settings/save` — App-level settings
 
 ---
 
@@ -149,23 +197,30 @@ Client address book — name, company, phone, email, address, city_state, notes.
 The entire frontend is one HTML file. All CSS, JS, and HTML in one file. No build step, no bundler. This is intentional — keeps deployment simple.
 
 ### Panels (navigation sections)
-| Panel ID | Nav Label | Description |
-|---|---|---|
-| `panel-build` | Build Proposal | Main proposal builder |
-| `panel-co` | Change Orders | Change order form |
-| `panel-saved` | Saved Proposals | Load/manage saved proposals |
-| `panel-pipeline` | Pipeline | Kanban-style deal pipeline |
-| `panel-clients` | Clients | Client address book |
-| `panel-analytics` | Analytics | Revenue/win rate charts |
-| `panel-settings` | Settings | Material prices, badges, library |
-| `panel-admin` | Admin | User management + activity log |
+| Panel ID | Description |
+|---|---|
+| `panel-dashboard` | Dashboard — KPIs, weather, today's schedule, reminders, leads, recent activity |
+| `panel-build` | Proposal builder with pricing options |
+| `panel-project` | Single project detail view |
+| `panel-projects` | Projects list + pipeline (Kanban) |
+| `panel-contacts` | Clients + Subcontractors tabs |
+| `panel-schedule` | Calendar views (day/3-day/week/month) |
+| `panel-co` | Change order form |
+| `panel-reports` | Reporting module |
+| `panel-settings` | Settings — materials, crew, equipment, company info |
+| `panel-admin` | Admin — user management, activity log, archived items |
+| `panel-bugs` | Bug reports tab |
+| `panel-roadmap` | Product roadmap tab |
+| `panel-workorder` | Work order detail view |
 
 ### Authentication Flow
 1. Page loads → startup IIFE calls `/auth/check`
 2. If authenticated: hides login screen, shows app, calls `boot()`, then `showAdminElements()`
 3. If not: shows login screen with canvas animation
-4. `doLogin()` → POST `/auth/login` → on success: set `window._userRole`, call `boot()`, `showAdminElements()`
+4. `doLogin()` → POST `/auth/login` with `{username, password}` → on success: set `window._userRole`, call `boot()`, `showAdminElements()`
 5. `doLogout()` → POST `/auth/logout` → `location.reload()`
+6. Users have username + password (min 6 chars). Passwords are SHA-256 hashed server-side and stored in `pin_hash` column.
+7. Three roles: `admin`, `user`, `field`. Field users see a reduced UI (elements with `data-field-hidden` are hidden).
 
 ### Admin Nav Visibility
 - `nav-admin` element has `data-admin-hidden` attribute by default
@@ -305,7 +360,6 @@ These functions MUST use the DOM API, not innerHTML string building. Previous ve
 ### Admin User
 - Username: `justin`
 - Full Name: Justin Ledwein
-- PIN: `2025`
 - Role: admin
 
 ### Default Materials
@@ -314,20 +368,37 @@ MAT = {'ABC base':45, 'Mill & Pave':35, 'B25.0C':85, 'I19.0C':92, 'S9.5B':95, 'S
 LBS = {'ABC base':150, 'Mill & Pave':115, 'B25.0C':115, 'I19.0C':115, 'S9.5B':115, 'S9.5C':115}
 ```
 
-### Default Project Note (pre-filled)
-"All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice."
+---
+
+## Bug Report Workflow
+
+Bug reports are stored in the `hd_bug_reports` table in Supabase and viewed in the app's Bug Reports tab.
+
+### How to read bug reports
+Query the Supabase REST API directly:
+```bash
+curl -s "https://azznfkboiwayifhhcguz.supabase.co/rest/v1/hd_bug_reports?select=*&order=submitted_at.desc" \
+  -H "apikey: SERVICE_ROLE_KEY" -H "Authorization: Bearer SERVICE_ROLE_KEY"
+```
+Filter by status: append `&status=eq.Open` to the URL.
+
+### How to mark a bug as fixed
+After fixing a bug, ALWAYS update its status in Supabase:
+```bash
+curl -s -X PATCH "https://azznfkboiwayifhhcguz.supabase.co/rest/v1/hd_bug_reports?id=eq.BUG_ID" \
+  -H "apikey: SERVICE_ROLE_KEY" -H "Authorization: Bearer SERVICE_ROLE_KEY" \
+  -H "Content-Type: application/json" -H "Prefer: return=minimal" \
+  -d '{"status":"Fixed","admin_notes":"Description of what was fixed","resolved_at":"ISO_TIMESTAMP"}'
+```
+**This is mandatory.** Every bug fix must update the bug report status to "Fixed" with a note describing the fix.
 
 ---
 
 ## Pending / Future Work
 
-- [ ] Scheduling module + built-in calendar
-- [ ] Badge Manager: dynamically inject CSS for custom badge colors when app loads
-- [ ] Settings: `renderMatTable()` badge dropdown should pull from `BADGE_DEFS` dynamically
-- [ ] Admin: edit own profile (PIN change) — UI shows Edit button but server-side PATCH works
-- [ ] PDF: include line item descriptions in the bid table output
-- [ ] Concrete items: allow custom `cy_per_lf` override per item
 - [ ] Phase tabs: multi-phase support partially built but not fully wired
+- [ ] Badge Manager: dynamically inject CSS for custom badge colors
+- [ ] Concrete items: allow custom `cy_per_lf` override per item
 
 ---
 
@@ -352,7 +423,14 @@ Edit the `MAT`, `LBS`, `DRATE`, `DDEPTH`, `LBADGE` objects near line ~920 in `in
 Add an entry to `CTYPES` array with `{id, name, desc, unit:'LF', cy_per_lf:X}`.
 
 ### Create a new user
-Use the Admin panel in the app, or POST to `/admin/users` with `{username, full_name, pin, role}`.
+Use the Admin panel in the app, or POST to `/admin/users` with `{username, full_name, password, role}`.
+Required fields: `full_name`, `username`, `password` (min 6 chars). Optional: `email`, `phone`, `role`.
+
+### Fix a bug report
+1. Read bug reports from Supabase (see Bug Report Workflow section)
+2. Fix the code
+3. Update the bug status to "Fixed" in Supabase with admin_notes (MANDATORY)
+4. Commit and push
 
 ---
 
