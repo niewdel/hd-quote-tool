@@ -2025,15 +2025,11 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       </div></div>
 
       <!-- PROJECTS LIST PANEL -->
-      <div class="panel" id="panel-projects"><div class="content mc-stagger" style="padding:16px;max-width:none;">
-        <div class="ops-page-head">
+      <div class="panel" id="panel-projects"><div class="content mc-stagger" style="padding:8px 16px;max-width:none;">
+        <div class="ops-page-head" style="margin-bottom:6px;">
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Projects Workspace</div>
             <div class="ops-page-title"></div>
-          </div>
-          <div class="ops-head-actions">
-            <button class="btn btn-sec btn-sm" onclick="showPanel('saved',null)">Saved Documents</button>
-            <button class="btn btn-primary btn-sm" onclick="openProjectModal()">New Project</button>
           </div>
         </div>
 
@@ -2058,6 +2054,10 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                 <select id="proj-stage-filter" onchange="filterProjects(document.getElementById('projects-search').value)" style="padding:7px 12px;border:1px solid var(--bdr);border-radius:8px;font-size:12px;background:var(--bg-sub);font-family:var(--font);">
                   <option value="">All Stages</option>
                 </select>
+                <div style="margin-left:auto;display:flex;gap:8px;">
+                  <button class="btn btn-sec btn-sm" onclick="showPanel('saved',null)">Saved Documents</button>
+                  <button class="btn btn-primary btn-sm" onclick="openProjectModal()">New Project</button>
+                </div>
               </div>
               <div id="proj-pipeline-view" style="overflow-x:auto;">
                 <div id="pipeline-board">
@@ -2249,7 +2249,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
       <!-- SETTINGS PANEL -->
       <div class="panel" id="panel-settings">
-        <div class="ops-page-head" style="padding:16px 16px 0;">
+        <div class="ops-page-head" style="padding:4px 16px 0;">
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Settings</div>
             <div class="ops-page-title"></div>
@@ -2583,8 +2583,8 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       </div></div>
 
       <!-- SCHEDULE PANEL -->
-      <div class="panel" id="panel-schedule"><div class="content mc-stagger" style="padding:16px;max-width:none;">
-        <div class="ops-page-head">
+      <div class="panel" id="panel-schedule"><div class="content mc-stagger" style="padding:8px 16px;max-width:none;">
+        <div class="ops-page-head" style="margin-bottom:6px;">
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Dispatch Board</div>
             <div class="ops-page-title"></div>
@@ -2697,13 +2697,10 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       </div></div>
 
       <div class="panel" id="panel-admin">
-  <div class="ops-page-head" style="padding:16px 16px 0;">
+  <div class="ops-page-head" style="padding:4px 16px 0;">
     <div class="ops-page-copy">
       <div class="ops-page-eyebrow">Admin Control Center</div>
       <div class="ops-page-title"></div>
-    </div>
-    <div class="ops-head-actions">
-      <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">Add User</button>
     </div>
   </div>
   <!-- Admin tabs -->
