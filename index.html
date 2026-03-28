@@ -12892,7 +12892,14 @@ function _extractReportSections(output){
     var c=el.style.color||'';
     if(c.startsWith('#'))return c;
     if(c.startsWith('rgb')){var m=c.match(/\d+/g);if(m&&m.length>=3)return'#'+m.slice(0,3).map(function(v){return('0'+parseInt(v).toString(16)).slice(-2);}).join('');};
-    if(c==='var(--red)')return'#CC0000';
+    if(c.indexOf('var(')>=0){
+      if(c.indexOf('--red')>=0)return'#CC0000';
+      if(c.indexOf('--badge-ok')>=0)return'#27500A';
+      if(c.indexOf('--badge-err')>=0)return'#A32D2D';
+      if(c.indexOf('--badge-warn')>=0)return'#B25000';
+      if(c.indexOf('--badge-info')>=0)return'#1a73e8';
+      return'#111111';
+    }
     return'#111111';
   }
   function extractStats(container){
@@ -12989,13 +12996,14 @@ function _extractReportSections(output){
   function processElement(el){
     // Skip text nodes and invisible elements
     if(el.nodeType!==1)return;
+    var isCard=el.classList.contains('card')||el.classList.contains('mc-card');
     // Stats grid (not inside a card)
-    if(!el.classList.contains('card')&&el.querySelector('.rpt-stat')&&!el.querySelector('.rpt-tbl')){
+    if(!isCard&&el.querySelector('.rpt-stat')&&!el.querySelector('.rpt-tbl')){
       extractStats(el);
       return;
     }
     // Card element
-    if(el.classList.contains('card')){
+    if(isCard){
       var titleEl=el.querySelector('.card-title');
       var title=titleEl?titleEl.textContent.trim():'';
       // Table inside card
@@ -13015,10 +13023,11 @@ function _extractReportSections(output){
       for(var i=0;i<el.children.length;i++){
         var ch=el.children[i];
         if(ch.nodeType!==1)continue;
+        var chIsCard=ch.classList.contains('card')||ch.classList.contains('mc-card');
         // Stat grid child
-        if(ch.querySelector('.rpt-stat')&&!ch.classList.contains('card')){extractStats(ch);continue;}
+        if(ch.querySelector('.rpt-stat')&&!chIsCard){extractStats(ch);continue;}
         // Card child
-        if(ch.classList.contains('card')){processElement(ch);continue;}
+        if(chIsCard){processElement(ch);continue;}
         // Grid with list columns (executive summary Top Clients / Top Regions)
         var gs=ch.getAttribute('style')||'';
         if(gs.indexOf('grid-template-columns')>=0&&ch.querySelectorAll('div[style*="border-bottom"]').length>0){
@@ -13035,7 +13044,7 @@ function _extractReportSections(output){
           continue;
         }
         // Nested wrapper or card container
-        if(ch.querySelector('.card')||ch.querySelector('.rpt-stat')){processElement(ch);}
+        if(ch.querySelector('.card,.mc-card')||ch.querySelector('.rpt-stat')){processElement(ch);}
       }
     }
   }
