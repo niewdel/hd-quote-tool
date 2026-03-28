@@ -1721,28 +1721,23 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           </div>
         </div>
 
-        <!-- PRESETS -->
-        <div class="mc-card" style="margin-bottom:var(--card-gap);">
-          <div class="card-hdr"><span class="card-title">Presets</span></div>
-          <div class="card-body" style="padding:12px 16px;">
-            <div class="preset-strip" id="presets"></div>
-          </div>
-        </div>
+        <!-- Hidden preset strip for renderPresets() to populate -->
+        <div id="presets" style="display:none;"></div>
 
-        <!-- PAVEMENT (Asphalt Sections + Concrete) -->
+        <!-- PAVEMENT (Asphalt Sections + Concrete + Library items) -->
         <div class="mc-card" style="margin-bottom:var(--card-gap);">
           <div class="card-hdr">
             <span class="card-title">Pavement</span>
             <div style="display:flex;gap:6px;">
-              <button class="btn btn-sec btn-sm" onclick="addConc()">+ Concrete</button>
+              <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('pavement')">From Library</button>
+              <button class="btn btn-sec btn-sm" onclick="showPresetPicker('pavement')">Add Preset</button>
               <button class="btn btn-sec btn-sm" onclick="addSection()">+ Add Section</button>
             </div>
           </div>
           <div class="card-body" style="padding:0;">
             <div id="sections"></div>
             <div id="conc-rows"></div>
-            <div id="conc-empty" class="empty-state" style="padding:16px;display:none;"><div class="empty-state-desc">Concrete items will appear here.</div></div>
-            <div id="pavement-empty" class="empty-state" style="padding:24px 16px;"><div class="empty-state-title">No pavement sections yet</div><div class="empty-state-desc">Click a preset above or + Add Section to get started.</div></div>
+            <div id="pavement-empty" class="empty-state" style="padding:24px 16px;"><div class="empty-state-title">No pavement items yet</div><div class="empty-state-desc">Add a preset, pull from the library, or add a section manually.</div></div>
           </div>
         </div>
 
@@ -1752,6 +1747,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <span class="card-title">Site Work</span>
             <div style="display:flex;gap:6px;">
               <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('sitework')">From Library</button>
+              <button class="btn btn-sec btn-sm" onclick="showPresetPicker('sitework')">Add Preset</button>
               <button class="btn btn-sec btn-sm" onclick="addSiteWorkItem()">+ Add Item</button>
             </div>
           </div>
@@ -1761,18 +1757,15 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           </div>
         </div>
 
-        <!-- ADDITIONAL ITEMS (Custom / misc) -->
+        <!-- ADDITIONAL ITEMS (Custom manual items only) -->
         <div class="mc-card" style="margin-bottom:var(--card-gap);">
           <div class="card-hdr">
             <span class="card-title">Additional Items</span>
-            <div style="display:flex;gap:6px;">
-              <button class="btn btn-sec btn-sm" onclick="openLibraryPicker()">From Library</button>
-              <button class="btn btn-sec btn-sm" onclick="addExtra()">+ Add Item</button>
-            </div>
+            <button class="btn btn-sec btn-sm" onclick="addExtra()">+ Add Item</button>
           </div>
           <div>
             <div id="extra-rows"></div>
-            <div id="extra-empty" class="empty-state" style="padding:16px;"><div class="empty-state-desc">Custom items, markings, traffic control, or anything not covered above.</div></div>
+            <div id="extra-empty" class="empty-state" style="padding:16px;"><div class="empty-state-desc">Custom items not in the library. Type in your own name, quantity, and price.</div></div>
           </div>
         </div>
 
@@ -3730,6 +3723,7 @@ function openLibraryPicker(target){
   // target: 'sitework' filters to sitework categories, undefined = all
   var _libPickerTarget=target||'extra';
   var SITEWORK_CATS=['Grading / Earthwork','Storm Drain','Sanitary Sewer','Water','Erosion Control','Land Clearing','Landscaping'];
+  var PAVEMENT_CATS=['Asphalt','Stone / Aggregate','Concrete','Striping / Signage'];
   if(!BID_LIBRARY.length){toast("Library empty — go to Settings > Item Library and click Load Defaults","err");return;}
   var ex=document.getElementById("lib-picker-modal");if(ex)ex.remove();
   var modal=document.createElement("div");modal.id="lib-picker-modal";
@@ -3782,7 +3776,8 @@ function openLibraryPicker(target){
     listWrap.innerHTML='';
     // Group by category
     var grouped={};
-    BID_LIBRARY.forEach(function(item){
+    var allowedCats=_libPickerTarget==='sitework'?SITEWORK_CATS:_libPickerTarget==='pavement'?PAVEMENT_CATS:null;
+    BID_LIBRARY.filter(function(item){return !allowedCats||allowedCats.indexOf(item.category)>=0;}).forEach(function(item){
       if(cat&&item.category!==cat)return;
       if(q&&(item.name||'').toLowerCase().indexOf(q)===-1&&(item.desc||'').toLowerCase().indexOf(q)===-1)return;
       var k=item.category||'Other';
@@ -3810,6 +3805,7 @@ function openLibraryPicker(target){
           var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
           var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:tradeBadge,material:item.material||'',mat_cost:item.mat_cost||0,labor_cost:0};
           if(_libPickerTarget==='sitework'){newItem.id=swid++;siteWorkItems.push(newItem);renderSiteWork();}
+          else if(_libPickerTarget==='pavement'){newItem.id=eid++;extraItems.push(newItem);renderExtra();}
           else{newItem.id=eid++;extraItems.push(newItem);renderExtra();}
           recalc();toast("Item added","ok");
         });
@@ -3826,7 +3822,64 @@ function openLibraryPicker(target){
   document.body.appendChild(modal);
   searchInp.focus();
 }
-function renderExtra(){var c=document.getElementById("extra-rows"),em=document.getElementById("extra-empty");if(!c)return;c.innerHTML="";em.style.display=extraItems.length?"none":"block";extraItems.forEach(function(i){var row=document.createElement("div");row.className="lyr-row";row.style.cssText="flex-wrap:wrap;gap:6px;align-items:flex-start;padding:8px 0;";var unitOpts=["LS","EA","LF","SY","SF","TON","CY","HR","DAY","WK","MO","VF","AC","LOAD"].map(function(u){return "<option"+(u===i.unit?" selected":"")+">"+u+"</option>";}).join("");var wrap=document.createElement("div");wrap.style.cssText="display:flex;flex-direction:column;gap:3px;flex:1;min-width:160px;";var ni=document.createElement("input");ni.type="text";ni.value=i.name||"";ni.placeholder="Item name";ni.style.cssText="width:100%;font-weight:500;";ni.addEventListener("change",(function(id){return function(){updExtraName(id,this.value);};})(i.id));var di=document.createElement("input");di.type="text";di.value=i.desc||"";di.placeholder="Description (appears on proposal)";di.style.cssText="width:100%;font-size:11px;color:var(--dgray);";di.addEventListener("change",(function(id){return function(){updExtraDesc(id,this.value);};})(i.id));wrap.appendChild(ni);wrap.appendChild(di);row.appendChild(wrap);var ql=document.createElement("label");ql.textContent="Qty";row.appendChild(ql);var qi=document.createElement("input");qi.type="number";qi.value=i.qty;qi.min="0";qi.step="1";qi.style.width="60px";qi.addEventListener("change",(function(id){return function(){updExtraNum(id,"qty",this.value);};})(i.id));row.appendChild(qi);var ul=document.createElement("label");ul.textContent="Unit";row.appendChild(ul);var us=document.createElement("select");us.style.width="66px";us.innerHTML=unitOpts;us.addEventListener("change",(function(id){return function(){updExtraUnit(id,this.value);};})(i.id));row.appendChild(us);var mcl=document.createElement("label");mcl.textContent="Mat $";mcl.style.cssText="font-size:11px;color:var(--dgray);";row.appendChild(mcl);var mci=document.createElement("input");mci.type="number";mci.value=i.mat_cost||"";mci.placeholder="0";mci.min="0";mci.step="1";mci.style.width="75px";mci.addEventListener("change",(function(id){return function(){updExtraNum(id,"mat_cost",this.value);};})(i.id));row.appendChild(mci);var lcl=document.createElement("label");lcl.textContent="Labor $";lcl.style.cssText="font-size:11px;color:var(--dgray);";row.appendChild(lcl);var lci=document.createElement("input");lci.type="number";lci.value=i.labor_cost||"";lci.placeholder="0";lci.min="0";lci.step="1";lci.style.width="75px";lci.addEventListener("change",(function(id){return function(){updExtraNum(id,"labor_cost",this.value);};})(i.id));row.appendChild(lci);var pl=document.createElement("label");pl.textContent="Bid $/unit";row.appendChild(pl);var pi=document.createElement("input");pi.type="number";pi.value=i.price||"";pi.placeholder="0.00";pi.min="0";pi.step=".01";pi.style.width="80px";pi.addEventListener("change",(function(id){return function(){updExtraNum(id,"price",this.value);};})(i.id));row.appendChild(pi);var rs=document.createElement("span");rs.className="lres";rs.setAttribute("data-extra",i.id);rs.innerHTML=i.subtotal>0?"Subtotal: <b>$"+fi(i.subtotal)+"</b>":"";row.appendChild(rs);var db=document.createElement("button");db.className="btn-ico";db.innerHTML="&#215;";db.addEventListener("click",(function(id){return function(){remExtra(id);};})(i.id));row.appendChild(db);c.appendChild(row);});recalc();}
+function renderExtra(){
+  var c=document.getElementById("extra-rows"),em=document.getElementById("extra-empty");if(!c)return;c.innerHTML="";
+  if(em)em.style.display=extraItems.length?"none":"";
+  extraItems.forEach(function(item,idx){
+    var row=document.createElement("div");row.className="lyr-row";row.style.cssText="padding:14px 16px;";
+    // Row 1: Name + delete
+    var top=document.createElement("div");top.style.cssText="display:flex;align-items:center;gap:10px;margin-bottom:6px;";
+    var nameIn=document.createElement("input");nameIn.type="text";nameIn.value=item.name||"";nameIn.placeholder="Item name";
+    nameIn.style.cssText="flex:1;font-size:13px;font-weight:600;padding:6px 10px;border:1px solid var(--bdr);border-radius:6px;background:var(--wht);";
+    (function(id){nameIn.addEventListener("change",function(){updExtraName(id,this.value);});})(item.id);
+    top.appendChild(nameIn);
+    var del=document.createElement("button");del.className="btn-ico";del.style.color="var(--dgray)";del.innerHTML="&times;";
+    (function(id){del.addEventListener("click",function(){remExtra(id);});})(item.id);
+    top.appendChild(del);
+    row.appendChild(top);
+    // Row 2: Description
+    var descIn=document.createElement("input");descIn.type="text";descIn.value=item.desc||"";descIn.placeholder="Description (appears on proposal)";
+    descIn.className="lyr-desc";
+    (function(id){descIn.addEventListener("change",function(){updExtraDesc(id,this.value);});})(item.id);
+    row.appendChild(descIn);
+    // Row 3: Fields in a row (matching site work layout)
+    var fields=document.createElement("div");fields.className="lyr-fields";
+    // Qty
+    var qF=document.createElement("div");qF.className="lyr-field";qF.innerHTML="<label>Qty</label>";
+    var qIn=document.createElement("input");qIn.type="number";qIn.min=0;qIn.step=1;qIn.value=item.qty;
+    (function(id){qIn.addEventListener("change",function(){updExtraNum(id,"qty",this.value);});})(item.id);
+    qF.appendChild(qIn);fields.appendChild(qF);
+    // Unit
+    var uF=document.createElement("div");uF.className="lyr-field";uF.innerHTML="<label>Unit</label>";
+    var uSel=document.createElement("select");
+    ["LS","EA","LF","SY","SF","TON","CY","HR","DAY","WK","MO","VF","AC","LOAD"].forEach(function(u){var o=document.createElement("option");o.value=u;o.textContent=u;if(item.unit===u)o.selected=true;uSel.appendChild(o);});
+    (function(id){uSel.addEventListener("change",function(){updExtraUnit(id,this.value);});})(item.id);
+    uF.appendChild(uSel);fields.appendChild(uF);
+    // Mat $
+    var mF=document.createElement("div");mF.className="lyr-field";mF.innerHTML="<label>Mat $</label>";
+    var mIn=document.createElement("input");mIn.type="number";mIn.min=0;mIn.step=1;mIn.value=item.mat_cost||"";mIn.placeholder="0";
+    (function(id){mIn.addEventListener("change",function(){updExtraNum(id,"mat_cost",this.value);});})(item.id);
+    mF.appendChild(mIn);fields.appendChild(mF);
+    // Labor $
+    var lF=document.createElement("div");lF.className="lyr-field";lF.innerHTML="<label>Labor $</label>";
+    var lIn=document.createElement("input");lIn.type="number";lIn.min=0;lIn.step=1;lIn.value=item.labor_cost||"";lIn.placeholder="0";
+    (function(id){lIn.addEventListener("change",function(){updExtraNum(id,"labor_cost",this.value);});})(item.id);
+    lF.appendChild(lIn);fields.appendChild(lF);
+    // Bid $/unit
+    var pF=document.createElement("div");pF.className="lyr-field";pF.innerHTML="<label>Bid $/Unit</label>";
+    var pIn=document.createElement("input");pIn.type="number";pIn.min=0;pIn.step=0.01;pIn.value=item.price||"";pIn.placeholder="0.00";
+    (function(id){pIn.addEventListener("change",function(){updExtraNum(id,"price",this.value);});})(item.id);
+    pF.appendChild(pIn);fields.appendChild(pF);
+    // Subtotal
+    var sub=document.createElement("span");sub.className="lres";sub.style.cssText="font-size:13px;font-weight:700;margin-left:auto;";
+    sub.setAttribute("data-extra",item.id);
+    sub.textContent=item.subtotal>0?"$"+Math.round(item.subtotal).toLocaleString():"";
+    fields.appendChild(sub);
+    row.appendChild(fields);
+    c.appendChild(row);
+  });
+  recalc();
+}
 async function doLogout(){
   try{await fetch("/auth/logout",{method:"POST"});}catch(e){}
   location.reload();
@@ -4016,6 +4069,35 @@ function _showWelcome(){
     +'</div>';
   m.addEventListener('click',function(e){if(e.target===m)m.remove();});
   document.body.appendChild(m);
+}
+
+function showPresetPicker(target){
+  // Show a quick picker of presets tagged for this section type
+  var ex=document.getElementById('preset-picker');if(ex)ex.remove();
+  var modal=document.createElement('div');modal.id='preset-picker';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');
+  box.style.cssText='background:var(--wht);border-radius:var(--rad);padding:20px;min-width:320px;max-width:480px;box-shadow:var(--shadow-l);';
+  box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><span style="font-weight:700;font-size:15px;">Add Preset</span><button class="btn-ico" onclick="document.getElementById(\'preset-picker\').remove()" style="font-size:18px;">&times;</button></div>';
+  var list=document.createElement('div');list.style.cssText='display:flex;flex-direction:column;gap:6px;';
+  PRESETS.forEach(function(p){
+    var btn=document.createElement('button');btn.className='btn btn-sec';btn.style.cssText='text-align:left;padding:10px 14px;';
+    btn.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--dgray);">'+p.layers.length+' layers — '+p.layers.map(function(l){return l.type;}).join(', ')+'</div>';
+    btn.addEventListener('click',function(){
+      if(target==='sitework'){
+        // Add preset layers as site work line items
+        p.layers.forEach(function(l){siteWorkItems.push({id:swid++,name:l.name||l.type,desc:l.description||'',qty:1,unit:'TON',price:0,subtotal:0,badge:'',mat_cost:0,labor_cost:0});});
+        renderSiteWork();recalc();
+      } else {
+        addSection(p.name,p.layers);
+      }
+      modal.remove();toast('Preset "'+p.name+'" added','ok');
+    });
+    list.appendChild(btn);
+  });
+  box.appendChild(list);modal.appendChild(box);
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+  document.body.appendChild(modal);
 }
 
 function _updateMobNav(btn){
