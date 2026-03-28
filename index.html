@@ -4497,16 +4497,40 @@ function renderDashTodaySchedule(){
   c.innerHTML='';
   var today=new Date().toISOString().split('T')[0];
   var todayWOs=[];
+  var activeProjects=[];
   (pipelineProposals||[]).forEach(function(p){
     var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
     if(!snap.is_project)return;
+    // Collect work orders scheduled for today
     (snap.work_orders||[]).forEach(function(wo){
       if(wo.scheduled_date===today&&wo.status!=='complete'){
         todayWOs.push({wo:wo,project:p,snap:snap});
       }
     });
+    // Also collect active projects (Scheduled/In Progress) as fallback
+    var stage=p.pipeline_stages?p.pipeline_stages.name:'';
+    if(stage==='Scheduled'||stage==='In Progress'){
+      activeProjects.push({project:p,snap:snap,stage:stage,stageColor:p.pipeline_stages?p.pipeline_stages.color:'#999'});
+    }
   });
-  if(!todayWOs.length){c.innerHTML='<div class="empty-state" style="padding:32px 18px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="empty-state-title">No work orders today</div><div class="empty-state-desc">Scheduled jobs will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel(\'schedule\',document.querySelector(\'[onclick*=schedule]\'))">Open Schedule</button></div>';return;}
+  if(!todayWOs.length&&!activeProjects.length){c.innerHTML='<div class="empty-state" style="padding:32px 18px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="empty-state-title">No active work today</div><div class="empty-state-desc">Scheduled jobs and work orders will appear here</div></div>';return;}
+  // If no WOs but active projects, show them
+  if(!todayWOs.length&&activeProjects.length){
+    activeProjects.forEach(function(item){
+      var row=document.createElement('div');row.className='mc-list-item';row.style.cursor='pointer';
+      var dot=document.createElement('span');dot.className='mc-dot';dot.style.background=item.stageColor;row.appendChild(dot);
+      var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+      info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(item.project.name||'')+'</div>'
+        +'<div style="font-size:11px;color:var(--dgray);">'+esc(item.project.client||'')+'</div>';
+      row.appendChild(info);
+      var badge=document.createElement('span');
+      badge.style.cssText='font-size:10px;font-weight:600;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:'+item.stageColor+'18;color:'+item.stageColor+';';
+      badge.textContent=item.stage;row.appendChild(badge);
+      (function(id){row.addEventListener('click',function(){openProjectSummary(id);});})(item.project.id);
+      c.appendChild(row);
+    });
+    return;
+  }
   todayWOs.forEach(function(item){
     var row=document.createElement('div');
     row.className='mc-list-item';
@@ -4580,7 +4604,7 @@ function renderDashUpcomingWO(){
     (snap.work_orders||[]).forEach(function(wo){
       if(wo.status==='complete')return;
       var d=wo.scheduled_date||wo.date||'';
-      if(d&&d>today&&d<=weekEndStr){
+      if(d&&d>=today&&d<=weekEndStr){
         wos.push({name:wo.name||'Work Order',project:p.name||'',date:d,status:wo.status||'pending',assigned:wo.assigned_to||'',projId:p.id,woId:wo.id});
       }
     });
