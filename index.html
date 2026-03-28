@@ -13409,7 +13409,20 @@ function _renderBugListInto(tbody){
       } else {
         td.textContent=val;
       }
-      if(i===1){td.style.fontWeight='600';td.style.maxWidth='200px';td.style.overflow='hidden';td.style.textOverflow='ellipsis';td.style.whiteSpace='nowrap';}
+      if(i===1){
+        td.textContent='';td.style.maxWidth='260px';
+        var titleSpan=document.createElement('div');titleSpan.style.cssText='font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';titleSpan.textContent=b.title;
+        td.appendChild(titleSpan);
+        // Show [Auto-fix] badge and resolution notes
+        var isAutoFix=b.admin_notes&&b.admin_notes.indexOf('[Auto-fix]')===0;
+        if(isAutoFix){
+          var afBadge=document.createElement('span');afBadge.style.cssText='display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--badge-info-bg);color:var(--badge-info);margin-right:4px;vertical-align:middle;';afBadge.textContent='SYSTEM';td.insertBefore(afBadge,titleSpan);
+        }
+        if(b.admin_notes&&b.status==='Fixed'){
+          var noteText=isAutoFix?b.admin_notes.replace('[Auto-fix] ',''):b.admin_notes;
+          if(noteText){var noteDiv=document.createElement('div');noteDiv.style.cssText='font-size:10px;color:var(--dgray);font-weight:400;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';noteDiv.textContent=noteText;td.appendChild(noteDiv);}
+        }
+      }
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
