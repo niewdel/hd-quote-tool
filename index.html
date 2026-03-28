@@ -625,7 +625,7 @@ body.dark .dash-section{background:rgba(24,24,27,0.65);border-color:rgba(255,255
 body.dark .dash-section-title{color:#A1A1AA;}
 .ops-page-head{
   display:flex;align-items:center;justify-content:space-between;gap:14px;
-  margin-bottom:16px;flex-wrap:wrap;min-height:36px;
+  margin-bottom:10px;flex-wrap:wrap;min-height:36px;
 }
 .ops-page-copy{display:flex;flex-direction:column;gap:2px;max-width:760px;}
 .ops-page-eyebrow{display:none;}
@@ -877,7 +877,8 @@ body.dark .profile-meta-chip{background:rgba(255,255,255,.03);border-color:rgba(
 .mob-account-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:none;background:none;color:inherit;border-radius:12px;cursor:pointer;padding:0;}
 .mob-account-btn:hover{background:rgba(255,255,255,.06);}
 @keyframes menuFadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
-.content{padding:20px;max-width:none;width:100%;}
+.content{padding:12px 20px;max-width:none;width:100%;}
+.panel>.content{padding:0;}
 
 /* Panels */
 .panel{display:none;}.panel.on{display:block;width:100%;box-sizing:border-box;animation:panelIn .3s cubic-bezier(0.2,0.8,0.2,1) both;}
@@ -1170,7 +1171,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
   .topbar { display: none !important; }
 
   /* --- Content padding --- */
-  .content { padding: 14px; }
+  .content { padding: 10px 14px; }
 
   /* --- Forms: 1 column on mobile --- */
   .fg2, .fg3, .fg4 { grid-template-columns: 1fr !important; }
