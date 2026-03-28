@@ -1741,12 +1741,13 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div style="display:flex;gap:6px;">
               <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('pavement')">From Library</button>
               <button class="btn btn-sec btn-sm" onclick="showPresetPicker('pavement')">Add Preset</button>
+              <button class="btn btn-sec btn-sm" onclick="addSection()">+ Add Item</button>
             </div>
           </div>
           <div class="card-body" style="padding:0;">
             <div id="sections"></div>
             <div id="conc-rows"></div>
-            <div id="pavement-empty" class="empty-state" style="padding:24px 16px;"><div class="empty-state-title">No pavement items yet</div><div class="empty-state-desc">Asphalt, concrete, stone, pavement markings, and striping.</div></div>
+            <div id="pavement-empty" class="empty-state" style="padding:24px 16px;"><div class="empty-state-title">No pavement items yet</div><div class="empty-state-desc">Click "Add Preset", "From Library", or "+ Add Item" above to get started.</div></div>
           </div>
         </div>
 
@@ -1762,7 +1763,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           </div>
           <div>
             <div id="sitework-rows"></div>
-            <div id="sitework-empty" class="empty-state" style="padding:16px;"><div class="empty-state-desc">Grading, utilities, erosion control, clearing, and other site work items.</div></div>
+            <div id="sitework-empty" class="empty-state" style="padding:16px;"><div class="empty-state-title" style="font-size:13px;">No site work items yet</div><div class="empty-state-desc">Grading, utilities, erosion control, clearing, and other site work items.</div></div>
           </div>
         </div>
 
@@ -1774,7 +1775,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           </div>
           <div>
             <div id="extra-rows"></div>
-            <div id="extra-empty" class="empty-state" style="padding:16px;"><div class="empty-state-desc">Custom items not in the library. Type in your own name, quantity, and price.</div></div>
+            <div id="extra-empty" class="empty-state" style="padding:16px;"><div class="empty-state-title" style="font-size:13px;">No additional items yet</div><div class="empty-state-desc">Custom items not in the library. Click "+ Add Item" above.</div></div>
           </div>
         </div>
 
@@ -4167,7 +4168,7 @@ function boot(){
   if(!sections.length){
     // Start blank — user clicks preset to add sections
     var secEl=document.getElementById('sections');
-    if(secEl)secEl.innerHTML='<div class="empty-state" style="padding:24px 16px;"><div class="empty-state-title">No sections yet</div><div class="empty-state-desc">Click a preset above or + Add Section to get started.</div></div>';
+    if(secEl)secEl.innerHTML='';
   } else {renderAll();}
   renderConc();renderExtra();
   loadClientsForAutocomplete();
