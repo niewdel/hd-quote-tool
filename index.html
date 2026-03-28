@@ -1532,7 +1532,19 @@ tr:hover td{background:var(--tbl-alt);}
                   <button class="btn btn-sec btn-sm" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Full Schedule</button>
                 </div>
                 <div id="dash-today-schedule">
-                  <div class="empty-state" style="padding:24px 18px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="empty-state-title">No work orders today</div><div class="empty-state-desc">Scheduled jobs will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Open Schedule</button></div>
+                  <div class="empty-state" style="padding:24px 18px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="empty-state-title">No work orders today</div><div class="empty-state-desc">Scheduled jobs will appear here</div></div>
+                </div>
+              </div>
+
+              <div class="dash-section">
+                <div class="dash-section-hdr">
+                  <span class="dash-section-title">Recent Projects</span>
+                </div>
+                <div id="dash-recent-projects" style="max-height:400px;overflow-y:auto;">
+                  <div class="empty-state" style="padding:24px 18px;">
+                    <div class="empty-state-title">No recent projects</div>
+                    <div class="empty-state-desc">Projects with activity will appear here.</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1581,17 +1593,6 @@ tr:hover td{background:var(--tbl-alt);}
                 <span class="dash-section-title">Recent Activity</span>
               </div>
               <div id="dash-recent-activity" style="max-height:360px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div></div></div>
-            </div>
-          </div>
-          <div class="dash-section">
-            <div class="dash-section-hdr">
-              <span class="dash-section-title">Recent Projects</span>
-            </div>
-            <div id="dash-recent-projects" style="max-height:400px;overflow-y:auto;">
-              <div class="empty-state" style="padding:24px 18px;">
-                <div class="empty-state-title">No recent projects</div>
-                <div class="empty-state-desc">Projects with activity will appear here.</div>
-              </div>
             </div>
           </div>
         </div>
