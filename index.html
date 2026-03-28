@@ -877,7 +877,7 @@ body.dark .profile-meta-chip{background:rgba(255,255,255,.03);border-color:rgba(
 .mob-account-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:none;background:none;color:inherit;border-radius:12px;cursor:pointer;padding:0;}
 .mob-account-btn:hover{background:rgba(255,255,255,.06);}
 @keyframes menuFadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
-.content{padding:24px;max-width:1400px;width:100%;}
+.content{padding:20px;max-width:none;width:100%;}
 
 /* Panels */
 .panel{display:none;}.panel.on{display:block;width:100%;box-sizing:border-box;animation:panelIn .3s cubic-bezier(0.2,0.8,0.2,1) both;}
@@ -1363,9 +1363,9 @@ tr:hover td{background:var(--tbl-alt);}
       <div class="nav-item" data-field-hidden role="button" tabindex="0" onclick="showPanel('contacts',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('contacts',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg><span class="nav-label">Contacts</span></div>
       <div class="nav-item" data-field-hidden role="button" tabindex="0" onclick="showPanel('reports',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('reports',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h3v12H2zm4.5 3h3v9h-3zM11 7h3v7h-3z"/></svg><span class="nav-label">Reports</span></div>
       <div class="nav-sep" role="separator"></div>
-      <div class="nav-item" data-admin-hidden role="button" tabindex="0" onclick="showPanel('settings',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('settings',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><span class="nav-label">App Settings</span></div>
+      <div class="nav-item" data-admin-hidden role="button" tabindex="0" onclick="showPanel('settings',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('settings',this);}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.7m0 9.6v1.7m-4.6-2.6l1.2-1.2m6.8-6.8l1.2-1.2M1.5 8h1.7m9.6 0h1.7M3.4 12.6l1.2-1.2m6.8-6.8l1.2-1.2"/></svg><span class="nav-label">App Settings</span></div>
       <div class="nav-item admin-only" id="nav-admin" data-admin-hidden role="button" tabindex="0" onclick="showPanel('admin',this);loadUsers();showAdminTab('company');" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('admin',this);loadUsers();showAdminTab('company');}">
-        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a3 3 0 00-3 3v1H4a2 2 0 00-2 2v5a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-1V4a3 3 0 00-3-3zm-1 3a1 1 0 112 0v1H7V4zm1 5.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg><span class="nav-label">Admin</span></div>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M8 1L2 4v3c0 3.9 2.5 7.1 6 8 3.5-.9 6-4.1 6-8V4L8 1z"/><path d="M6 8l1.5 1.5L10 6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nav-label">Admin</span></div>
       <div class="nav-item" role="button" tabindex="0" onclick="showPanel('bugs',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('bugs',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a1 1 0 011 1v1.07a5 5 0 013.61 2.64L14 5l1 1-1.68 1.68A5 5 0 0113 10h2v1.5h-2a5 5 0 01-.68 1.82L14 15l-1 1-1.39-1.39A5 5 0 018 16a5 5 0 01-3.61-1.39L3 16l-1-1 1.68-1.68A5 5 0 013 11.5H1V10h2a5 5 0 01.32-2.32L1.64 6 3 5l1.39 1.71A5 5 0 017 3.07V2a1 1 0 011-1zm0 4a3 3 0 100 6 3 3 0 000-6z"/></svg><span class="nav-label">Bug Report</span></div>
     </nav>
     <div class="sb-foot">
@@ -1536,7 +1536,7 @@ tr:hover td{background:var(--tbl-alt);}
                 <div class="dash-section-hdr">
                   <span class="dash-section-title">Recent Projects</span>
                 </div>
-                <div id="dash-recent-projects" style="max-height:400px;overflow-y:auto;">
+                <div id="dash-recent-projects">
                   <div class="empty-state" style="padding:24px 18px;">
                     <div class="empty-state-title">No recent projects</div>
                     <div class="empty-state-desc">Projects with activity will appear here.</div>
@@ -1596,7 +1596,7 @@ tr:hover td{background:var(--tbl-alt);}
 
       <!-- BUILD PANEL -->
       <div class="panel" id="panel-build" data-field-hidden>
-        <div class="content" style="max-width:1200px;">
+        <div class="content" style="">
         <div class="ops-page-head">
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Proposal Builder</div>
@@ -1731,7 +1731,7 @@ tr:hover td{background:var(--tbl-alt);}
 
       <!-- JOB COST / ESTIMATES VS ACTUALS PANEL -->
       <div class="panel" id="panel-jobcost" data-field-hidden>
-        <div class="content" style="max-width:1200px;">
+        <div class="content" style="">
         <div class="ops-page-head">
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Job Costing</div>
@@ -1810,7 +1810,7 @@ tr:hover td{background:var(--tbl-alt);}
 
       <!-- SAVED DOCUMENTS PANEL -->
       <div class="panel" id="panel-saved">
-        <div class="content" style="max-width:1200px;">
+        <div class="content" style="">
           <div class="ops-page-head">
             <div class="ops-page-copy">
               <div class="ops-page-eyebrow">Document Hub</div>
@@ -1954,7 +1954,7 @@ tr:hover td{background:var(--tbl-alt);}
       </div></div>
 
       <!-- CONTACTS PANEL (merged clients + subs) -->
-      <div class="panel" id="panel-contacts"><div class="content" style="max-width:1200px;">
+      <div class="panel" id="panel-contacts"><div class="content" style="">
         <div class="ops-page-head">
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Contacts Workspace</div>
@@ -2003,7 +2003,7 @@ tr:hover td{background:var(--tbl-alt);}
       <!-- Legacy panel-clients/panel-subs removed — contacts panel is authoritative -->
 
       <!-- CLIENT SUMMARY PANEL -->
-      <div class="panel" id="panel-client-summary"><div class="content" style="padding:20px;max-width:1200px;">
+      <div class="panel" id="panel-client-summary"><div class="content" style="padding:20px;">
         <div class="ops-page-head">
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Client Summary</div>
@@ -2040,7 +2040,7 @@ tr:hover td{background:var(--tbl-alt);}
       </div></div>
 
       <!-- CHANGE ORDERS PANEL -->
-      <div class="panel" id="panel-co" data-field-hidden><div class="content" style="max-width:1200px;">
+      <div class="panel" id="panel-co" data-field-hidden><div class="content" style="">
         <div class="ops-page-head">
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Change Order</div>
@@ -2123,7 +2123,7 @@ tr:hover td{background:var(--tbl-alt);}
 
 
       <!-- ANALYTICS PANEL -->
-      <div class="panel" id="panel-analytics" data-field-hidden><div class="content" style="max-width:1200px;">
+      <div class="panel" id="panel-analytics" data-field-hidden><div class="content" style="">
         <div class="ops-page-head">
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Analytics</div>
@@ -2426,7 +2426,7 @@ tr:hover td{background:var(--tbl-alt);}
 
         <!-- Bug Report tab (moved from standalone panel) -->
         <div id="stab-content-bugreport" style="display:none;">
-          <div class="content" style="max-width:900px;">
+          <div class="content" style="">
             <div class="card" style="margin-bottom:20px;">
               <div class="card-hdr"><span class="card-title">Report a Bug</span></div>
               <div class="card-body" style="padding:16px;">
@@ -2459,7 +2459,7 @@ tr:hover td{background:var(--tbl-alt);}
 
       </div>
       <!-- WORK ORDER DETAIL PANEL -->
-      <div class="panel" id="panel-workorder"><div class="content" style="padding:20px;max-width:1200px;">
+      <div class="panel" id="panel-workorder"><div class="content" style="padding:20px;">
         <div class="ops-page-head">
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Work Order</div>
@@ -2588,7 +2588,7 @@ tr:hover td{background:var(--tbl-alt);}
       </div></div>
 
       <!-- REPORTS PANEL -->
-      <div class="panel" id="panel-reports" data-field-hidden><div class="content" style="max-width:1200px;">
+      <div class="panel" id="panel-reports" data-field-hidden><div class="content" style="">
         <div class="ops-page-head">
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Reporting Center</div>
@@ -2707,7 +2707,7 @@ tr:hover td{background:var(--tbl-alt);}
   </div>
   <!-- Roadmap tab (moved from standalone panel) -->
   <div id="admin-pane-roadmap" style="display:none;">
-    <div class="content" style="max-width:1100px;">
+    <div class="content" style="">
       <div class="card">
         <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="card-title">Roadmap & Feature Requests</span>
@@ -2723,7 +2723,7 @@ tr:hover td{background:var(--tbl-alt);}
 </div>
 
 <!-- Bug Report Panel -->
-<div class="panel" id="panel-bugs"><div class="content" style="max-width:900px;">
+<div class="panel" id="panel-bugs"><div class="content" style="">
   <div class="card" style="margin-bottom:20px;">
     <div class="card-hdr"><span class="card-title">Report a Bug</span></div>
     <div class="card-body" style="padding:16px;">
@@ -2763,7 +2763,7 @@ tr:hover td{background:var(--tbl-alt);}
 </div>
 
 <!-- Roadmap Panel -->
-<div class="panel" id="panel-roadmap"><div class="content" style="max-width:1100px;">
+<div class="panel" id="panel-roadmap"><div class="content" style="">
   <div class="card">
     <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span class="card-title">Roadmap & Feature Requests</span>

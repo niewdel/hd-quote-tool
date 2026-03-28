@@ -169,10 +169,10 @@ def change_password():
         if r.status_code != 200 or not r.json():
             return jsonify({'ok': False, 'error': 'User not found'}), 404
         user = r.json()[0]
-        pw_ok = (user.get('password_hash') == hash_password(current) or user.get('pin_hash') == hash_pin(current))
+        pw_ok = user.get('pin_hash') == hash_password(current)
         if not pw_ok:
             return jsonify({'ok': False, 'error': 'Current password is incorrect'}), 401
-        update = {'password_hash': hash_password(new_pw), 'pin_hash': hash_pin(new_pw)}
+        update = {'pin_hash': hash_password(new_pw)}
         if hint: update['password_hint'] = hint
         http.patch(sb_url('hd_users', f'?username=eq.{username}'), headers={**sb_headers(), 'Prefer': 'return=minimal'}, json=update, timeout=5)
         return jsonify({'ok': True})
@@ -529,7 +529,7 @@ def create_user():
     if not username or not pin: return jsonify({'ok':False,'error':'Username and password required'}), 400
     if role not in ('admin','user','field'): role = 'user'
     try:
-        r = http.post(sb_url('hd_users'), headers=sb_headers(), json={'username':username,'full_name':full_name,'email':email,'phone':phone,'password_hash':hash_password(pin),'pin_hash':hash_pin(pin),'role':role,'active':True,'created_by':session.get('username','admin'),'password_hint':hint}, timeout=5)
+        r = http.post(sb_url('hd_users'), headers=sb_headers(), json={'username':username,'full_name':full_name,'email':email,'phone':phone,'pin_hash':hash_password(pin),'role':role,'active':True,'created_by':session.get('username','admin'),'password_hint':hint}, timeout=5)
         if r.status_code in (200,201):
             user = r.json()[0] if isinstance(r.json(),list) else r.json()
             user.pop('pin_hash',None)
@@ -552,11 +552,9 @@ def update_user(uid):
     if 'role' in data and data['role'] in ('admin','user','field'): update['role'] = data['role']
     if 'active' in data: update['active'] = bool(data['active'])
     if 'password' in data and data['password']:
-        update['password_hash'] = hash_password(data['password'])
-        update['pin_hash'] = hash_pin(data['password'])
+        update['pin_hash'] = hash_password(data['password'])
     elif 'pin' in data and data['pin']:
-        update['pin_hash'] = hash_pin(data['pin'])
-        update['password_hash'] = hash_password(data['pin'])
+        update['pin_hash'] = hash_password(data['pin'])
     if 'password_hint' in data: update['password_hint'] = str(data['password_hint']).strip()
     if not update: return jsonify({'ok':False,'error':'Nothing to update'}), 400
     try:
