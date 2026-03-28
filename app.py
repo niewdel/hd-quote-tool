@@ -1405,6 +1405,11 @@ def settings_save():
     value = data.get('value')
     if not key:
         return jsonify({'ok': False, 'error': 'Missing key'}), 400
+    # Personal settings any user can save
+    personal_keys = {'hd_notif_prefs', 'hd_sender'}
+    # Shared business settings require admin role
+    if key not in personal_keys and session.get('role') != 'admin':
+        return jsonify({'ok': False, 'error': 'Admin access required to change app settings'}), 403
     try:
         # Upsert: try to update, if not found insert
         h = sb_headers()
