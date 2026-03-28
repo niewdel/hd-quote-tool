@@ -1,4 +1,4 @@
-import os, tempfile, functools, json, hashlib, time
+import os, tempfile, functools, json, hashlib, time, uuid
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, session, send_file
 from werkzeug.utils import secure_filename
@@ -1646,6 +1646,99 @@ def delete_roadmap(item_id):
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ── Public Proposal Sharing & Approval ────────────────────
+@app.route('/proposal/share/<int:pid>', methods=['POST'])
+@require_auth
+def share_proposal(pid):
+    """Generate a share token for a proposal."""
+    try:
+        token = uuid.uuid4().hex
+        r = http.patch(
+            sb_url('proposals', f'?id=eq.{pid}'),
+            headers=sb_headers(),
+            json={'share_token': token},
+            timeout=10
+        )
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True, 'token': token})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/proposal/view/<token>')
+def public_proposal_view(token):
+    """Public route — no auth. Returns proposal data for shared link."""
+    try:
+        r = http.get(
+            sb_url('proposals', f'?share_token=eq.{token}&select=*'),
+            headers=sb_admin_headers(), timeout=10
+        )
+        if r.status_code != 200:
+            return jsonify({'ok': False, 'error': 'Proposal not found'}), 404
+        items = r.json()
+        if not items:
+            return jsonify({'ok': False, 'error': 'Proposal not found'}), 404
+        prop = items[0]
+        # Strip internal fields
+        prop.pop('share_token', None)
+        prop.pop('stage_id', None)
+        prop.pop('created_by', None)
+        return jsonify({'ok': True, 'proposal': prop})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/proposal/approve/<token>', methods=['POST'])
+def public_proposal_approve(token):
+    """Public route — no auth. Client approves a shared proposal."""
+    try:
+        d = request.json or {}
+        approver_name = str(d.get('name', '')).strip()
+        comment = str(d.get('comment', '')).strip()
+        if not approver_name:
+            return jsonify({'ok': False, 'error': 'Your name is required to approve'}), 400
+        # Find the proposal
+        r = http.get(
+            sb_url('proposals', f'?share_token=eq.{token}&select=id,snap,stage_id'),
+            headers=sb_admin_headers(), timeout=10
+        )
+        items = r.json() if r.status_code == 200 else []
+        if not items:
+            return jsonify({'ok': False, 'error': 'Proposal not found'}), 404
+        prop = items[0]
+        pid = prop['id']
+        snap = json.loads(prop['snap']) if isinstance(prop.get('snap'), str) else (prop.get('snap') or {})
+        # Record approval in snap
+        snap['approved_by'] = approver_name
+        snap['approved_at'] = datetime.utcnow().isoformat()
+        if comment:
+            snap['approval_comment'] = comment
+        # Find "Approved" stage
+        sr = http.get(
+            sb_url('pipeline_stages', '?name=eq.Approved&select=id'),
+            headers=sb_headers(), timeout=5
+        )
+        stage_update = {}
+        if sr.status_code == 200 and sr.json():
+            stage_update['stage_id'] = sr.json()[0]['id']
+        # Update proposal
+        update = {'snap': json.dumps(snap)}
+        update.update(stage_update)
+        r2 = http.patch(
+            sb_url('proposals', f'?id=eq.{pid}'),
+            headers=sb_admin_headers(),
+            json=update, timeout=10
+        )
+        if r2.status_code >= 300:
+            return jsonify({'ok': False, 'error': 'Failed to save approval'}), 400
+        return jsonify({'ok': True, 'message': 'Proposal approved'})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/p/<token>')
+def public_proposal_page(token):
+    """Serve the public proposal viewer page."""
+    return send_file('proposal_view.html')
 
 # ── Reminders ─────────────────────────────────────────────
 @app.route('/reminders/list')
