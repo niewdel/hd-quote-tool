@@ -1827,6 +1827,22 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           </div>
         </div>
 
+      <!-- Pricing Options (Good/Better/Best) -->
+      <div class="mc-card" style="margin-bottom:var(--card-gap);">
+        <div class="card-hdr">
+          <span class="card-title">Pricing Options</span>
+          <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--dgray);cursor:pointer;margin:0;">
+            <input type="checkbox" id="options-toggle" onchange="togglePricingOptions()"/>
+            Enable multi-option pricing
+          </label>
+        </div>
+        <div class="card-body" id="pricing-options-body" style="display:none;">
+          <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Add pricing tiers for your client to choose from. The current proposal total will be used as the base option.</p>
+          <div id="pricing-options-list"></div>
+          <button class="btn btn-sec btn-sm" onclick="addPricingOption()" style="margin-top:10px;">+ Add Option</button>
+        </div>
+      </div>
+
       </div><!-- /content -->
       </div><!-- /panel-build -->
 
@@ -8284,6 +8300,7 @@ function buildPayload(){
       return {name:u.name+(u.unit?' (per '+u.unit+')':''),unit:u.unit||'',rate:u.rate};
     }),
     _date_iso:date,
+    pricing_options:(document.getElementById('options-toggle').checked&&pricingOptions.length>1)?pricingOptions:undefined,
   };
 }
 
@@ -8949,6 +8966,7 @@ async function saveQuote(){
     waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,mob_cost:document.getElementById('mob-cost').value,contingency:document.getElementById('contingency').value,
     selectedClient:selectedClient,liOverrides:liOverrides,
     sections:sections,concItems:concItems,extraItems:extraItems,siteWorkItems:siteWorkItems};
+  if(document.getElementById('options-toggle').checked&&pricingOptions.length)snap.pricing_options=pricingOptions;
   var p=buildPayload();
   snap.document_number=p.document_number||'';
   snap.project_number=p.project_number||'';
@@ -9033,6 +9051,17 @@ function loadQuote(id){
   if(!window._pendingProjectLink){
     var parentId=findParentProject(q.id);
     if(parentId)window._pendingProjectLink=parentId;
+  }
+  // Restore pricing options
+  if(d.pricing_options&&d.pricing_options.length){
+    pricingOptions=d.pricing_options;
+    document.getElementById('options-toggle').checked=true;
+    document.getElementById('pricing-options-body').style.display='block';
+    renderPricingOptions();
+  } else {
+    pricingOptions=[];
+    document.getElementById('options-toggle').checked=false;
+    document.getElementById('pricing-options-body').style.display='none';
   }
   showPanel('build',document.querySelector('.nav-item'));
   updateProposalDocBadge();
@@ -9311,6 +9340,9 @@ function resetAll(){
   document.getElementById('client-bar').style.display='none';
   selectedClient={name:'',company:'',phone:'',email:''};
   liOverrides={};
+  pricingOptions=[];
+  document.getElementById('options-toggle').checked=false;
+  document.getElementById('pricing-options-body').style.display='none';
   renderAll();renderConc();renderExtra();
   toast('Reset');
 }
@@ -14230,6 +14262,55 @@ function shareProjectLink(){
         }
       } else {toast(d.error||'Failed to generate link','err');}
     });
+}
+
+// ── Pricing Options (Multi-Estimate) ─────────────────────
+var pricingOptions=[];
+
+function togglePricingOptions(){
+  var on=document.getElementById('options-toggle').checked;
+  document.getElementById('pricing-options-body').style.display=on?'block':'none';
+  if(on&&pricingOptions.length===0){
+    // Seed with current proposal as Option A
+    addPricingOption('Standard','Current proposal scope');
+    addPricingOption('Premium','Enhanced scope with additional items');
+  }
+}
+
+function addPricingOption(name,desc){
+  var id=Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  pricingOptions.push({id:id,name:name||'Option '+(pricingOptions.length+1),description:desc||'',total:0});
+  renderPricingOptions();
+}
+
+function removePricingOption(id){
+  pricingOptions=pricingOptions.filter(function(o){return o.id!==id;});
+  renderPricingOptions();
+}
+
+function updatePricingOption(id,field,val){
+  var opt=pricingOptions.find(function(o){return o.id===id;});
+  if(opt){
+    if(field==='total')opt.total=parseFloat(val)||0;
+    else opt[field]=val;
+  }
+}
+
+function renderPricingOptions(){
+  var c=document.getElementById('pricing-options-list');if(!c)return;
+  if(pricingOptions.length===0){c.innerHTML='<p style="font-size:12px;color:var(--dgray);">No options added yet.</p>';return;}
+  var html='';
+  pricingOptions.forEach(function(opt,i){
+    html+='<div style="display:flex;gap:8px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--bdr);">';
+    html+='<div style="flex:1;display:grid;grid-template-columns:1fr 1fr 120px;gap:8px;align-items:center;">';
+    html+='<input type="text" value="'+esc(opt.name)+'" placeholder="Option name" style="font-size:13px;padding:6px 10px;" onchange="updatePricingOption(\''+opt.id+'\',\'name\',this.value)"/>';
+    html+='<input type="text" value="'+esc(opt.description)+'" placeholder="Brief description" style="font-size:13px;padding:6px 10px;" onchange="updatePricingOption(\''+opt.id+'\',\'description\',this.value)"/>';
+    html+='<input type="number" value="'+(opt.total||'')+'" placeholder="$ Total" style="font-size:13px;padding:6px 10px;" onchange="updatePricingOption(\''+opt.id+'\',\'total\',this.value)"/>';
+    html+='</div>';
+    html+='<button class="btn-ico" onclick="removePricingOption(\''+opt.id+'\')" style="color:var(--dgray);font-size:14px;margin-top:4px;">&#10005;</button>';
+    html+='</div>';
+  });
+  c.innerHTML=html;
 }
 
 // ── Leads ────────────────────────────────────────────────

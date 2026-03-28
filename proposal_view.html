@@ -157,6 +157,17 @@
     }
 
     // Notes
+    // Pricing options
+    var opts = snap.pricing_options || [];
+    if(opts.length > 1){
+      html += '<div class="card"><div class="card-hdr">Pricing Options</div>';
+      html += '<table><thead><tr><th>Option</th><th>Description</th><th class="text-right">Total</th></tr></thead><tbody>';
+      opts.forEach(function(o){
+        html += '<tr><td style="font-weight:600;">' + esc(o.name) + '</td><td>' + esc(o.description||'') + '</td><td class="text-right" style="font-weight:600;">' + fmt(o.total||0) + '</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+
     if(snap.notes){
       html += '<div class="card"><div class="card-hdr">Terms &amp; Conditions</div><div class="card-body"><div class="notes-box">' + esc(snap.notes) + '</div></div></div>';
     }

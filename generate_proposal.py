@@ -876,6 +876,38 @@ def build(data, out_path):
     story.append(bid_table(data.get('line_items',[]), st))
     story.append(Spacer(1, 0.1*inch))
     story.append(total_line(data.get('total',0)))
+
+    # Pricing options comparison table (if multi-option proposal)
+    pricing_opts = data.get('pricing_options', [])
+    if pricing_opts and len(pricing_opts) > 1:
+        story.append(Spacer(1, 0.25*inch))
+        story.append(Paragraph('Pricing Options', ParagraphStyle('po_hdr', fontName='Helvetica-Bold', fontSize=11, textColor=BLACK, spaceAfter=4)))
+        story.append(Spacer(1, 0.08*inch))
+        opt_data = [['Option', 'Description', 'Total']]
+        for opt in pricing_opts:
+            opt_data.append([
+                opt.get('name', ''),
+                opt.get('description', ''),
+                '${:,.2f}'.format(float(opt.get('total', 0)))
+            ])
+        opt_tbl = Table(opt_data, colWidths=[1.8*inch, 3.5*inch, 1.7*inch])
+        opt_tbl.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), COLHDR),
+            ('TEXTCOLOR', (0,0), (-1,0), WHITE),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,0), 9),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,1), (-1,-1), 10),
+            ('ALIGN', (-1,0), (-1,-1), 'RIGHT'),
+            ('ROWBACKGROUNDS', (0,1), (-1,-1), [WHITE, LGRAY]),
+            ('GRID', (0,0), (-1,-1), 0.5, TBLBORD),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('LEFTPADDING', (0,0), (-1,-1), 8),
+            ('RIGHTPADDING', (0,0), (-1,-1), 8),
+        ]))
+        story.append(opt_tbl)
+
     story.append(PageBreak())
 
     if data.get('site_plan_image') or data.get('site_plan_url'):
