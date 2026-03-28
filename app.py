@@ -531,11 +531,13 @@ def create_user():
     email = str(data.get('email','')).strip()
     phone = str(data.get('phone','')).strip()
     role = data.get('role','user')
-    hint = str(data.get('password_hint', data.get('hint', ''))).strip()
-    if not username or not pin: return jsonify({'ok':False,'error':'Username and password required'}), 400
+    if not full_name or not username or not pin: return jsonify({'ok':False,'error':'Full name, username, and password are required'}), 400
     if role not in ('admin','user','field'): role = 'user'
     try:
-        r = http.post(sb_url('hd_users'), headers=sb_headers(), json={'username':username,'full_name':full_name,'email':email,'phone':phone,'pin_hash':hash_password(pin),'role':role,'active':True,'created_by':session.get('username','admin'),'password_hint':hint}, timeout=5)
+        row = {'username':username,'full_name':full_name,'pin_hash':hash_password(pin),'role':role,'active':True,'created_by':session.get('username','admin')}
+        if email: row['email'] = email
+        if phone: row['phone'] = phone
+        r = http.post(sb_url('hd_users'), headers=sb_headers(), json=row, timeout=5)
         if r.status_code in (200,201):
             user = r.json()[0] if isinstance(r.json(),list) else r.json()
             user.pop('pin_hash',None)
@@ -561,7 +563,6 @@ def update_user(uid):
         update['pin_hash'] = hash_password(data['password'])
     elif 'pin' in data and data['pin']:
         update['pin_hash'] = hash_password(data['pin'])
-    if 'password_hint' in data: update['password_hint'] = str(data['password_hint']).strip()
     if not update: return jsonify({'ok':False,'error':'Nothing to update'}), 400
     try:
         # If username is changing, look up the old one first
