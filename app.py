@@ -1406,9 +1406,11 @@ def settings_save():
     if not key:
         return jsonify({'ok': False, 'error': 'Missing key'}), 400
     # Personal settings any user can save
-    personal_keys = {'hd_notif_prefs', 'hd_sender'}
+    personal_keys = {'hd_notif_prefs', 'hd_sender', 'hd_dark_mode', 'hd_auto_logout', 'hd_sb_pinned', 'hd_subcontractors'}
+    # Client notes are dynamic keys (hd_client_notes_*)
+    is_personal = key in personal_keys or key.startswith('hd_client_notes_')
     # Shared business settings require admin role
-    if key not in personal_keys and session.get('role') != 'admin':
+    if not is_personal and session.get('role') != 'admin':
         return jsonify({'ok': False, 'error': 'Admin access required to change app settings'}), 403
     try:
         # Upsert: try to update, if not found insert

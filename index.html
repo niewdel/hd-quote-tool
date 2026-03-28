@@ -3472,7 +3472,7 @@ async function saveAcctProfile(){
 function saveAcctAutoLogout(){
   var sel=document.getElementById('acct-auto-logout');
   _autoLogoutMinutes=parseInt(sel.value)||0;
-  localStorage.setItem('hd_auto_logout',String(_autoLogoutMinutes));
+  _saveSetting('hd_auto_logout',String(_autoLogoutMinutes));
   // Sync old select
   var old=document.getElementById('sec-auto-logout');if(old)old.value=sel.value;
 }
@@ -3818,11 +3818,11 @@ function toggleSbPin(){
   if(sb.classList.contains('pinned')){
     sb.classList.remove('pinned');
     app.classList.remove('sb-expanded');
-    localStorage.setItem('hd_sb_pinned','0');
+    _saveSetting('hd_sb_pinned','0');
   } else {
     sb.classList.add('pinned');
     app.classList.add('sb-expanded');
-    localStorage.setItem('hd_sb_pinned','1');
+    _saveSetting('hd_sb_pinned','1');
   }
 }
 function _restoreSbPin(){
@@ -4091,7 +4091,7 @@ function _applyJCDefaults(d){
 }
 
 function _loadFromSupabase(){
-  fetch('/settings/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:['hd_sender','hd_presets','hd_badge_defs','hd_mat_prices','hd_jc_defaults','hd_crews','hd_bid_library','hd_handbook_url','hd_equipment','hd_unit_prices','hd_notif_prefs','hd_company_info']})})
+  fetch('/settings/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:['hd_sender','hd_presets','hd_badge_defs','hd_mat_prices','hd_jc_defaults','hd_crews','hd_bid_library','hd_handbook_url','hd_equipment','hd_unit_prices','hd_notif_prefs','hd_company_info','hd_dark_mode','hd_auto_logout','hd_sb_pinned','hd_subcontractors']})})
     .then(function(r){return r.json();}).then(function(d){
       if(!d.ok||!d.values)return;
       var v=d.values;
@@ -4107,6 +4107,11 @@ function _loadFromSupabase(){
       if(v.hd_handbook_url){var el=document.getElementById('dash-handbook-url');if(el)el.value=v.hd_handbook_url;}
       if(v.hd_notif_prefs){try{if(v.hd_notif_prefs.inapp)Object.assign(_notifPrefs.inapp,v.hd_notif_prefs.inapp);if(v.hd_notif_prefs.email)Object.assign(_notifPrefs.email,v.hd_notif_prefs.email);localStorage.setItem('hd_notif_prefs',JSON.stringify(_notifPrefs));loadNotifPrefs();}catch(e){}}
       if(v.hd_company_info){window._companyInfo=v.hd_company_info;}
+      // Preferences
+      if(v.hd_dark_mode!==undefined){var dm=v.hd_dark_mode==='1';if(dm)document.body.classList.add('dark');else document.body.classList.remove('dark');var dcb=document.getElementById('dark-switch-cb');if(dcb)dcb.checked=dm;var acb=document.getElementById('acct-dark-cb');if(acb)acb.checked=dm;try{localStorage.setItem('hd_dark_mode',v.hd_dark_mode);}catch(e){}}
+      if(v.hd_auto_logout!==undefined){_autoLogoutMinutes=parseInt(v.hd_auto_logout)||0;try{localStorage.setItem('hd_auto_logout',String(_autoLogoutMinutes));}catch(e){}}
+      if(v.hd_sb_pinned!==undefined){try{localStorage.setItem('hd_sb_pinned',v.hd_sb_pinned);}catch(e){}_restoreSbPin();}
+      if(v.hd_subcontractors){try{localStorage.setItem('hd_subcontractors',JSON.stringify(v.hd_subcontractors));}catch(e){}}
     }).catch(function(){});
 }
 
@@ -9890,13 +9895,13 @@ function openSubModal(editIdx){
       var standalone=JSON.parse(localStorage.getItem('hd_subcontractors')||'[]');
       var sIdx2=standalone.findIndex(function(s){return s.id===editing.id;});
       if(sIdx2>-1)standalone[sIdx2]=subData;
-      localStorage.setItem('hd_subcontractors',JSON.stringify(standalone));
+      _saveSetting('hd_subcontractors',standalone);
       toast('Subcontractor updated','ok');modal.remove();renderSubsList();
     } else {
       // New standalone sub
       var standalone2=JSON.parse(localStorage.getItem('hd_subcontractors')||'[]');
       standalone2.push(subData);
-      localStorage.setItem('hd_subcontractors',JSON.stringify(standalone2));
+      _saveSetting('hd_subcontractors',standalone2);
       toast('Subcontractor added','ok');modal.remove();renderSubsList();
     }
   });
@@ -9920,7 +9925,7 @@ function deleteSub(idx){
   } else {
     var standalone=JSON.parse(localStorage.getItem('hd_subcontractors')||'[]');
     standalone=standalone.filter(function(s){return s.id!==item.sub.id;});
-    localStorage.setItem('hd_subcontractors',JSON.stringify(standalone));
+    _saveSetting('hd_subcontractors',standalone);
     toast('Subcontractor removed','ok');renderSubsList();
   }
 }
@@ -9990,7 +9995,7 @@ function addClientNote(){
   var inp=document.getElementById('cs-note-input');if(!inp||!inp.value.trim())return;
   var notes=[];try{notes=JSON.parse(localStorage.getItem('hd_client_notes_'+_currentClientId)||'[]');}catch(e){}
   notes.unshift({text:inp.value.trim(),user:window._userUsername||'',date:new Date().toISOString()});
-  localStorage.setItem('hd_client_notes_'+_currentClientId,JSON.stringify(notes));
+  _saveSetting('hd_client_notes_'+_currentClientId,notes);
   inp.value='';
   renderClientNotes();
 }
@@ -9998,7 +10003,7 @@ function removeClientNote(idx){
   if(!confirm('Remove this note?'))return;
   var notes=[];try{notes=JSON.parse(localStorage.getItem('hd_client_notes_'+_currentClientId)||'[]');}catch(e){}
   notes.splice(idx,1);
-  localStorage.setItem('hd_client_notes_'+_currentClientId,JSON.stringify(notes));
+  _saveSetting('hd_client_notes_'+_currentClientId,notes);
   renderClientNotes();
 }
 function editClientFromSummary(){if(_currentClientId)editClient(_currentClientId);}
@@ -10175,7 +10180,7 @@ function _checkAutoLogout(){
 function saveAutoLogout(){
   var sel=document.getElementById('sec-auto-logout');
   _autoLogoutMinutes=parseInt(sel.value)||0;
-  localStorage.setItem('hd_auto_logout',String(_autoLogoutMinutes));
+  _saveSetting('hd_auto_logout',String(_autoLogoutMinutes));
   if(_autoLogoutTimer)clearInterval(_autoLogoutTimer);
   if(_autoLogoutMinutes>0)_autoLogoutTimer=setInterval(_checkAutoLogout,30000);
   toast('Auto-logout set to '+(_autoLogoutMinutes>0?_autoLogoutMinutes+' minutes':'never'),'ok');
@@ -12624,6 +12629,7 @@ function toggleDarkMode(){
     if(cb)cb.checked=on;
   }
   localStorage.setItem('hd_dark_mode',on?'1':'0');
+  _saveSetting('hd_dark_mode',on?'1':'0');
 }
 (function(){
   // Dark mode is now the default — only disable if user explicitly chose light
