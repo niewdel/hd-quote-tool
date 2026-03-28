@@ -2043,6 +2043,11 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
             </div>
 
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin:10px 0 6px;">
+              <button class="btn btn-sec btn-sm" onclick="showPanel('saved',null)">Saved Documents</button>
+              <button class="btn btn-primary btn-sm" onclick="openProjectModal()">New Project</button>
+            </div>
+
             <div class="mc-card">
               <div class="mc-toolbar">
                 <input id="projects-search" type="text" placeholder="Search projects, clients, or addresses..." oninput="filterProjects(this.value)"/>
@@ -2054,10 +2059,6 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                 <select id="proj-stage-filter" onchange="filterProjects(document.getElementById('projects-search').value)" style="padding:7px 12px;border:1px solid var(--bdr);border-radius:8px;font-size:12px;background:var(--bg-sub);font-family:var(--font);">
                   <option value="">All Stages</option>
                 </select>
-                <div style="margin-left:auto;display:flex;gap:8px;">
-                  <button class="btn btn-sec btn-sm" onclick="showPanel('saved',null)">Saved Documents</button>
-                  <button class="btn btn-primary btn-sm" onclick="openProjectModal()">New Project</button>
-                </div>
               </div>
               <div id="proj-pipeline-view" style="overflow-x:auto;">
                 <div id="pipeline-board">
