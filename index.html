@@ -2564,10 +2564,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div class="ops-page-eyebrow">Dispatch Board</div>
             <div class="ops-page-title"></div>
           </div>
-          <div class="ops-head-actions">
-            <button class="btn btn-sec btn-sm" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">Open Projects</button>
-            <button class="btn btn-primary btn-sm" onclick="schedCalNav(0)">Jump To Today</button>
-          </div>
+          <div class="ops-head-actions"></div>
         </div>
 
         <div class="ops-schedule-grid">
@@ -10013,7 +10010,7 @@ function renderSubsList(){
   var countEl=document.getElementById('contacts-subs-count') || document.getElementById('subs-count');
   if(countEl)countEl.innerHTML='<b>'+allSubs.length+'</b> subcontractor'+(allSubs.length!==1?'s':'');
   c.innerHTML='';
-  if(!allSubs.length){c.innerHTML='<p style="color:var(--dgray);font-size:13px;">No subcontractors yet. Click + Add Sub to get started.</p>';return;}
+  if(!allSubs.length){c.innerHTML='<div class="empty-state"><div class="empty-state-title">No subcontractors yet</div><div class="empty-state-desc">Click Add Subcontractor above to get started.</div></div>';return;}
   allSubs.forEach(function(item,idx){
     var sub=item.sub;
     var statusColors={pending:'#999',approved:'#4CAF50',completed:'#2196F3',paid:'#8BC34A'};
